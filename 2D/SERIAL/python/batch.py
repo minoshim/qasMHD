@@ -14,11 +14,11 @@ from python import plt2d
 while True:
     direc=input("Input data directory (Ctrl-D to exit): ")+"/"
     try:
-        x=np.loadtxt(direc+"x.dat",dtype=np.float)
-        y=np.loadtxt(direc+"y.dat",dtype=np.float)
-        t=np.loadtxt(direc+"t.dat",dtype=np.float)
-        offs=np.loadtxt(direc+"offsets.dat",dtype=np.int)
-        para=float(np.loadtxt(direc+"params.dat",dtype=np.float))
+        x=np.loadtxt(direc+"x.dat",dtype=float)
+        y=np.loadtxt(direc+"y.dat",dtype=float)
+        t=np.loadtxt(direc+"t.dat",dtype=float)
+        offs=np.loadtxt(direc+"offsets.dat",dtype=int)
+        para=float(np.loadtxt(direc+"params.dat",dtype=float))
         break
     except:
         print("Error during file load.")
