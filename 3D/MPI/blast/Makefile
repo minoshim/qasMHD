@@ -1,0 +1,38 @@
+DIR0 = ../../..
+include $(DIR0)/Makefile.inc
+DIRI = $(DIR0)/common
+DIRM = $(DIR0)/mpi
+DIRL = $(DIR0)
+INCDIR  = -I$(DIRI) -I$(DIRM)
+LDFLAGS = -L$(DIRL)
+LIBS = -lm -l$(LIBNAME) -l$(LIBMPI)
+LIBRARY = $(DIRL)/lib$(LIBNAME).a $(DIRL)/lib$(LIBMPI).a 
+TARGET = a.out
+OBJS = main.o mhd_fd3d.o boundary.o
+DATADIR = dat
+
+.PHONY : all
+.PHONY : clean
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(MPICC) $(OBJS) $(CFLAGS) $(LIBS) $(LDFLAGS) $(INCDIR) -o $(TARGET)
+
+%.o: %.c
+	$(MPICC) -c $< $(CFLAGS) $(LIBS) $(LDFLAGS) $(INCDIR) -o $@
+%.o: %.cpp
+	$(MPICC) -c $< $(CFLAGS) $(LIBS) $(LDFLAGS) $(INCDIR) -o $@
+
+$(LIBRARY):
+	cd $(DIRL); make
+
+clean:
+	rm -f $(TARGET) $(OBJS)
+
+cdata:
+	rm -f $(DATADIR)/*.dat
+
+main.o: $(LIBRARY) myfunc.h mhd_fd3d.o mhd_fd3d.h boundary.o boundary.h dataio.hpp get.hpp global.hpp init.hpp new_delete.hpp
+mhd_fd3d.o: $(LIBRARY) mhd_fd3d.h boundary.o boundary.h
+boundary.o: $(LIBRARY) boundary.h
