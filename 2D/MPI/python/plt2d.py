@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
-def image(x,y,val,save=0,title="",cmap="jet",xlabel="x",ylabel="y"):
-    fig=plt.figure()
+def image(x,y,val,save=0,title="",cmap="jet",xlabel="x",ylabel="y",figsize=(6.4,4.8)):
+    fig=plt.figure(figsize=figsize)
     plt.axes().set_aspect("equal")
     plt.pcolormesh(x,y,val,cmap=cmap)
     plt.xlabel(xlabel)
