@@ -1,4 +1,3 @@
-#include "mpi.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -10,8 +9,6 @@
 
 #define XMESH (64)		// Number of cells in X domain
 #define YMESH (1024)		// Number of cells in Y domain
-#define MNP_X (1)		// Number of MPI processes in X
-#define MNP_Y (4)		// Number of MPI processes in Y
 #define N_OUT (50)		// Number of output
 #define DTOUT (1.0)		// Time step for output
 
@@ -31,11 +28,8 @@ namespace global
 {
   // Universal parameters (fixed)
   const int xoff=4,yoff=xoff;	// Number of ghost cells in each side
-  const int nx=XMESH/MNP_X+2*xoff,ny=YMESH/MNP_Y+2*yoff; // Number of cells in MPI domain (including offset)
+  const int nx=XMESH+2*xoff,ny=YMESH+2*yoff; // Number of cells in whole domain (including offset)
   const int nd=nx*ny;
-  const int mpi_numx=MNP_X;
-  const int mpi_numy=MNP_Y;
-  const int mnp=MNP_X*MNP_Y;
   const int nout=N_OUT;		// Number of output
   const double dtrec=DTOUT;	// Time step for output
   const double tend=dtrec*nout;	// Simulation end time
