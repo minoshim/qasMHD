@@ -131,11 +131,17 @@ void mhd_lrstate(const double *ro, const double *vx, const double *vy, const dou
   double prs[]={pr[sm2],pr[sm1],pr[ss0],pr[sp1],pr[sp2]};
 
   /* Characteristic decomposition for supersonic stencil */
-  int flg[3]={(ros[ns/2-1]*(vxs[ns/2-1]*vxs[ns/2-1]+vys[ns/2-1]*vys[ns/2-1]+vzs[ns/2-1]*vzs[ns/2-1]) > gamma*prs[ns/2-1]),
-	      (ros[ns/2+0]*(vxs[ns/2+0]*vxs[ns/2+0]+vys[ns/2+0]*vys[ns/2+0]+vzs[ns/2+0]*vzs[ns/2+0]) > gamma*prs[ns/2+0]),
-	      (ros[ns/2+1]*(vxs[ns/2+1]*vxs[ns/2+1]+vys[ns/2+1]*vys[ns/2+1]+vzs[ns/2+1]*vzs[ns/2+1]) > gamma*prs[ns/2+1])};
-  if (flg[0]+flg[1]+flg[2] != 0){
-    /* mhd_c_reconst(ros,vxs,vys,vzs,bys,bzs,prs,bx,gamma,ns,vl,vr,func_lr); */
+  /* int flg[3]={(ros[ns/2-1]*(vxs[ns/2-1]*vxs[ns/2-1]+vys[ns/2-1]*vys[ns/2-1]+vzs[ns/2-1]*vzs[ns/2-1]) > gamma*prs[ns/2-1]), */
+  /* 	      (ros[ns/2+0]*(vxs[ns/2+0]*vxs[ns/2+0]+vys[ns/2+0]*vys[ns/2+0]+vzs[ns/2+0]*vzs[ns/2+0]) > gamma*prs[ns/2+0]), */
+  /* 	      (ros[ns/2+1]*(vxs[ns/2+1]*vxs[ns/2+1]+vys[ns/2+1]*vys[ns/2+1]+vzs[ns/2+1]*vzs[ns/2+1]) > gamma*prs[ns/2+1])}; */
+  /* if (flg[0]+flg[1]+flg[2] != 0){ */
+  /*   /\* mhd_c_reconst(ros,vxs,vys,vzs,bys,bzs,prs,bx,gamma,ns,vl,vr,func_lr); *\/ */
+  /*   mhd_m_reconst(ros,vxs,vys,vzs,bys,bzs,prs,bx,gamma,ns,vl,vr,func_lr); */
+  /* } else{ */
+  /*   mhd_a_reconst(ros,vxs,vys,vzs,bys,bzs,prs,bx,gamma,ns,vl,vr,func_lr); */
+  /* } */
+  int flg=(ros[ns/2+0]*(vxs[ns/2+0]*vxs[ns/2+0]+vys[ns/2+0]*vys[ns/2+0]+vzs[ns/2+0]*vzs[ns/2+0]) > gamma*prs[ns/2+0]);
+  if (flg){
     mhd_m_reconst(ros,vxs,vys,vzs,bys,bzs,prs,bx,gamma,ns,vl,vr,func_lr);
   } else{
     mhd_a_reconst(ros,vxs,vys,vzs,bys,bzs,prs,bx,gamma,ns,vl,vr,func_lr);
