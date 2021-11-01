@@ -50,7 +50,7 @@ void init_plasma()
   }
 
   for (j=0;j<ny;j++){
-    double angle=0.5*(2.0+tanh((y[j]-s0)/lambda)-tanh((y[j]+s0)/lambda))*(angle_u-angle_l)+angle_l;
+    double angle=sqrwave2(angle_u,angle_l,(y[j]-s0)/lambda,(y[j]+s0)/lambda);
     for (i=0;i<nx;i++){
       double vx,vy,vz,cx,cy,cz,pr;
       double xm,ym;
@@ -59,8 +59,8 @@ void init_plasma()
       xm=x[i]-0.5*dx;
       ym=y[j]-0.5*dy;
 
-      ro[ss]=0.5*(2.0+tanh((y[j]-s0)/lambda)-tanh((y[j]+s0)/lambda))*(ro_u-ro_l)+ro_l;
-      vx=+vamp*(1.0+tanh((y[j]-s0)/lambda)-tanh((y[j]+s0)/lambda));
+      ro[ss]=sqrwave2(ro_u,ro_l,(y[j]-s0)/lambda,(y[j]+s0)/lambda);
+      vx=sqrwave2(vamp,-vamp,(y[j]-s0)/lambda,(y[j]+s0)/lambda);
       vy=dvy[i]*(exp(-((y[j]-s0)*(y[j]-s0))/(4*lambda*lambda))-exp(-((y[j]+s0)*(y[j]+s0))/(4*lambda*lambda)));
       vz=0.0;
 
@@ -76,7 +76,7 @@ void init_plasma()
 
       // Gravitational potential, phi_g = g0*lg*log(cosh(y/lg))
       // d(phi_g)/dy = g0*tanh(y/lg)
-      phi_g[ss]=g0*lg*log(cosh(y[j]/lg));
+      phi_g[ss]=g_potential(y[j],g0,lg,0);
       
       // Pressure is obtained by integrating the equilibrium
       pr=cal_pressure(0,y[j],pr0,1+(int)(fabs(y[j])/dy+0.5));
@@ -98,8 +98,8 @@ double cal_pressure(double y0, double y1, double pr0, int n)
   for (j=0;j<n;j++){
     double yc,roc,dphi_gc;
     yc=y0+(j+0.5)*dyc;
-    roc=0.5*(2.0+tanh((yc-s0)/lambda)-tanh((yc+s0)/lambda))*(ro_u-ro_l)+ro_l;
-    dphi_gc=g0*tanh(yc/lg);
+    roc=sqrwave2(ro_u,ro_l,(yc-s0)/lambda,(yc+s0)/lambda);
+    dphi_gc=g_potential(yc,g0,lg,1);
     ans+=-roc*dphi_gc*dyc;
   }
   return ans;

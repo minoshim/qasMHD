@@ -8,7 +8,7 @@
 #include "myfunc.h"
 
 #define XMESH (128)		// Number of cells in X domain
-#define YMESH (256)		// Number of cells in Y domain
+#define YMESH (512)		// Number of cells in Y domain
 #define N_OUT (50)		// Number of output
 #define DTOUT (0.5)		// Time step for output
 
