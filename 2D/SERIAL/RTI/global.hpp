@@ -44,7 +44,7 @@ namespace global
   const double dy=ly/YMESH;	// Spatial width in Y
   const double idx=1.0/dx;
   const double idy=1.0/dy;
-  const double gam=1.2;	// Specific heat ratio
+  const double gam=5.0/3.0;	// Specific heat ratio
   const double g0=1.0;		// Gravitational acceleration
   const double dr=((dx < dy)?dx:dy);
   const double cfl=0.4;		// CFL number
