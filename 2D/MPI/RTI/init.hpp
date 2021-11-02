@@ -22,7 +22,6 @@ void init_plasma(int mpi_rank)
   double dvy[nx];
   double stim;			// Time at node 0, used for seed of rand_noise
   unsigned seed;
-  double pr0=0.5*beta*b0*b0;
   double prmin=1e-4;
 
   if (mpi_rank == 0) stim=MPI_Wtime();

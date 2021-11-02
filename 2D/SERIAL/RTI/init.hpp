@@ -34,7 +34,6 @@ void init_plasma()
   int i,j,ss;
   double dvy[nx];
   unsigned seed;
-  double pr0=0.5*beta*b0*b0;
   double prmin=1e-4;
 
   seed=(unsigned)time(NULL);
