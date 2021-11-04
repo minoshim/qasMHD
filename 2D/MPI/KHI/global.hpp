@@ -15,7 +15,7 @@
 #define N_OUT (50)		// Number of output
 #define DTOUT (2.0)		// Time step for output
 
-#define RANDOM (0)		// Flag for random perturbation (see init.hpp)
+#define RANDOM (0)		// Flag for random perturbation to vy (see init.hpp)
 
 int dnxs[8]={0,0,0,0,0,0,0,0};
 int dnys[8]={+1,+1,-1,+1,+1,-1,+1,+1};
@@ -67,10 +67,11 @@ namespace global
   const double ro_u=1.0;	// Density in upper domain
   const double ro_l=1.0;	// Density in lower domain
   const double b0=1.0;		// B field strength
+  const double pr0=0.5*beta*b0*b0; // Pressure
   const double dv=0.01;		// Perturbation amplitude
 
   // Tentative parameters
-  double cf=sqrt((1.0+0.5*gam*beta)*b0*b0/fmin(ro_u,ro_l));
+  double cf=sqrt((gam*pr0+b0*b0)/fmin(ro_u,ro_l));
   double vmax=vamp+cf;	// Rough estimate of vfast+vbulk
   double dt=cfl*dr/vmax;	// Time step
   int nmax=(int)(tend/dt+0.5);	// Number of maximum iteration

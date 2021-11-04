@@ -61,7 +61,7 @@ void init_plasma(int mpi_rank)
 	by[ss]=cy=0.0;
 	bz[ss]=cz=b0*sin(angle*dtor);
       }
-      pr=0.5*beta*(cx*cx+cy*cy+cz*cz);
+      pr=pr0;
 
       mhd_cnsvt(ro[ss],vx,vy,vz,cx,cy,cz,pr,&mx[ss],&my[ss],&mz[ss],&en[ss],gam);      
     }
