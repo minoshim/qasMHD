@@ -9,6 +9,8 @@ double minmod(double a, double b); /* return minmod(a,b) */
 
 double minmod3(double a, double b, double c); /* return minmod(a,b,c) */
 
+double rand_noise(const double *params, unsigned seed); /* return uniform random distribution (params[0] +- paramas[1]) */
+
 void cpy_array(double *a, const double *b, int n); /* copy b to a. n = length */
 
 void conv_d2f(float *valo, const double *vali, int n); /* convert double (vali) to single (valo) presicion */

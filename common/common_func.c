@@ -25,6 +25,16 @@ double minmod3(double a, double b, double c)
 	 +max(min(min(a,b),c),0));
 }
 
+double rand_noise(const double *params, unsigned seed)
+{
+  static int r_flag=0;
+  if (r_flag == 0){
+    srandom(seed);
+    r_flag=1;
+  }
+  return(params[0]+params[1]*((double)random()/RAND_MAX-0.5)*2.0);
+}
+
 void cpy_array(double *a, const double *b, int n)
 {
   int i;
