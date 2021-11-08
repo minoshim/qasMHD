@@ -6,4 +6,6 @@
 #include "mhd_fd3d.h"
 #include "boundary.h"
 
+/* Define routines used in main program */
+
 #endif
