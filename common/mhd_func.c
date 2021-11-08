@@ -122,13 +122,13 @@ void mhd_lrstate(const double *ro, const double *vx, const double *vy, const dou
   sp1=+1*offset;
   sp2=+2*offset;
   /* Primitive variables in the stencil */
-  double ros[]={ro[sm2],ro[sm1],ro[ss0],ro[sp1],ro[sp2]};
-  double vxs[]={vx[sm2],vx[sm1],vx[ss0],vx[sp1],vx[sp2]};
-  double vys[]={vy[sm2],vy[sm1],vy[ss0],vy[sp1],vy[sp2]};
-  double vzs[]={vz[sm2],vz[sm1],vz[ss0],vz[sp1],vz[sp2]};
-  double bys[]={by[sm2],by[sm1],by[ss0],by[sp1],by[sp2]};
-  double bzs[]={bz[sm2],bz[sm1],bz[ss0],bz[sp1],bz[sp2]};
-  double prs[]={pr[sm2],pr[sm1],pr[ss0],pr[sp1],pr[sp2]};
+  double ros[ns]={ro[sm2],ro[sm1],ro[ss0],ro[sp1],ro[sp2]};
+  double vxs[ns]={vx[sm2],vx[sm1],vx[ss0],vx[sp1],vx[sp2]};
+  double vys[ns]={vy[sm2],vy[sm1],vy[ss0],vy[sp1],vy[sp2]};
+  double vzs[ns]={vz[sm2],vz[sm1],vz[ss0],vz[sp1],vz[sp2]};
+  double bys[ns]={by[sm2],by[sm1],by[ss0],by[sp1],by[sp2]};
+  double bzs[ns]={bz[sm2],bz[sm1],bz[ss0],bz[sp1],bz[sp2]};
+  double prs[ns]={pr[sm2],pr[sm1],pr[ss0],pr[sp1],pr[sp2]};
 
   /* Characteristic decomposition for supersonic stencil */
   /* int flg[3]={(ros[ns/2-1]*(vxs[ns/2-1]*vxs[ns/2-1]+vys[ns/2-1]*vys[ns/2-1]+vzs[ns/2-1]*vzs[ns/2-1]) > gamma*prs[ns/2-1]), */
@@ -175,11 +175,11 @@ void mhd_lr_fb(const double *vx, const double *vy, const double *bx, const doubl
   ss0=0;
   sp1=+1*offset;
   sp2=+2*offset;
-  double vxs[]={vx[sm2],vx[sm1],vx[ss0],vx[sp1],vx[sp2]};
-  double vys[]={vy[sm2],vy[sm1],vy[ss0],vy[sp1],vy[sp2]};
-  double bxs[]={bx[sm2],bx[sm1],bx[ss0],bx[sp1],bx[sp2]};
-  double bys[]={by[sm2],by[sm1],by[ss0],by[sp1],by[sp2]};
-  double val[]={bys[0]*vxs[0],bys[1]*vxs[1],bys[2]*vxs[2],bys[3]*vxs[3],bys[4]*vxs[4]};
+  double vxs[ns]={vx[sm2],vx[sm1],vx[ss0],vx[sp1],vx[sp2]};
+  double vys[ns]={vy[sm2],vy[sm1],vy[ss0],vy[sp1],vy[sp2]};
+  double bxs[ns]={bx[sm2],bx[sm1],bx[ss0],bx[sp1],bx[sp2]};
+  double bys[ns]={by[sm2],by[sm1],by[ss0],by[sp1],by[sp2]};
+  double val[ns]={bys[0]*vxs[0],bys[1]*vxs[1],bys[2]*vxs[2],bys[3]*vxs[3],bys[4]*vxs[4]};
   double fl[2],fr[2];
   func_lr(&val[ns/2],&fl[0],&fr[0]);
   func_lr(&vys[ns/2],&fl[1],&fr[1]);
@@ -200,7 +200,7 @@ void mhd_lr_single(const double *f, int offset,
   ss0=0;
   sp1=+1*offset;
   sp2=+2*offset;
-  double val[]={f[sm2],f[sm1],f[ss0],f[sp1],f[sp2]};
+  double val[ns]={f[sm2],f[sm1],f[ss0],f[sp1],f[sp2]};
   func_lr(&val[ns/2],vl,vr);
 }
 
