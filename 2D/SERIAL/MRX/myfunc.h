@@ -21,15 +21,5 @@ inline double harris_density(double x, const double *params)
   double cosh1=cosh((x-x0)/width);
   return( 1.0/(cosh1*cosh1) );
 }
-inline double rand_noise(const double *params, unsigned seed)
-{
-  /* Return uniform random distribution (params[0] +- paramas[1]) */
-  static int r_flag=0;
-  if (r_flag == 0){
-    srandom(seed);
-    r_flag=1;
-  }
-  return(params[0]+params[1]*((double)random()/RAND_MAX-0.5)*2.0);
-}
 
 #endif
