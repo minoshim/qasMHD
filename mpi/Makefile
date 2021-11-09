@@ -9,7 +9,7 @@ OBJS = common_mpi.o
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	ar -r $(TARGET) $(OBJS)
+	ar -r $@ $^
 
 %.o: %.c
 	$(MPICC) -c $< $(CFLAGS) -o $@

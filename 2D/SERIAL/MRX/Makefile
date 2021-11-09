@@ -16,7 +16,7 @@ DATADIR = dat
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(OBJS) $(CFLAGS) $(LIBS) $(LDFLAGS) $(INCDIR) -o $(TARGET)
+	$(CC) $^ $(CFLAGS) $(LIBS) $(LDFLAGS) $(INCDIR) -o $@
 
 %.o: %.c
 	$(CC) -c $< $(CFLAGS) $(LIBS) $(LDFLAGS) $(INCDIR) -o $@

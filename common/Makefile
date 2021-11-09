@@ -10,7 +10,7 @@ OBJS = common_func.o common_interp.o mhd_eigen.o mhd_flux.o mhd_func.o
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	ar -r $(TARGET) $(OBJS)
+	ar -r $@ $^
 
 %.o: %.c
 	$(CC) -c $< $(CFLAGS) $(LIBS) -o $@
