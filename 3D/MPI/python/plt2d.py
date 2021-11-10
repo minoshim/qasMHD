@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 def image(x,y,val,save=0,title="",cmap="jet",xlabel="x",ylabel="y",figsize=(6.4,4.8)):
     fig=plt.figure(figsize=figsize)
     plt.axes().set_aspect("equal")
-    plt.pcolormesh(x,y,val,cmap=cmap)
+    plt.pcolormesh(x,y,val,cmap=cmap,shading='auto')
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
@@ -21,20 +21,20 @@ def imagex3(x,y,z,val,save=0,title="",cmap="jet"):
 
     plt.subplot(1,3,1)
     tmp=0.5*(val[nz//2-1,:,:]+val[nz//2,:,:])
-    plt.pcolormesh(x,y,tmp,cmap=cmap)
+    plt.pcolormesh(x,y,tmp,cmap=cmap,shading='auto')
     plt.xlabel("x")
     plt.ylabel("y")
 
     plt.subplot(1,3,2)
     tmp=0.5*(val[:,:,nx//2-1]+val[:,:,nx//2])
-    plt.pcolormesh(y,z,tmp,cmap=cmap)
+    plt.pcolormesh(y,z,tmp,cmap=cmap,shading='auto')
     plt.xlabel("y")
     plt.ylabel("z")
     plt.title(title)
     
     plt.subplot(1,3,3)
     tmp=0.5*(val[:,ny//2-1,:]+val[:,ny//2,:])
-    plt.pcolormesh(x,z,tmp,cmap=cmap)
+    plt.pcolormesh(x,z,tmp,cmap=cmap,shading='auto')
     plt.xlabel("x")
     plt.ylabel("z")
 
