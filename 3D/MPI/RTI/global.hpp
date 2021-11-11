@@ -21,9 +21,9 @@
 
 int dnxs[8]={0,0,0,0,0,0,0,0};
 int dnys[8]={0,0,0,0,0,0,0,0};
-int dnzs[8]={+1,+1,+1,+1,+1,+1,+1,+1};
+int dnzs[8]={+2,+2,+2,+2,+2,+2,+2,+2};
 // Boundary condition flag for ro,mx,my,mz,bx,by,bz,en (be sure of variable order)
-// 0=Periodic, +1=Neumann, -1=Dirichlet
+// 0=Periodic, +1=Neumann, -1=Dirichlet, +2=Open, -2=Zero-fix
 int stxs[8]={0,0,0,0,1,0,0,0};
 int stys[8]={0,0,0,0,0,1,0,0};
 int stzs[8]={0,0,0,0,0,0,1,0};

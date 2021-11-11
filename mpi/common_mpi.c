@@ -125,7 +125,7 @@ void mpi_sdrv2d(double *f[], int nn, int nx, int ny, int xoff, int yoff,
 
 void mpi_xbc2d(double *f, int nx, int ny, int xoff, int yoff, int st, int dn,
 	       int mpi_rank, int mpi_numx, int mpi_numy)
-/* 2D X Dirichlet or Neumann BC under MPI */
+/* 2D X BC under MPI */
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center) */
 /* dn: Factor of Dirichlet (-1), Neumann (+1), Zero-fix (-2), Open (+2). if dn==0, nothing to do */
 {
@@ -161,7 +161,7 @@ void mpi_xbc2d(double *f, int nx, int ny, int xoff, int yoff, int st, int dn,
 
 void mpi_ybc2d(double *f, int nx, int ny, int xoff, int yoff, int st, int dn,
 	       int mpi_rank, int mpi_numx, int mpi_numy)
-/* 2D Y Dirichlet or Neumann BC under MPI */
+/* 2D Y BC under MPI */
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center) */
 /* dn: Factor of Dirichlet (-1), Neumann (+1), Zero-fix (-2), Open (+2). if dn==0, nothing to do */
 {
@@ -391,13 +391,13 @@ void mpi_sdrv3d(double *f[], int nn, int nx, int ny, int nz, int xoff, int yoff,
 
 void mpi_xbc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, int st, int dn,
 	       int mpi_rank, int mpi_numx, int mpi_numy, int mpi_numz)
-/* 3D X Dirichlet or Neumann BC under MPI */
+/* 3D X BC under MPI */
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center) */
-/* dn: Factor of Dirichlet (-1) or Neumann (+1). if dn==0, nothing to do */
+/* dn: Factor of Dirichlet (-1), Neumann (+1), Zero-fix (-2), Open (+2). if dn==0, nothing to do */
 {
-  if (dn != 0){
-    int i,j,k;
-    int m_xy=mpi_numx*mpi_numy;
+  int i,j,k;
+  int m_xy=mpi_numx*mpi_numy;
+  if (abs(dn) == 1){
     /* Left */
     if (((mpi_rank%m_xy)%mpi_numx) == 0){
       for (k=0;k<nz;k++){
@@ -414,18 +414,35 @@ void mpi_xbc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, 
         }
       }
     }
+  } else if (abs(dn) == 2){
+    /* Left */
+    if (((mpi_rank%m_xy)%mpi_numx) == 0){
+      for (k=0;k<nz;k++){
+	for (j=0;j<ny;j++){
+	  for (i=0;i<xoff;i++) f[nx*(ny*k+j)+i]=0.25*(2+dn)*f[nx*(ny*k+j)+xoff];
+	}
+      }
+    }
+    /* Right */
+    if (((mpi_rank%m_xy)%mpi_numx) == (mpi_numx-1)){
+      for (k=0;k<nz;k++){
+        for (j=0;j<ny;j++){
+	  for (i=0;i<xoff-st;i++) f[nx*(ny*k+j)+(nx-1-i)]=0.25*(2+dn)*f[nx*(ny*k+j)+(nx-1-xoff+st)];
+        }
+      }
+    }
   }
 }
 
 void mpi_ybc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, int st, int dn,
 	       int mpi_rank, int mpi_numx, int mpi_numy, int mpi_numz)
-/* 3D Y Dirichlet or Neumann BC under MPI */
+/* 3D Y BC under MPI */
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center) */
-/* dn: Factor of Dirichlet (-1) or Neumann (+1). if dn==0, nothing to do */
+/* dn: Factor of Dirichlet (-1), Neumann (+1), Zero-fix (-2), Open (+2). if dn==0, nothing to do */
 {
-  if (dn != 0){
-    int i,j,k;
-    int m_xy=mpi_numx*mpi_numy;
+  int i,j,k;
+  int m_xy=mpi_numx*mpi_numy;
+  if (abs(dn) == 1){
     /* Left */
     if (((mpi_rank%m_xy)/mpi_numx) == 0){
       for (k=0;k<nz;k++){
@@ -442,18 +459,35 @@ void mpi_ybc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, 
 	}
       }
     }
+  } else if (abs(dn) == 2){
+    /* Left */
+    if (((mpi_rank%m_xy)/mpi_numx) == 0){
+      for (k=0;k<nz;k++){
+	for (j=0;j<yoff;j++){
+	  for (i=0;i<nx;i++) f[nx*(ny*k+j)+i]=0.25*(2+dn)*f[nx*(ny*k+yoff)+i];
+	}
+      }
+    }
+    /* Right */
+    if (((mpi_rank%m_xy)/mpi_numx) == (mpi_numy-1)){
+      for (k=0;k<nz;k++){
+	for (j=0;j<yoff-st;j++){
+	  for (i=0;i<nx;i++) f[nx*(ny*k+(ny-1-j))+i]=0.25*(2+dn)*f[nx*(ny*k+(ny-1-yoff+st))+i];
+	}
+      }
+    }
   }
 }
 
 void mpi_zbc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, int st, int dn,
 	       int mpi_rank, int mpi_numx, int mpi_numy, int mpi_numz)
-/* 3D Z Dirichlet or Neumann BC under MPI */
+/* 3D Z BC under MPI */
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center) */
-/* dn: Factor of Dirichlet (-1) or Neumann (+1). if dn==0, nothing to do */
+/* dn: Factor of Dirichlet (-1), Neumann (+1), Zero-fix (-2), Open (+2). if dn==0, nothing to do */
 {
-  if (dn != 0){
-    int i,j,k;
-    int m_xy=mpi_numx*mpi_numy;
+  int i,j,k;
+  int m_xy=mpi_numx*mpi_numy;
+  if (abs(dn) == 1){
     /* Left */
     if ((mpi_rank/m_xy) == 0){
       for (k=0;k<zoff;k++){
@@ -467,6 +501,23 @@ void mpi_zbc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, 
       for (k=0;k<zoff-st;k++){
 	for (j=0;j<ny;j++){
 	  for (i=0;i<nx;i++) f[nx*(ny*(nz-1-k)+j)+i]=dn*f[nx*(ny*((nz-2*zoff+st)+k)+j)+i];
+	}
+      }
+    }
+  } else if (abs(dn) == 2){
+    /* Left */
+    if ((mpi_rank/m_xy) == 0){
+      for (k=0;k<zoff;k++){
+	for (j=0;j<ny;j++){
+	  for (i=0;i<nx;i++) f[nx*(ny*k+j)+i]=0.25*(2+dn)*f[nx*(ny*zoff+j)+i];
+	}
+      }
+    }
+    /* Right */
+    if ((mpi_rank/m_xy) == (mpi_numz-1)){
+      for (k=0;k<zoff-st;k++){
+	for (j=0;j<ny;j++){
+	  for (i=0;i<nx;i++) f[nx*(ny*(nz-1-k)+j)+i]=0.25*(2+dn)*f[nx*(ny*(nz-1-zoff+st)+j)+i];
 	}
       }
     }
