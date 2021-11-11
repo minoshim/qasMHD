@@ -7,7 +7,7 @@ void mpi_sdrv2d(double *f[], int nn, int nx, int ny, int xoff, int yoff,
 		int mpi_rank, int mpi_numx, int mpi_numy)
 /* MPI SendRecv for 2D variables */
 /* Set dn=0 for Periodic boundary */
-/* For Neumann or Dirichlet condition, call mpi_xbc2d and mpi_ybc2d later */
+/* For other condition, call mpi_xbc2d and mpi_ybc2d later */
 {
   int i,j,n;
   int mpi_tag=0;
@@ -127,10 +127,10 @@ void mpi_xbc2d(double *f, int nx, int ny, int xoff, int yoff, int st, int dn,
 	       int mpi_rank, int mpi_numx, int mpi_numy)
 /* 2D X Dirichlet or Neumann BC under MPI */
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center) */
-/* dn: Factor of Dirichlet (-1) or Neumann (+1). if dn==0, nothing to do */
+/* dn: Factor of Dirichlet (-1), Neumann (+1), Zero-fix (-2), Open (+2). if dn==0, nothing to do */
 {
-  if (dn != 0){
-    int i,j;
+  int i,j;
+  if (abs(dn) == 1){
     /* Left */
     if ((mpi_rank % mpi_numx) == 0){
       for (j=0;j<ny;j++){
@@ -143,6 +143,19 @@ void mpi_xbc2d(double *f, int nx, int ny, int xoff, int yoff, int st, int dn,
 	for (i=0;i<xoff-st;i++) f[nx*j+(nx-1-i)]=dn*f[nx*j+(nx-2*xoff+st)+i];
       }
     }
+  } else if (abs(dn) == 2){
+    /* Left */
+    if ((mpi_rank % mpi_numx) == 0){
+      for (j=0;j<ny;j++){
+	for (i=0;i<xoff;i++) f[nx*j+i]=0.25*(2+dn)*f[nx*j+xoff];
+      }
+    }
+    /* Right */
+    if ((mpi_rank % mpi_numx) == (mpi_numx-1)){
+      for (j=0;j<ny;j++){
+	for (i=0;i<xoff-st;i++) f[nx*j+(nx-1-i)]=0.25*(2+dn)*f[nx*j+(nx-1-xoff+st)];
+      }
+    }
   }
 }
 
@@ -150,10 +163,10 @@ void mpi_ybc2d(double *f, int nx, int ny, int xoff, int yoff, int st, int dn,
 	       int mpi_rank, int mpi_numx, int mpi_numy)
 /* 2D Y Dirichlet or Neumann BC under MPI */
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center) */
-/* dn: Factor of Dirichlet (-1) or Neumann (+1). if dn==0, nothing to do */
+/* dn: Factor of Dirichlet (-1), Neumann (+1), Zero-fix (-2), Open (+2). if dn==0, nothing to do */
 {
-  if (dn != 0){
-    int i,j;
+  int i,j;
+  if (abs(dn) == 1){
     /* Left */
     if (mpi_rank/mpi_numx == 0){
       for (j=0;j<yoff;j++){
@@ -166,6 +179,19 @@ void mpi_ybc2d(double *f, int nx, int ny, int xoff, int yoff, int st, int dn,
 	for (i=0;i<nx;i++) f[nx*(ny-1-j)+i]=dn*f[nx*((ny-2*yoff+st)+j)+i];
       }
     }
+  } else if (abs(dn) == 2){
+    /* Left */
+    if (mpi_rank/mpi_numx == 0){
+      for (j=0;j<yoff;j++){
+	for (i=0;i<nx;i++) f[nx*j+i]=0.25*(2+dn)*f[nx*yoff+i];
+      }
+    }
+    /* Right */
+    if (mpi_rank/mpi_numx == (mpi_numy-1)){
+      for (j=0;j<yoff-st;j++){
+	for (i=0;i<nx;i++) f[nx*(ny-1-j)+i]=0.25*(2+dn)*f[nx*(ny-1-yoff+st)+i];
+      }
+    }
   }
 }
 
@@ -174,7 +200,7 @@ void mpi_sdrv3d(double *f[], int nn, int nx, int ny, int nz, int xoff, int yoff,
 		int mpi_rank, int mpi_numx, int mpi_numy, int mpi_numz)
 /* MPI SendRecv for 3D variables */
 /* Set dn=0 for Periodic boundary */
-/* For Neumann or Dirichlet condition, call mpi_x(y,z)bc3d later */
+/* For other condition, call mpi_x(y,z)bc3d later */
 {
   int i,j,k,n;
   int m_xy=mpi_numx*mpi_numy;
