@@ -61,6 +61,7 @@ void rk_updt(double *f1, double f0, double df, double rkfac0, double rkfac1)
 
 void bc1d(double *f, int nx, int xoff, int dnx)
 /* 1D boundary condition */
+/* dn: 0 for periodic, -1 for Dirichlet, +1 for Neumann, -2 for zero-fix, +2 for open condition */
 {
   int i;
   if (dnx == 0){
@@ -69,11 +70,17 @@ void bc1d(double *f, int nx, int xoff, int dnx)
       f[i]=f[nx-2*xoff+i];      
       f[nx-1-i]=f[2*xoff-1-i];
     }
-  } else{
+  } else if (abs(dnx) == 1){
     /* Dirichlet (dn = -1) or Neumann (dn = +1) */
     for (i=0;i<xoff;i++){
       f[i]=dnx*f[2*xoff-1-i];
       f[nx-1-i]=dnx*f[nx-2*xoff+i];
+    }
+  } else if (abs(dnx) == 2){
+    /* Zero-fix (dn = -2) or Open (dn = +2) */
+    for (i=0;i<xoff;i++){
+      f[i]=0.25*(2+dnx)*f[xoff];
+      f[nx-1-i]=0.25*(2+dnx)*f[nx-1-xoff];
     }
   }
 }
@@ -82,7 +89,7 @@ void bc2d(double *f, int nx, int ny, int xoff, int yoff,
 	  int stx, int dnx, int sty, int dny)
 /* 2D Boundary condition */
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center), else 0 */
-/* dn: 0 for periodic, -1 for Dirichlet, +1 for Neumann condition */
+/* dn: 0 for periodic, -1 for Dirichlet, +1 for Neumann, -2 for zero-fix, +2 for open condition */
 {
   int i,j;
   if (dnx == 0){
@@ -93,7 +100,7 @@ void bc2d(double *f, int nx, int ny, int xoff, int yoff,
 	f[nx*j+i]=f[nx*j+(nx-2*xoff+i)];
       }
     }
-  } else{
+  } else if (abs(dnx) == 1){
     /* Dirichlet (dn = -1) or Neumann (dn = +1) */
     for (j=0;j<ny;j++){
       for (i=0;i<xoff;i++){
@@ -103,6 +110,18 @@ void bc2d(double *f, int nx, int ny, int xoff, int yoff,
       for (i=0;i<xoff-stx;i++){
 	/* Right */
 	f[nx*j+(nx-1-i)]=dnx*f[nx*j+(nx-2*xoff+stx)+i];
+      }
+    }
+  } else if (abs(dnx) == 2){
+    /* Zero-fix (dn = -2) or Open (dn = +2) */
+    for (j=0;j<ny;j++){
+      for (i=0;i<xoff;i++){
+	/* Left */
+	f[nx*j+i]=0.25*(2+dnx)*f[nx*j+xoff];
+      }
+      for (i=0;i<xoff-stx;i++){
+	/* Right */
+	f[nx*j+(nx-1-i)]=0.25*(2+dnx)*f[nx*j+(nx-1-xoff+stx)];
       }
     }
   }
@@ -115,7 +134,7 @@ void bc2d(double *f, int nx, int ny, int xoff, int yoff,
 	f[nx*j+i]=f[nx*(ny-2*yoff+j)+i];
       }
     }
-  } else{
+  } else if (abs(dny) == 1){
     /* Dirichlet (dn = -1) or Neumann (dn = +1) */
     for (j=0;j<yoff;j++){
       for (i=0;i<nx;i++){
@@ -129,6 +148,20 @@ void bc2d(double *f, int nx, int ny, int xoff, int yoff,
 	f[nx*(ny-1-j)+i]=dny*f[nx*(ny-2*yoff+sty+j)+i];
       }
     }
+  } else if (abs(dny) == 2){
+    /* Zero-fix (dn = -2) or Open (dn = +2) */
+    for (j=0;j<yoff;j++){
+      for (i=0;i<nx;i++){
+	/* Left */
+	f[nx*j+i]=0.25*(2+dny)*f[nx*yoff+i];
+      }
+    }
+    for (j=0;j<yoff-sty;j++){
+      for (i=0;i<nx;i++){
+	/* Right */
+	f[nx*(ny-1-j)+i]=0.25*(2+dny)*f[nx*(ny-1-yoff+sty)+i];
+      }
+    }
   }
 }
 
@@ -136,7 +169,7 @@ void bc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff,
 	  int stx, int dnx, int sty, int dny, int stz, int dnz)
 /* 3D Boundary condition */
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center), else 0 */
-/* dn: 0 for periodic, -1 for Dirichlet, +1 for Neumann condition */
+/* dn: 0 for periodic, -1 for Dirichlet, +1 for Neumann, -2 for zero-fix, +2 for open condition */
 {
   int i,j,k;
   if (dnx == 0){
@@ -149,7 +182,7 @@ void bc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff,
 	}
       }
     }
-  } else{
+  } else if (abs(dnx) == 1){
     /* Dirichlet (dn = -1) or Neumann (dn = +1) */
     for (k=0;k<nz;k++){
       for (j=0;j<ny;j++){
@@ -160,6 +193,20 @@ void bc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff,
 	for (i=0;i<xoff-stx;i++){
 	  /* Right */
 	  f[nx*(ny*k+j)+(nx-1-i)]=dnx*f[nx*(ny*k+j)+(nx-2*xoff+stx+i)];
+	}
+      }
+    }
+  } else if (abs(dnx) == 2){
+    /* Zero-fix (dn = -2) or Open (dn = +2) */
+    for (k=0;k<nz;k++){
+      for (j=0;j<ny;j++){
+	for (i=0;i<xoff;i++){
+	  /* Left */
+	  f[nx*(ny*k+j)+(     i)]=0.25*(2+dnx)*f[nx*(ny*k+j)+(         xoff)];
+	}
+	for (i=0;i<xoff-stx;i++){
+	  /* Right */
+	  f[nx*(ny*k+j)+(nx-1-i)]=0.25*(2+dnx)*f[nx*(ny*k+j)+(nx-1-xoff+stx)];
 	}
       }
     }
@@ -175,7 +222,7 @@ void bc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff,
 	}
       }
     }
-  } else{
+  } else if (abs(dny) == 1){
     /* Dirichlet (dn = -1) or Neumann (dn = +1) */
     for (k=0;k<nz;k++){
       for (j=0;j<yoff;j++){
@@ -191,6 +238,22 @@ void bc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff,
 	}
       }
     }
+  } else if (abs(dny) == 2){
+    /* Zero-fix (dn = -2) or Open (dn = +2) */
+    for (k=0;k<nz;k++){
+      for (j=0;j<yoff;j++){
+	for (i=0;i<nx;i++){
+	  /* Left */
+	  f[nx*(ny*k+(     j))+i]=0.25*(2+dny)*f[nx*(ny*k+(         yoff))+i];
+	}
+      }
+      for (j=0;j<yoff-sty;j++){
+	for (i=0;i<nx;i++){
+	  /* Right */
+	  f[nx*(ny*k+(ny-1-j))+i]=0.25*(2+dny)*f[nx*(ny*k+(ny-1-yoff+sty))+i];
+	}
+      }
+    }
   }
 
   if (dnz == 0){
@@ -203,7 +266,7 @@ void bc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff,
 	}
       }
     }
-  } else{
+  } else if (abs(dnz) == 1){
     /* Dirichlet (dn = -1) or Neumann (dn = +1) */
     for (k=0;k<zoff;k++){
       for (j=0;j<ny;j++){
@@ -218,6 +281,24 @@ void bc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff,
 	for (i=0;i<nx;i++){
 	  /* Right */
 	  f[nx*(ny*(nz-1-k)+j)+i]=dnz*f[nx*(ny*(nz-2*zoff+stz+k)+j)+i];	  
+	}
+      }
+    }
+  } else if (abs(dnz) == 2){
+    /* Zero-fix (dn = -2) or Open (dn = +2) */
+    for (k=0;k<zoff;k++){
+      for (j=0;j<ny;j++){
+	for (i=0;i<nx;i++){
+	  /* Left */
+	  f[nx*(ny*(     k)+j)+i]=0.25*(2+dnz)*f[nx*(ny*(         zoff)+j)+i];
+	}
+      }
+    }
+    for (k=0;k<zoff-stz;k++){
+      for (j=0;j<ny;j++){
+	for (i=0;i<nx;i++){
+	  /* Right */
+	  f[nx*(ny*(nz-1-k)+j)+i]=0.25*(2+dnz)*f[nx*(ny*(nz-1-zoff+stz)+j)+i];
 	}
       }
     }

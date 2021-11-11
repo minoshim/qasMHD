@@ -23,19 +23,19 @@ void rk_updt(double *f1, double f0, double df, double rkfac0, double rkfac1);
 void bc1d(double *f, int nx, int xoff, int dnx);
 /* 1D boundary condition */
 /* xoff = number of ghost cell */
-/* dnx = 0 (periodic), -1 (dirichlet), +1 (Neumann) */
+/* dn: 0 for periodic, -1 for Dirichlet, +1 for Neumann, -2 for zero-fix, +2 for open condition */
 
 void bc2d(double *f, int nx, int ny, int xoff, int yoff,
 	  int stx, int dnx, int sty, int dny);
 /* 2D Boundary condition */
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center), else 0 */
-/* dn: 0 for periodic, -1 for Dirichlet, +1 for Neumann condition */
+/* dn: 0 for periodic, -1 for Dirichlet, +1 for Neumann, -2 for zero-fix, +2 for open condition */
 
 void bc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff,
 	  int stx, int dnx, int sty, int dny, int stz, int dnz);
 /* 3D Boundary condition */
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center), else 0 */
-/* dn: 0 for periodic, -1 for Dirichlet, +1 for Neumann condition */
+/* dn: 0 for periodic, -1 for Dirichlet, +1 for Neumann, -2 for zero-fix, +2 for open condition */
 
 void bkup_load(double *p[], int nm, int nd, int *n, int *cnt, double *tim, double *dt, double *trec, int mpi_rank, const char *fildir);
 void bkup_save(double *p[], int nm, int nd, int n, int cnt, double tim, double dt, double trec, int mpi_rank, const char *fildir);
