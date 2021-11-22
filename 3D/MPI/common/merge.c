@@ -216,8 +216,8 @@ int main(int argc, char *argv[])
   int mpi=mpix*mpiy*mpiz,mxy=mpix*mpiy,flag;
   float *val[smax],*merge_val[smax];
   for (s=0;s<smax;s++){
-    val[s]=(float*)malloc(sizeof(double)*nx*ny*nz);
-    merge_val[s]=(float*)malloc(sizeof(double)*nxall*nyall*nzall);
+    val[s]=(float*)malloc(sizeof(float)*nx*ny*nz);
+    merge_val[s]=(float*)malloc(sizeof(float)*nxall*nyall*nzall);
   }
   
   for (n=nstt;n<nt;n++){
