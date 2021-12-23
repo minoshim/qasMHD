@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-def image(x,y,val,save=0,title="",cmap="jet",xlabel="x",ylabel="y",figsize=(6.4,4.8)):
+def image(x,y,val,save=0,title="",cmap="jet",xlabel="x",ylabel="y",figsize=(6.4,4.8),filename="result.eps"):
     fig=plt.figure(figsize=figsize)
     plt.axes().set_aspect("equal")
     plt.pcolormesh(x,y,val,cmap=cmap,shading='auto')
@@ -9,7 +9,7 @@ def image(x,y,val,save=0,title="",cmap="jet",xlabel="x",ylabel="y",figsize=(6.4,
     plt.title(title)
     plt.colorbar()
     if (save):
-        fig.savefig("result.eps")
+        fig.savefig(filename)
     plt.show(block=False) # console non-blocked
     return 0
 
