@@ -29,4 +29,9 @@ double cal_fcen_4th(const double *f); /* 4th order */
 double cal_df_2nd(const double *f); /* 2nd order */
 double cal_df_4th(const double *f); /* 4th order */
 
+/* 2nd central difference */
+/* f = address @ i, Return = 2nd derivative @ i */
+double cal_d2f_2nd(const double *f); /* 2nd order */
+double cal_d2f_4th(const double *f); /* 4th order */
+
 #endif

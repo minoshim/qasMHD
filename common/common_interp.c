@@ -162,3 +162,14 @@ double cal_df_4th(const double *f) /* 4th order */
 {
   return((27.0*(f[1]-f[0])-(f[2]-f[-1]))/24.0);
 }
+
+/* 2nd central difference */
+/* f = address @ i, Return = 2nd derivative @ i */
+double cal_d2f_2nd(const double *f) /* 2nd order */
+{
+  return ( (f[1]+f[-1])-2.0*f[0] );
+}
+double cal_d2f_4th(const double *f) /* 4th order */
+{
+  return ( (-(f[2]+f[-2])+16.0*(f[1]+f[-1])-30.0*f[0])/12.0 );
+}
