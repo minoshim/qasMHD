@@ -1,4 +1,5 @@
 #include "emhd_func1d.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <omp.h>
@@ -38,6 +39,7 @@ void emhd_q2b(double *q, double *b, double de, double dx, int nx, int xoff, int 
   int cnt;
   cnt=emhd_q2b_cg(q,b,de,dx,nx,xoff,dnx);
   /* cnt=emhd_q2b_gs(q,b,de,dx,nx,xoff,dnx); */
+  if (!cnt) puts("emhd_q2b: Not converged!!");
 }
 
 int emhd_q2b_cg(double *q, double *b, double de, double dx, int nx, int xoff, int dnx)
@@ -111,7 +113,7 @@ int emhd_q2b_cg(double *q, double *b, double de, double dx, int nx, int xoff, in
   free(pk);
   free(ap);
 
-  return cnt;
+  return cmax-cnt;		/* If zero, iteration does NOT converge */
 }
 
 int emhd_q2b_gs(double *q, double *b, double de, double dx, int nx, int xoff, int dnx)
@@ -160,6 +162,6 @@ int emhd_q2b_gs(double *q, double *b, double de, double dx, int nx, int xoff, in
     }
   } while( (anorm > eps*anormf) && (++cnt < cmax) );
 
-  return cnt;
+  return cmax-cnt;		/* If zero, iteration does NOT converge */
 }
   
