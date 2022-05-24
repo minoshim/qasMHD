@@ -73,4 +73,4 @@ data2=np.array([ro,vx,vy,vz,pr,bx,by,bz])
 
 # #Plot
 val=pr/ro
-a=plt2d.image(x=x,y=y,val=val,save=0,title=f"t={t[sst]:.2f}")
+a=plt2d.image(x=x,y=y,val=val,save=0,title=f"t={t[sst]:.2f}",show=1)
