@@ -14,7 +14,7 @@ void (*riemann[])(double, double, double, double, double, double, double,
 		  double, double, const double*,
 		  double*, double*, double*, double*, double*, double*, double*)={calc_flux_roe,calc_flux_hlld,calc_flux_lhlld,calc_flux_mlau};
 /* Interpolation function */
-void (*interpol[])(const double *f, double *fl, double *fr)={cal_flr_1st,muscl_mm_cal_flr,wcns3_cal_flr,wcns4_cal_flr};
+void (*interpol[])(const double *f, double *fl, double *fr)={cal_flr_1st,muscl_kr_cal_flr,wcns3_cal_flr,wcns4_cal_flr};
 /* Spatial difference */
 double (*df1[])(const double *f)={cal_df_2nd,cal_df_2nd,cal_df_4th,cal_df_4th};
 
