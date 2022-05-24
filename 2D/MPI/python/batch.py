@@ -55,4 +55,4 @@ pr=(gam-1)*(data[7,:,:]-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
 
 # #Plot
 val=pr/ro
-a=plt2d.image(x=x,y=y,val=val,save=0,title=f"t={t[sst]:.2f}")
+a=plt2d.image(x=x,y=y,val=val,save=0,title=f"t={t[sst]:.2f}",show=1)
