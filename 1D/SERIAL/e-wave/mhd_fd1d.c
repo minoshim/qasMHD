@@ -134,6 +134,7 @@ void mhd_fd1d(double *ro, double *mx, double *my, double *mz,
       }
 
       /* Modification for extended MHD */
+      int dnx[]={-dnxs[4],-dnxs[5]};
 #ifdef _OPENMP
 #pragma omp for
 #endif
@@ -146,11 +147,10 @@ void mhd_fd1d(double *ro, double *mx, double *my, double *mz,
 	enew[1*nx+ss]=eorg[1*nx+ss]; /* +ey */
       }
 #ifdef _OPENMP
-#pragma omp single
+#pragma omp for
 #endif
-      {
-	emhd_eorg2enew(&eorg[0*nx],&enew[0*nx],rtmp,de,dx,nx,xoff,-dnxs[4]);
-	emhd_eorg2enew(&eorg[1*nx],&enew[1*nx],rtmp,de,dx,nx,xoff,-dnxs[5]);
+      for (i=0;i<2;i++){
+	emhd_eorg2enew(&eorg[i*nx],&enew[i*nx],rtmp,de,dx,nx,xoff,dnx[i]);
       }
 #ifdef _OPENMP
 #pragma omp for
