@@ -39,8 +39,8 @@ void emhd_enew2eorg(double *enew, double *eorg, const double *ro,
   /* Boundary condition for Enew */
   boundary(&p[1],1,nx,ny,xoff,yoff,stxs,dnxs,stys,dnys,mpi_rank,mpi_numx,mpi_numy);
 
-  for (int j=yoff;j<ny-yoff;j++){
-    for (int i=xoff;i<nx-xoff;i++){
+  for (int j=yoff;j<ny-yoff+sty;j++){
+    for (int i=xoff;i<nx-xoff+stx;i++){
       int ss=nx*j+i;
       double val0[]={enew[ss-2   ],enew[ss-1   ],enew[ss],enew[ss+1   ],enew[ss+2   ]};
       double val1[]={enew[ss-2*nx],enew[ss-1*nx],enew[ss],enew[ss+1*nx],enew[ss+2*nx]};
@@ -94,8 +94,8 @@ int emhd_eorg2enew_cg(double *eorg, double *enew, const double *ro,
   /* Initialize */
   boundary(&p[1],1,nx,ny,xoff,yoff,stxs,dnxs,stys,dnys,mpi_rank,mpi_numx,mpi_numy); /* B.C. for Enew */
   numer=0.0;
-  for (j=yoff;j<ny-yoff;j++){
-    for (i=xoff;i<nx-xoff;i++){
+  for (j=yoff;j<ny-yoff+sty;j++){
+    for (i=xoff;i<nx-xoff+stx;i++){
       ss=nx*j+i;
       double val0[]={enew[ss-2   ],enew[ss-1   ],enew[ss],enew[ss+1   ],enew[ss+2   ]};
       double val1[]={enew[ss-2*nx],enew[ss-1*nx],enew[ss],enew[ss+1*nx],enew[ss+2*nx]};
@@ -116,8 +116,8 @@ int emhd_eorg2enew_cg(double *eorg, double *enew, const double *ro,
 
     boundary(&p[2],1,nx,ny,xoff,yoff,stxs,dnxs,stys,dnys,mpi_rank,mpi_numx,mpi_numy); /* B.C. for Pk */
     denom=0.0;
-    for (j=yoff;j<ny-yoff;j++){
-      for (i=xoff;i<nx-xoff;i++){
+    for (j=yoff;j<ny-yoff+sty;j++){
+      for (i=xoff;i<nx-xoff+stx;i++){
 	ss=nx*j+i;
 	double val0[]={pk[ss-2   ],pk[ss-1   ],pk[ss],pk[ss+1   ],pk[ss+2   ]};
 	double val1[]={pk[ss-2*nx],pk[ss-1*nx],pk[ss],pk[ss+1*nx],pk[ss+2*nx]};
@@ -131,8 +131,8 @@ int emhd_eorg2enew_cg(double *eorg, double *enew, const double *ro,
     coef=(denom == 0)?0:numer/denom;
 
     anorm=0.0;
-    for (j=yoff;j<ny-yoff;j++){
-      for (i=xoff;i<nx-xoff;i++){
+    for (j=yoff;j<ny-yoff+sty;j++){
+      for (i=xoff;i<nx-xoff+stx;i++){
 	ss=nx*j+i;
 	enew[ss]+=coef*pk[ss];
 	rk[ss]-=coef*ap[ss];
@@ -145,8 +145,8 @@ int emhd_eorg2enew_cg(double *eorg, double *enew, const double *ro,
 
     denom=numer;
     numer=0.0;
-    for (j=yoff;j<ny-yoff;j++){
-      for (i=xoff;i<nx-xoff;i++){
+    for (j=yoff;j<ny-yoff+sty;j++){
+      for (i=xoff;i<nx-xoff+stx;i++){
 	ss=nx*j+i;
 	numer+=rk[ss]*rk[ss];
       }
@@ -156,8 +156,8 @@ int emhd_eorg2enew_cg(double *eorg, double *enew, const double *ro,
     numer=dtmpa[0];
     coef=(denom == 0)?0:numer/denom;
     
-    for (j=yoff;j<ny-yoff;j++){
-      for (i=xoff;i<nx-xoff;i++){
+    for (j=yoff;j<ny-yoff+sty;j++){
+      for (i=xoff;i<nx-xoff+stx;i++){
 	ss=nx*j+i;
 	pk[ss]=rk[ss]+coef*pk[ss];
       }
