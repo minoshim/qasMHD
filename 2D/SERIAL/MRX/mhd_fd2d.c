@@ -492,7 +492,7 @@ void mhd_diff2d(double *p[], double dt, double dx, double dy,
 	vz[ss]=mz[ss]*iro;
       }
       
-      /* Resistive E-field at cell center */
+      /* Resistive E-field at CT grid */
 #ifdef _OPENMP
 #pragma omp for
 #endif
