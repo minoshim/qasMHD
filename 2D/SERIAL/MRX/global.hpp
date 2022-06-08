@@ -54,7 +54,7 @@ namespace global
   const double lambda=1.0;	// Current sheet thickness
   const double beta=0.2;	// Plasma beta @ lobe
   const double ro0=1.0;		// Density @ CS
-  const double ro1=1.0;		// Density @ lobe
+  const double ro1=0.2;		// Density @ lobe
   const double b0=1.0;		// Mag field @ lobe
   const double b1=0.05;		// Mag field perturbation by Zenitani
   const double bg=0.0;		// Guide mag field along Z

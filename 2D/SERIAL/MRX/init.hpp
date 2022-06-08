@@ -54,7 +54,8 @@ void init_plasma()
       xm=x[i]-0.5*dx;
       ym=y[j]-0.5*dy;
 
-      ro[ss]=(ro0-ro1)*harris_density(y[j],para)+ro1;
+      // ro[ss]=(ro0-ro1)*harris_density(y[j],para)+ro1;
+      ro[ss]=ro0*harris_density(y[j],para)+ro1;
 
       vx=0.0;
       vy=0.0;
