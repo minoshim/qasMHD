@@ -83,9 +83,8 @@ void mhd_fd2d(double *p[], double dt, double dx, double dy, double de,
   dvy=(double*)malloc(sizeof(double)*nxy);
 
   /* Modification for extended MHD */
-  double *rtmp,*eorg,*enew;
+  double *rtmp,*enew;
   rtmp=(double*)malloc(sizeof(double)*nxy);
-  eorg=(double*)malloc(sizeof(double)*nxy*2);
   enew=(double*)malloc(sizeof(double)*nxy*2);
   
   /* Copy current data */
@@ -260,19 +259,17 @@ void mhd_fd2d(double *p[], double dt, double dx, double dy, double de,
 	  for (i=3;i<nx-2;i++){
 	    ss=nx*j+i;
 	    rtmp[ss]=0.5*(ro[ss- 1]+ro[ss]);
-	    eorg[0*nxy+ss]=fx[nm*ss+5]+fc[ss]; /* -ez */
-	    eorg[1*nxy+ss]=fx[nm*ss+6];	       /* +ey */
-	    enew[0*nxy+ss]=eorg[0*nxy+ss];
-	    enew[1*nxy+ss]=eorg[1*nxy+ss];
+	    enew[0*nxy+ss]=fx[nm*ss+5]+fc[ss]; /* -ez */
+	    enew[1*nxy+ss]=fx[nm*ss+6];	       /* +ey */
 	  }
 	}
 #ifdef _OPENMP
 #pragma omp single
 #endif
 	{
-	  emhd_eorg2enew(&eorg[0*nxy],&enew[0*nxy],rtmp,de,dx,dy,
+	  emhd_eorg2enew(&enew[0*nxy],&enew[0*nxy],rtmp,de,dx,dy,
 			 nx,ny,xoff,yoff,stx[0],dnx[0],sty[0],dny[0],mpi_rank,mpi_numx,mpi_numy);
-	  emhd_eorg2enew(&eorg[1*nxy],&enew[1*nxy],rtmp,de,dx,dy,
+	  emhd_eorg2enew(&enew[1*nxy],&enew[1*nxy],rtmp,de,dx,dy,
 			 nx,ny,xoff,yoff,stx[1],dnx[1],sty[1],dny[1],mpi_rank,mpi_numx,mpi_numy);
 	}
 #ifdef _OPENMP
@@ -282,12 +279,12 @@ void mhd_fd2d(double *p[], double dt, double dx, double dy, double de,
 #pragma simd
 	  for (i=3;i<nx-2;i++){
 	    ss=nx*j+i;
-	    fc[ss]     =enew[0*nxy+ss]-fx[nm*ss+5]; /* -ez, central */
-	    fx[nm*ss+6]=enew[1*nxy+ss];		    /* +ey */
-	    double dey=+(enew[1*nxy+ss]-eorg[1*nxy+ss]);
-	    double dez=-(enew[0*nxy+ss]-eorg[0*nxy+ss]);
+	    double dey=+(enew[1*nxy+ss]-(fx[nm*ss+6]));
+	    double dez=-(enew[0*nxy+ss]-(fx[nm*ss+5]+fc[ss]));
 	    double bytmp=0.5*(cy[ss- 1]+cy[ss]); /* For simplicity. (func_bc can be used) */
 	    double bztmp=0.5*(cz[ss- 1]+cz[ss]);
+	    fc[ss]     =enew[0*nxy+ss]-fx[nm*ss+5]; /* -ez, central */
+	    fx[nm*ss+6]=enew[1*nxy+ss];		    /* +ey */
 	    fx[nm*ss+7]+=dey*bztmp-dez*bytmp;
 	  }
 	}
@@ -408,19 +405,17 @@ void mhd_fd2d(double *p[], double dt, double dx, double dy, double de,
 	  for (i=0;i<nx;i++){
 	    ss=nx*j+i;
 	    rtmp[ss]=0.5*(ro[ss-nx]+ro[ss]);
-	    eorg[0*nxy+ss]=fy[nm*ss+6];	       /* -ex */
-	    eorg[1*nxy+ss]=fy[nm*ss+4]+fc[ss]; /* +ez */
-	    enew[0*nxy+ss]=eorg[0*nxy+ss];
-	    enew[1*nxy+ss]=eorg[1*nxy+ss];
+	    enew[0*nxy+ss]=fy[nm*ss+6];	       /* -ex */
+	    enew[1*nxy+ss]=fy[nm*ss+4]+fc[ss]; /* +ez */
 	  }
 	}
 #ifdef _OPENMP
 #pragma omp single
 #endif
 	{
-	  emhd_eorg2enew(&eorg[0*nxy],&enew[0*nxy],rtmp,de,dx,dy,
+	  emhd_eorg2enew(&enew[0*nxy],&enew[0*nxy],rtmp,de,dx,dy,
 			 nx,ny,xoff,yoff,stx[0],dnx[0],sty[0],dny[0],mpi_rank,mpi_numx,mpi_numy);
-	  emhd_eorg2enew(&eorg[1*nxy],&enew[1*nxy],rtmp,de,dx,dy,
+	  emhd_eorg2enew(&enew[1*nxy],&enew[1*nxy],rtmp,de,dx,dy,
 			 nx,ny,xoff,yoff,stx[1],dnx[1],sty[1],dny[1],mpi_rank,mpi_numx,mpi_numy);
 	}
 #ifdef _OPENMP
@@ -430,12 +425,12 @@ void mhd_fd2d(double *p[], double dt, double dx, double dy, double de,
 #pragma simd
 	  for (i=0;i<nx;i++){
 	    ss=nx*j+i;
-	    fy[nm*ss+6]=enew[0*nxy+ss];		    /* -ex */
-	    fc[ss]     =enew[1*nxy+ss]-fy[nm*ss+4]; /* +ez, central */
-	    double dez=+(enew[1*nxy+ss]-eorg[1*nxy+ss]);
-	    double dex=-(enew[0*nxy+ss]-eorg[0*nxy+ss]);
+	    double dez=+(enew[1*nxy+ss]-(fy[nm*ss+4]+fc[ss]));
+	    double dex=-(enew[0*nxy+ss]-(fy[nm*ss+6]));
 	    double bztmp=0.5*(cz[ss-nx]+cz[ss]); /* For simplicity. (func_bc can be used) */
 	    double bxtmp=0.5*(cx[ss-nx]+cx[ss]);
+	    fc[ss]     =enew[1*nxy+ss]-fy[nm*ss+4]; /* +ez, central */
+	    fy[nm*ss+6]=enew[0*nxy+ss];		    /* -ex */
 	    fy[nm*ss+7]+=dez*bxtmp-dex*bztmp;
 	  }
 	}
@@ -537,7 +532,6 @@ void mhd_fd2d(double *p[], double dt, double dx, double dy, double de,
   free(dvy);
   /* Modification for extended MHD */
   free(rtmp);
-  free(eorg);
   free(enew);
 }
 
