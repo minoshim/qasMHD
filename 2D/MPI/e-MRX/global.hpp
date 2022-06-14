@@ -55,6 +55,7 @@ namespace global
   const double dr=((dx < dy)?dx:dy);
   const double cfl=0.4;		// CFL number
   const double de=1.0*dy;	// Electron inertia length
+  const double mpme=1.0;	// Mass ratio (proton/electron)
   const char fildir[]="dat/";	// Directory for file output
 
   // Initial condition parameters

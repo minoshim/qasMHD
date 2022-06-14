@@ -29,7 +29,7 @@ extern int dnys[8];
 extern int stxs[8];
 extern int stys[8];
 
-void mhd_fd2d(double *p[], double dt, double dx, double dy, double de,
+void mhd_fd2d(double *p[], double dt, double dx, double dy, double de, double mpme,
 	      int nm, int nx, int ny, int xoff, int yoff, double gamma,
 	      int mpi_rank, int mpi_numx, int mpi_numy)
 /* 2D finite-difference code for MHD */
@@ -43,6 +43,7 @@ void mhd_fd2d(double *p[], double dt, double dx, double dy, double de,
 
 
 /* Include modification for extended MHD. de is electron inertia length */
+/* mpme is mass ratio (proton/electron) */
 {
   int i,j,ss,rk;
   const double rk_fac[3][2]={{0.0,1.0},{0.5+(R_K-2)*0.25,0.5-(R_K-2)*0.25},{1./3.,2./3.}};
@@ -83,9 +84,18 @@ void mhd_fd2d(double *p[], double dt, double dx, double dy, double de,
   dvy=(double*)malloc(sizeof(double)*nxy);
 
   /* Modification for extended MHD */
-  double *rtmp,*enew;
+  const double idx=1.0/dx,idy=1.0/dy;
+  const double memt=1.0/(1.0+mpme);
+  const double mpmt=1.0-memt;
+  const double smemt=sqrt(memt);
+  const double smpmt=sqrt(mpmt);
+  const double smtme=1.0/smemt;
+  double *rtmp,*enew,*vp,*ve,*dnvv;
   rtmp=(double*)malloc(sizeof(double)*nxy);
   enew=(double*)malloc(sizeof(double)*nxy*2);
+  vp=(double*)malloc(sizeof(double)*nxy*3);
+  ve=(double*)malloc(sizeof(double)*nxy*3);
+  dnvv=(double*)malloc(sizeof(double)*nxy*3);
   
   /* Copy current data */
   for (i=0;i<nm;i++){
@@ -177,6 +187,62 @@ void mhd_fd2d(double *p[], double dt, double dx, double dy, double de,
 	boundary(pv,2,nx,ny,xoff,yoff,stx,dnx,sty,dny,mpi_rank,mpi_numx,mpi_numy);
       }
 
+      /* Modification for extended MHD */
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for (j=1;j<ny-1;j++){
+#pragma simd
+	for (i=1;i<nx-1;i++){
+	  ss=nx*j+i;
+	  double fac=smtme*de/ro[ss];
+	  double jj[3];
+	  jj[0]=calc_jcen(&cy[ss],&cz[ss],idy,  0,nx, 0); /* jx @ cell center */
+	  jj[1]=calc_jcen(&cz[ss],&cx[ss],  0,idx, 0, 1); /* jy */
+	  jj[2]=calc_jcen(&cx[ss],&cy[ss],idx,idy, 1,nx); /* jz */
+	  vp[0*nxy+ss]=vx[ss]+memt*fac*jj[0]; /* Proton velocity @ cell center */
+	  vp[1*nxy+ss]=vy[ss]+memt*fac*jj[1];
+	  vp[2*nxy+ss]=vz[ss]+memt*fac*jj[2];
+	  ve[0*nxy+ss]=vx[ss]-mpmt*fac*jj[0]; /* Electron velocity @ cell center*/
+	  ve[1*nxy+ss]=vy[ss]-mpmt*fac*jj[1];
+	  ve[2*nxy+ss]=vz[ss]-mpmt*fac*jj[2];
+	}
+      }
+#ifdef _OPENMP
+#pragma omp single
+#endif
+      {
+	double *pvp[]={&vp[0*nxy],&vp[1*nxy],&vp[2*nxy]};
+	double *pve[]={&ve[0*nxy],&ve[1*nxy],&ve[2*nxy]};
+	boundary(pvp,3,nx,ny,xoff,yoff,&stxs[1],&dnxs[1],&stys[1],&dnys[1],mpi_rank,mpi_numx,mpi_numy);
+	boundary(pve,3,nx,ny,xoff,yoff,&stxs[1],&dnxs[1],&stys[1],&dnys[1],mpi_rank,mpi_numx,mpi_numy);
+      }
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for (j=1;j<ny-1;j++){
+#pragma simd
+	for (i=1;i<nx-1;i++){
+	  ss=nx*j+i;
+	  dnvv[0*nxy+ss]=calc_dnvv(&ro[ss],&vp[0*nxy+ss],&vp[1*nxy+ss],&vp[2*nxy+ss],&ve[0*nxy+ss],&ve[1*nxy+ss],&ve[2*nxy+ss],
+				   idx,idy,0,1,nx,0);
+	  dnvv[1*nxy+ss]=calc_dnvv(&ro[ss],&vp[1*nxy+ss],&vp[2*nxy+ss],&vp[0*nxy+ss],&ve[1*nxy+ss],&ve[2*nxy+ss],&ve[0*nxy+ss],
+				   idy,0,idx,nx,0,1);
+	  dnvv[2*nxy+ss]=calc_dnvv(&ro[ss],&vp[2*nxy+ss],&vp[0*nxy+ss],&vp[1*nxy+ss],&ve[2*nxy+ss],&ve[0*nxy+ss],&ve[1*nxy+ss],
+				   0,idx,idy,0,1,nx);
+	}
+      }
+#ifdef _OPENMP
+#pragma omp single
+#endif
+      {
+	int stx[]={0,0,0},sty[]={0,0,0};
+	int dnx[]={+dnxs[6],-dnxs[6],-dnxs[5]};
+	int dny[]={-dnys[6],+dnys[6],-dnys[4]};
+	double *pv[]={&dnvv[0*nxy],&dnvv[1*nxy],&dnvv[2*nxy]};
+	boundary(pv,3,nx,ny,xoff,yoff,stx,dnx,sty,dny,mpi_rank,mpi_numx,mpi_numy);
+      }
+
       /* Primitive variable at cell face along X */
 #ifdef _OPENMP
 #pragma omp for
@@ -261,15 +327,18 @@ void mhd_fd2d(double *p[], double dt, double dx, double dy, double de,
 	    rtmp[ss]=0.5*(ro[ss- 1]+ro[ss]);
 	    enew[0*nxy+ss]=fx[nm*ss+5]+fc[ss]; /* -ez */
 	    enew[1*nxy+ss]=fx[nm*ss+6];	       /* +ey */
+	    double fac=mpmt*smemt*de/rtmp[ss];
+	    enew[0*nxy+ss]+=-fac*0.5*(dnvv[2*nxy+ss -1]+dnvv[2*nxy+ss]); /* -ez */
+	    enew[1*nxy+ss]+=+fac*0.5*(dnvv[1*nxy+ss -1]+dnvv[1*nxy+ss]); /* +ey */
 	  }
 	}
 #ifdef _OPENMP
 #pragma omp single
 #endif
 	{
-	  emhd_eorg2enew(&enew[0*nxy],&enew[0*nxy],rtmp,de,dx,dy,
+	  emhd_eorg2enew(&enew[0*nxy],&enew[0*nxy],rtmp,smpmt*de,dx,dy,
 			 nx,ny,xoff,yoff,stx[0],dnx[0],sty[0],dny[0],mpi_rank,mpi_numx,mpi_numy);
-	  emhd_eorg2enew(&enew[1*nxy],&enew[1*nxy],rtmp,de,dx,dy,
+	  emhd_eorg2enew(&enew[1*nxy],&enew[1*nxy],rtmp,smpmt*de,dx,dy,
 			 nx,ny,xoff,yoff,stx[1],dnx[1],sty[1],dny[1],mpi_rank,mpi_numx,mpi_numy);
 	}
 #ifdef _OPENMP
@@ -407,15 +476,18 @@ void mhd_fd2d(double *p[], double dt, double dx, double dy, double de,
 	    rtmp[ss]=0.5*(ro[ss-nx]+ro[ss]);
 	    enew[0*nxy+ss]=fy[nm*ss+6];	       /* -ex */
 	    enew[1*nxy+ss]=fy[nm*ss+4]+fc[ss]; /* +ez */
+	    double fac=mpmt*smemt*de/rtmp[ss];
+	    enew[0*nxy+ss]+=-fac*0.5*(dnvv[0*nxy+ss-nx]+dnvv[0*nxy+ss]); /* -ex */
+	    enew[1*nxy+ss]+=+fac*0.5*(dnvv[2*nxy+ss-nx]+dnvv[2*nxy+ss]); /* +ez */
 	  }
 	}
 #ifdef _OPENMP
 #pragma omp single
 #endif
 	{
-	  emhd_eorg2enew(&enew[0*nxy],&enew[0*nxy],rtmp,de,dx,dy,
+	  emhd_eorg2enew(&enew[0*nxy],&enew[0*nxy],rtmp,smpmt*de,dx,dy,
 			 nx,ny,xoff,yoff,stx[0],dnx[0],sty[0],dny[0],mpi_rank,mpi_numx,mpi_numy);
-	  emhd_eorg2enew(&enew[1*nxy],&enew[1*nxy],rtmp,de,dx,dy,
+	  emhd_eorg2enew(&enew[1*nxy],&enew[1*nxy],rtmp,smpmt*de,dx,dy,
 			 nx,ny,xoff,yoff,stx[1],dnx[1],sty[1],dny[1],mpi_rank,mpi_numx,mpi_numy);
 	}
 #ifdef _OPENMP
@@ -533,6 +605,9 @@ void mhd_fd2d(double *p[], double dt, double dx, double dy, double de,
   /* Modification for extended MHD */
   free(rtmp);
   free(enew);
+  free(vp);
+  free(ve);
+  free(dnvv);
 }
 
 void mhd_diff2d(double *p[], double dt, double dx, double dy,

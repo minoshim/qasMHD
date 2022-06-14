@@ -8,7 +8,7 @@
 #define CTW (1)		 /* Flag for CT 2D upwind weighting (Minoshima+19, ApJS,242,14) */
 
 /* 2D MHD solver */
-void mhd_fd2d(double *p[], double dt, double dx, double dy, double de,
+void mhd_fd2d(double *p[], double dt, double dx, double dy, double de, double mpme,
 	      int nm, int nx, int ny, int xoff, int yoff, double gamma,
 	      int mpi_rank, int mpi_numx, int mpi_numy);
 void mhd_diff2d(double *p[], double dt, double dx, double dy,

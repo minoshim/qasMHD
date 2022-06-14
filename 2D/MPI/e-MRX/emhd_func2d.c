@@ -175,3 +175,29 @@ int emhd_eorg2enew_cg(double *eorg, double *enew, const double *ro,
 
   return cmax-cnt;		/* If zero, iteration does NOT converge */
 }
+
+double calc_jcen(const double *bx, const double *by, double idx, double idy,
+		 int xoffset, int yoffset)
+/* Calculate jz by 2nd-order central difference from co-located values */
+/* bx,by are adress @ (i,j,k) */
+{
+  return 0.5*((by[+xoffset]-by[-xoffset])*idx-(bx[+yoffset]-bx[-yoffset])*idy);
+}
+
+double calc_dnvv(const double *ro,
+		 const double *vpx, const double *vpy, const double *vpz,
+		 const double *vex, const double *vey, const double *vez,
+		 double idx, double idy, double idz,
+		 int xoffset, int yoffset, int zoffset)
+/* Calculate div(n (v_p v_px - v_e v_px)) by 2nd-order central difference from co-located values */
+/* ro,vpx,... are adress @ (i,j,k) */
+{
+  double tmp[3];
+  tmp[0]=(+ro[+xoffset]*(vpx[+xoffset]*vpx[+xoffset]-vex[+xoffset]*vex[+xoffset])
+	  -ro[-xoffset]*(vpx[-xoffset]*vpx[-xoffset]-vex[-xoffset]*vex[-xoffset]))*idx;
+  tmp[1]=(+ro[+yoffset]*(vpy[+yoffset]*vpx[+yoffset]-vey[+yoffset]*vex[+yoffset])
+	  -ro[-yoffset]*(vpy[-yoffset]*vpx[-yoffset]-vey[-yoffset]*vex[-yoffset]))*idy;
+  tmp[2]=(+ro[+zoffset]*(vpz[+zoffset]*vpx[+zoffset]-vez[+zoffset]*vex[+zoffset])
+	  -ro[-zoffset]*(vpz[-zoffset]*vpx[-zoffset]-vez[-zoffset]*vex[-zoffset]))*idz;
+  return 0.5*(tmp[0]+tmp[1]+tmp[2]);
+}

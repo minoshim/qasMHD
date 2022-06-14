@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
     boundary(p,8,nx,ny,xoff,yoff,stxs,dnxs,stys,dnys,mpi_rank,mpi_numx,mpi_numy);
 
     // MHD update
-    mhd_fd2d(p,dt,dx,dy,de,8,nx,ny,xoff,yoff,gam,mpi_rank,mpi_numx,mpi_numy);
+    mhd_fd2d(p,dt,dx,dy,de,mpme,8,nx,ny,xoff,yoff,gam,mpi_rank,mpi_numx,mpi_numy);
     
 #if (DIFF)			// Diffusion
     double dcmax=get_dcoefs(nu,eta);

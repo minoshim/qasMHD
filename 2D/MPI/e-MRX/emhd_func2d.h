@@ -18,5 +18,12 @@ int emhd_eorg2enew_cg(double *eorg, double *enew, const double *ro,
 		      int nx, int ny, int xoff, int yoff,
 		      int stx, int dnx, int sty, int dny,
 		      int mpi_rank, int mpi_numx, int mpi_numy); /* Eorg => Enew by Conjugate Gradient method */
+double calc_jcen(const double *bx, const double *by, double idx, double idy,
+		 int xoffset, int yoffset);
+double calc_dnvv(const double *ro,
+		 const double *vpx, const double *vpy, const double *vpz,
+		 const double *vex, const double *vey, const double *vez,
+		 double idx, double idy, double idz,
+		 int xoffset, int yoffset, int zoffset);
 
 #endif
