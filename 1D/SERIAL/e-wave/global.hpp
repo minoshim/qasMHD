@@ -37,6 +37,7 @@ namespace global
   const double vx0=0.0*cf0;	// Ambient normal velocity
   const double cfl=0.4;		// CFL number
   const double de=2.0*dx;	// Electron inertia length
+  const double mpme=1.0;	// Mass ratio (proton/electron)
   const char fildir[]="dat/";	// Directory for file output
 
   // Tentative parameters

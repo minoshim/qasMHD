@@ -9,7 +9,7 @@
 /* 1D MHD solver */
 void mhd_fd1d(double *ro, double *mx, double *my, double *mz,
 	      double *by, double *bz, double *en,
-	      double bx, double dt, double dx, double de,
+	      double bx, double dt, double dx, double de, double mpme,
 	      int nx, int xoff, double gamma);
 
 #endif

@@ -38,7 +38,7 @@ int main(void)
     boundary(p,7,nx,xoff,dnxs);
 
     // MHD update
-    mhd_fd1d(ro,mx,my,mz,by,bz,en,bx,dt,dx,de,nx,xoff,gam);
+    mhd_fd1d(ro,mx,my,mz,by,bz,en,bx,dt,dx,de,mpme,nx,xoff,gam);
 
     /* Output */
     if ((n % nrec) == 0){
