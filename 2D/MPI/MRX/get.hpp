@@ -31,7 +31,7 @@ void get_dt(double *dt, double cfl, double dr, int comment)
   if (comment){
     printf("vmax = %f, dt = %.9f, dx = %f\n",vmax,(*dt),dr);
     printf("CFL number = %f\n",vmax*(*dt)/dr);
-    printf("CFL condition for diffusion is %f\n ",max(eta0,2*nu0)*(*dt)/(dr*dr));
+    printf("CFL condition for diffusion is %f\n",max(eta0,2*nu0)*(*dt)/(dr*dr));
     // Factor 2 is multiplied in viscous coef. for robust estimation
   }
 }
