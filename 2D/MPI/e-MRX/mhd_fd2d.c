@@ -44,6 +44,7 @@ void mhd_fd2d(double *p[], double dt, double dx, double dy, double de, double mp
 
 /* Include modification for extended MHD. de is electron inertia length */
 /* mpme is mass ratio (proton/electron) */
+/* 2022/06/17: Hall term and Pressure gradient term are NOT included (valid when mpme=1.0) */
 {
   int i,j,ss,rk;
   const double rk_fac[3][2]={{0.0,1.0},{0.5+(R_K-2)*0.25,0.5-(R_K-2)*0.25},{1./3.,2./3.}};
