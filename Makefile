@@ -11,3 +11,5 @@ clean:
 	rm -f *.a
 	cd common; make clean
 	cd mpi; make clean
+
+#test
