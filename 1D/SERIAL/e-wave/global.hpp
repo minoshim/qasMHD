@@ -34,7 +34,8 @@ namespace global
   const double ro0=1.0;		// Ambient density
   const double pr0=0.5*beta*bx*bx; // Ambient pressure
   const double cf0=sqrt((bx*bx+gam*pr0)/ro0); // Magnetosonic speed
-  const double vx0=0.0*cf0;	// Ambient normal velocity
+  const double va0=sqrt((bx*bx)/ro0);	      // Alfven speed
+  const double vx0=0.0*va0;	// Ambient normal velocity
   const double cfl=0.4;		// CFL number
   const double de=2.0*dx;	// Electron inertia length
   const double mpme=1.0;	// Mass ratio (proton/electron)
