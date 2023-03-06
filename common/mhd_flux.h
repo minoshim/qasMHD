@@ -47,4 +47,10 @@ void calc_flux_resistive(const double *by, const double *bz, const double *ey, c
 			 double (*func_fc)(const double *f),
 			 double *fby, double *fbz, double *fen);
 
+
+/* Lax-Friedrichs solver for Hall term */
+void calc_flux_hall_lf(double rol, double vnl, double vtl, double vul, double btl, double bul, double enl,
+		       double ror, double vnr, double vtr, double vur, double btr, double bur, double enr,
+		       double bnc, double smax,
+		       double *fbt, double *fbu, double *fen);
 #endif
