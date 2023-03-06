@@ -202,11 +202,17 @@ void mhd_fd2d(double *p[], double dt, double dx, double dy,
 	  ur[nm*sr+5]=vr[4];	/* by */
 	  ur[nm*sr+6]=vr[5];	/* bz */
 	  ur[nm*sr+7]=vr[6];	/* pr */
-
+	}
+#pragma simd
+	for (i=2;i<nx-2;i++){
+	  ss=nx*j+i;
+	  sl=nx*j+(i+1);
+	  sr=nx*j+i;
+	  double vl,vr;
 	  /* Linear interpolation of numerical flux of By */
-	  mhd_lr_fb(&vx[ss],&vy[ss],&bx[ss],&cy[ss],1,lfun_lr,vl,vr);
-	  ql[sl]=vl[0];		/* by*vx-bx*vy @ i+1/2 Left */
-	  qr[sr]=vr[0];		/* by*vx-bx*vy @ i-1/2 Right */
+	  mhd_lr_fb(&vx[ss],&vy[ss],&bx[ss],&cy[ss],1,lfun_lr,&vl,&vr);
+	  ql[sl]=vl;		/* by*vx-bx*vy @ i+1/2 Left */
+	  qr[sr]=vr;		/* by*vx-bx*vy @ i-1/2 Right */
 	}
       }
 
@@ -304,11 +310,17 @@ void mhd_fd2d(double *p[], double dt, double dx, double dy,
 	  ur[nm*sr+5]=vr[4];	/* bz */
 	  ur[nm*sr+6]=vr[5];	/* bx */
 	  ur[nm*sr+7]=vr[6];	/* pr */
-
+	}
+#pragma simd
+	for (i=0;i<nx;i++){
+	  ss=nx*j+i;
+	  sl=nx*(j+1)+i;
+	  sr=nx*j+i;
+	  double vl,vr;
 	  /* Linear interpolation of numerical flux of Bx */
-	  mhd_lr_fb(&vy[ss],&vx[ss],&by[ss],&cx[ss],nx,lfun_lr,vl,vr);
-	  ql[sl]=vl[0];		/* bx*vy-by*vx @ j+1/2 Left */
-	  qr[sr]=vr[0];		/* bx*vy-by*vx @ j-1/2 Right */
+	  mhd_lr_fb(&vy[ss],&vx[ss],&by[ss],&cx[ss],nx,lfun_lr,&vl,&vr);
+	  ql[sl]=vl;		/* bx*vy-by*vx @ j+1/2 Left */
+	  qr[sr]=vr;		/* bx*vy-by*vx @ j-1/2 Right */
 	}
       }
 
