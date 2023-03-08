@@ -38,4 +38,4 @@ The qasMHD code is tested on Linux OSs (Ubuntu, Linut Mint, CentOS, including Wi
 - `libmpi.a` is the library generated from `mpi/`
 - `libqasmhd.a` is the library generated from `common/`
 
-For information about `1D/`, `2D/`, and `3D/` problem, see `Readme.md` in each directory.
+For information about `1D/`, `2D/`, and `3D/` problems, see `Readme.md` in each directory.
