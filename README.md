@@ -22,6 +22,6 @@ The qasMHD code is tested on Linux OSs (Ubuntu, Linut Mint, CentOS, including Wi
 
 ## Installation
 1. Download the qasMHD code from Github via `git clone hppts://`
-2. The main is `qasMHD/`
-3. Chedk `qasMHD/Makefile.inc` and modify environments variables `CC`, `CFLAGS`, and `MPICC` to meet your environments
+2. The main directory is `qasMHD/`
+3. Check `qasMHD/Makefile.inc` and modify environments variables `CC`, `CFLAGS`, and `MPICC` to meet your environments
 
