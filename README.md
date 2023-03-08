@@ -25,3 +25,15 @@ The qasMHD code is tested on Linux OSs (Ubuntu, Linut Mint, CentOS, including Wi
 2. The main directory is `qasMHD/`
 3. Check `qasMHD/Makefile.inc` and modify environments variables `CC`, `CFLAGS`, and `MPICC` to meet your environments
 
+## Composition
+- `1D/SERIAL/` contains serial codes for one-dimensional problems
+- `2D/` contains serial and MPI parallel codes for two-dimensional problems
+- `3D/MPI/` contains MPI parallel codes for three-dimensional problems
+- `common/` contains central functions for MHD simulations
+- `license/` contains license documents
+- `mpi/` contains functions for MPI parallelization
+- `Makefile` to make libraries there
+- `Makefile.inc` to define environments variables
+- `Readme.md` is this file
+- `libmpi.a` is the library from `mpi/`
+- `libqasmhd.a` is the library from `common/`
