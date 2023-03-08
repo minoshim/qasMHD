@@ -24,7 +24,7 @@ The qasMHD code is tested on Linux OSs (Ubuntu, Linux Mint, CentOS, including Wi
 1. Download the qasMHD code from Github via `>git clone hppts://`.
 2. Move to the main directory `qasMHD/`.
 3. Check `qasMHD/Makefile.inc` and modify environments variables `CC`, `CFLAGS`, and `MPICC` to meet your environments.
-4. Execute `>make` to make libraries
+4. Execute `make clean` and `>make` commands to remake libraries
 5. Since the code is updated without notice, you may update the code via `>git pull origin main`.
 
 ## Composition
