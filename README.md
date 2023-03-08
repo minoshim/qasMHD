@@ -8,6 +8,13 @@ The qasMHD code is unique in that it can accurately solve MHD flows with very wi
 The current version supports 1D-3D space in Cartesian coordinates and hybrid MPI/OpenMP parallel computation.
 
 ## System requirements
+Following packages are required to be installed on the system
+- Git for version management
+- C++ compiler (GNU, Intel)
+- MPI library (MPICH, OpenMPI) to use the MPI parallel code
+- Python 3.X for data read and visualization
+- These packages (excluding Intel compiler) can be installed by 'apt-get' or 'yum install' commands
+The packages are tested on Linux OSs (Ubuntu, Linut Mint, CentOS, including Windows Subsystem for Linux)
 
 ## Instllation
 
