@@ -21,4 +21,7 @@ Following packages are required to be installed on the system
 The qasMHD code is tested on Linux OSs (Ubuntu, Linut Mint, CentOS, including Windows Subsystem for Linux).
 
 ## Installation
+1. Download the qasMHD code from Github via `git clone hppts://`
+2. The main is `qasMHD/`
+3. Chedk `qasMHD/Makefile.inc` and modify environments variables `CC`, `CFLAGS`, and `MPICC` to meet your environments
 
