@@ -21,9 +21,10 @@ Following packages are required to be installed on the system
 The qasMHD code is tested on Linux OSs (Ubuntu, Linut Mint, CentOS, including Windows Subsystem for Linux).
 
 ## Installation
-1. Download the qasMHD code from Github via `git clone hppts://`
-2. The main directory is `qasMHD/`
-3. Check `qasMHD/Makefile.inc` and modify environments variables `CC`, `CFLAGS`, and `MPICC` to meet your environments
+1. Download the qasMHD code from Github via `git clone hppts://`.
+2. The main directory is `qasMHD/`.
+3. Check `qasMHD/Makefile.inc` and modify environments variables `CC`, `CFLAGS`, and `MPICC` to meet your environments.
+4. Sice the code is updated without notice, you may update the code via `git pull origin main`.
 
 ## Composition
 - `1D/SERIAL/` contains serial codes for one-dimensional problems
