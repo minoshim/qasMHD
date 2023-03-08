@@ -13,7 +13,8 @@ Following packages are required to be installed on the system
 - C++ compiler (GNU, Intel)
 - MPI library (MPICH, OpenMPI) to use the MPI parallel code
 - Python 3.X for data read and visualization
-- These packages (excluding Intel compiler) can be installed by 'apt-get' or 'yum install' commands
+- These packages (excluding Intel compiler) can be installed by `apt-get` or `yum install` commands
+
 The packages are tested on Linux OSs (Ubuntu, Linut Mint, CentOS, including Windows Subsystem for Linux)
 
 ## Instllation
