@@ -3,8 +3,8 @@ Quasi all-speed magnetohydrodynamic (qasMHD) simulation code is a C++ package fo
 
 The qasMHD code has the capabilities of
 - up to 4th order accuracy in space, and 3rd order accuracy in time
-- shock capturing by approximate Riemann solvers, including recent low-dissipation all-speed solvers
-- preservation of the solenoidal condition of the magnetic field by a sophisticated Contrained Transport (CT) method 
+- shock capturing by approximate Riemann solvers, including recent low-dissipation all-speed solvers[^1][^2]
+- preservation of the solenoidal condition of the magnetic field by a sophisticated Contrained Transport (CT) method[^3] 
 
 The qasMHD code is unique in that it can accurately solve MHD flows in wide-ranging Mach numbers, even when the flow is neary incompressible!!
 
@@ -40,3 +40,8 @@ The qasMHD code is tested on Linux OSs (Ubuntu, Linut Mint, CentOS, including Wi
 - `libqasmhd.a` is the library generated from `common/`
 
 For information about `1D/`, `2D/`, and `3D/` problems, see `Readme.md` in each directory.
+
+## References
+[^1]: hoge
+[^2]: piyo
+[^3]: fuga
