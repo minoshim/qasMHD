@@ -2,29 +2,29 @@
 Quasi all-speed magnetohydrodynamic (qasMHD) simulation code is a C++ package for solving compressible MHD equations.
 
 The qasMHD code has the capabilities of
-- up to 4th order accuracy in space, and 3rd order accuracy in time
-- shock capturing by approximate Riemann solvers, including recent low-dissipation all-speed solvers[^1][^2]
-- preservation of the solenoidal condition of the magnetic field by a sophisticated Contrained Transport (CT) method[^3] 
+- up to 4th order accuracy in space, and 3rd order accuracy in time,
+- shock capturing by approximate Riemann solvers, including recent low-dissipation all-speed solvers[^1][^2],
+- preservation of the solenoidal condition of the magnetic field by a sophisticated Contrained Transport (CT) method[^3].
 
 The qasMHD code is unique in that it can accurately solve MHD flows in wide-ranging Mach numbers, even when the flow is neary incompressible!!
 
 The current version supports 1D-3D space in Cartesian coordinates and hybrid MPI/OpenMP parallel computation.
 
 ## System requirements
-Following packages are required to be installed on the system
+Following packages are required to be installed on the system:
 - Git for version management
 - C++ compiler (GNU, Intel)
 - MPI library (MPICH, OpenMPI) to use the MPI parallel code
 - Python 3.X for data read and visualization
 - These packages (excluding Intel compiler) can be installed by `apt-get` or `yum` commands
 
-The qasMHD code is tested on Linux OSs (Ubuntu, Linut Mint, CentOS, including Windows Subsystem for Linux).
+The qasMHD code is tested on Linux OSs (Ubuntu, Linux Mint, CentOS, including Windows Subsystem for Linux).
 
 ## Installation
-1. Download the qasMHD code from Github via `git clone hppts://`.
+1. Download the qasMHD code from Github via `>git clone hppts://`.
 2. The main directory is `qasMHD/`.
 3. Check `qasMHD/Makefile.inc` and modify environments variables `CC`, `CFLAGS`, and `MPICC` to meet your environments.
-4. Sice the code is updated without notice, you may update the code via `git pull origin main`.
+4. Sice the code is updated without notice, you may update the code via `>git pull origin main`.
 
 ## Composition
 - `1D/SERIAL/` contains serial codes for one-dimensional problems
