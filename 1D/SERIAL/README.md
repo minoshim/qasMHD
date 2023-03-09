@@ -24,5 +24,5 @@ Call the python script `batch.py` or `batch_a.py`
 >>>exec(open("batch.py").read())
 ```
 
-[^1]:hoge
-[^2]:piyo
+[^1]: [Miyoshi T. and Kusano K. 2005, JCP](https://www.sciencedirect.com/science/article/pii/S0021999105001142?via%3Dihub)
+[^2]: [Minoshima T., Kitamura K., and Miyoshi T. 2020, ApJS](https://iopscience.iop.org/article/10.3847/1538-4365/ab8aee/meta)
