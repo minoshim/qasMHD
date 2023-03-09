@@ -1,12 +1,12 @@
 ## qasMHD/1D/SERIAL
 Sereal codes for the following one-dimensional problems are available:
-- `shock`... standard shock tube problems
-- `wave`... MHD wave propagation problems
+- `shock`... standard shock tube problems[^1]
+- `wave`... MHD wave propagation problems[^2]
 
 Users may edit the following files contained in each directory:
 - `init.hpp` defines the initial condition
 - `global.hpp` defines the simulation parameters (number of grid points, plasma parameters, etc.)
-- `mhd_fd1d.h` sets the Riemann solvers, spatial and temporal order of accuracy
+- `mhd_fd1d.h` defines the Riemann solvers, spatial and temporal order of accuracy
 
 ### How to run the simulation
 ```
@@ -23,3 +23,6 @@ Call the python script `batch.py` or `batch_a.py`
 >python
 >>>exec(open("batch.py").read())
 ```
+
+[^1]:hoge
+[^2]:piyo
