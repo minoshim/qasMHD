@@ -4,7 +4,7 @@ Quasi all-speed magnetohydrodynamic (qasMHD) simulation code is a C++ package fo
 The qasMHD code has the capabilities of
 - up to 4th order accuracy in space, and 3rd order accuracy in time,
 - shock capturing by approximate Riemann solvers, including recent low-dissipation all-speed solvers[^1][^2],
-- preservation of the solenoidal condition of the magnetic field by a sophisticated Contrained Transport (CT) method[^3].
+- preservation of the solenoidal condition of the magnetic field by a sophisticated Contrained Transport method[^3].
 
 The qasMHD code is unique in that it can accurately solve MHD flows in wide-ranging Mach numbers, even when the flow is neary incompressible!!
 
@@ -16,16 +16,18 @@ Following packages are required to be installed on the system:
 - C++ compiler (GNU, Intel)
 - MPI library (MPICH, OpenMPI) to use the MPI parallel code
 - Python 3.X for data read and visualization
-- These packages (excluding Intel compiler) can be installed by `apt-get` or `yum` commands
 
 The qasMHD code is tested on Linux OSs (Ubuntu, Linux Mint, CentOS, including Windows Subsystem for Linux).
+
+Above packages (excluding Intel compiler) can be installed by `apt-get` or `yum` commands.
 
 ## Installation
 1. Download the qasMHD code from Github via `>git clone hppts://`.
 2. Move to the main directory `qasMHD/`.
-3. Check `qasMHD/Makefile.inc` and modify environments variables `CC`, `CFLAGS`, and `MPICC` to meet your environments.
-4. Execute `>make clean` and `>make` commands to remake libraries
-5. Since the code is updated without notice, you may update the code via `>git pull origin main`.
+3. Check `Makefile.inc` and edit environment variables `CC`, `CFLAGS`, and `MPICC` to meet your environment.
+4. Execute `>make clean` and `>make` commands to remake libraries.
+
+Since the code is updated without notice, you may update the code via `>git pull origin main`.
 
 ## Composition
 - `1D/SERIAL/` contains serial codes for one-dimensional problems
@@ -35,9 +37,9 @@ The qasMHD code is tested on Linux OSs (Ubuntu, Linux Mint, CentOS, including Wi
 - `license/` contains license documents
 - `mpi/` contains functions for MPI parallelization
 - `Makefile` to make libraries there
-- `Makefile.inc` to define environments variables
+- `Makefile.inc` to define environment variables
 - `Readme.md` is this file
-- `libmpi.a` is the library generated from `mpi/`
+- `libmympi.a` is the library generated from `mpi/`
 - `libqasmhd.a` is the library generated from `common/`
 
 For information about `1D/`, `2D/`, and `3D/` problems, see `Readme.md` in each directory.
