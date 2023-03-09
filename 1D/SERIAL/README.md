@@ -8,7 +8,7 @@ Users may edit the following files contained in each directory:
 - `global.hpp` defines the simulation parameters (number of grid points, plasma parameters, etc.)
 - `mhd_fd1d.h` to choose the Riemann solvers, spatial and temporal order of accuracy
 
-## How to run the simulation?
+### How to run the simulation?
 ```
 >cd shock/
 >make
@@ -16,3 +16,5 @@ Users may edit the following files contained in each directory:
 ```
 
 The simulation data is stored in the `dat` directory.
+
+### How to check the result?
