@@ -12,7 +12,7 @@ The current version supports 1D-3D space in Cartesian coordinates and hybrid MPI
 
 ## System requirements
 Following packages are required to be installed on the system:
-- Git for version management
+- Git to install and update the package
 - C++ compiler (GNU, Intel)
 - MPI library (MPICH, OpenMPI) to use the MPI parallel code
 - Python 3.X with NumPy and matplitlib for data read and visualization, installed from [Anaconda](https://www.anaconda.com/products/distribution)
