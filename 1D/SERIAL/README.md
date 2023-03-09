@@ -18,7 +18,7 @@ Users may edit the following files contained in each directory:
 The simulation data is stored in the `dat` directory.
 
 ### How to check the result
-Call the python script `batch.py` or `batch_a.py`
+Execute the python script `batch.py` or `batch_a.py`
 ```
 >python
 >>>exec(open("batch.py").read())
