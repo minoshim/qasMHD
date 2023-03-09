@@ -6,11 +6,9 @@ Sereal codes for the following one-dimensional problems are available:
 Users may edit the following files contained in each directory:
 - `init.hpp` defines the initial condition
 - `global.hpp` defines the simulation parameters (number of grid points, plasma parameters, etc.)
-- `mhd_fd1d.h` to choose the Riemann solvers, spatial and temporal order of accuracy
+- `mhd_fd1d.h` sets the Riemann solvers, spatial and temporal order of accuracy
 
-See `Readme.md` in each directory for details of the problem.
-
-### How to run the simulation?
+### How to run the simulation
 ```
 >cd shock/
 >make
@@ -19,4 +17,9 @@ See `Readme.md` in each directory for details of the problem.
 
 The simulation data is stored in the `dat` directory.
 
-### How to check the result?
+### How to check the result
+Call the python script `batch.py` or `batch_a.py`
+```
+>python
+>exec(open("batch.py").read())
+```
