@@ -10,6 +10,7 @@ Users may edit the following files contained in each directory:
 
 ## How to run the simulation?
 ```
+>cd shock/
 >make
 >./a.out
 ```
