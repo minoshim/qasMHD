@@ -1,12 +1,12 @@
 # qasMHD
 Quasi all-speed magnetohydrodynamic (qasMHD) simulation code is a C++ package for solving compressible MHD equations.
 
-The qasMHD code has the capabilities of
+The qasMHD code has the characteristics of
 - up to 4th order accuracy in space, and 3rd order accuracy in time,
 - shock capturing by approximate Riemann solvers, including recent low-dissipation all-speed solvers[^1][^2],
 - preservation of the solenoidal condition of the magnetic field by a sophisticated Contrained Transport method[^3].
 
-The qasMHD code is unique in that it can accurately solve MHD flows in wide-ranging Mach numbers, even when the flow is neary incompressible!!
+The qasMHD code is unique in that it can accurately solve MHD flows in wide-ranging Mach numbers, even when the flow is almost incompressible!
 
 The current version supports 1D-3D space in Cartesian coordinates and hybrid MPI/OpenMP parallel computation.
 
@@ -15,7 +15,7 @@ Following packages are required to be installed on the system:
 - Git for version management
 - C++ compiler (GNU, Intel)
 - MPI library (MPICH, OpenMPI) to use the MPI parallel code
-- Python 3.X for data read and visualization
+- Python 3.X with NumPy and matplitlib for data read and visualization, installed from [Anaconda](https://www.anaconda.com/products/distribution)
 
 The qasMHD code is tested on Linux OSs (Ubuntu, Linux Mint, CentOS, including Windows Subsystem for Linux).
 
@@ -24,7 +24,7 @@ Above packages (excluding Intel compiler) can be installed by `apt-get` or `yum`
 ## Installation
 1. Download the qasMHD code from Github via `>git clone hppts://`.
 2. Move to the main directory `qasMHD/`.
-3. Check `Makefile.inc` and edit environment variables `CC`, `CFLAGS`, and `MPICC` to meet your environment.
+3. Check `Makefile.inc` and edit environment variables `CC`, `CFLAGS`, and `MPICC` to meet users environment.
 4. Execute `>make clean` and `>make` commands to remake libraries.
 
 Since the code is updated without notice, you may update the code via `>git pull origin main`.
