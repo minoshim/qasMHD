@@ -12,10 +12,10 @@ The current version supports 1D-3D space in Cartesian coordinates and hybrid MPI
 
 ## System requirements
 Following packages are required to be installed on the system:
-- Git to install and update the package
-- C++ compiler (GNU, Intel)
-- MPI library (MPICH, OpenMPI) to use the MPI parallel code
-- Python 3.X with NumPy and matplotlib for data read and visualization, installed from [Anaconda](https://www.anaconda.com/products/distribution)
+- Git to install and update the package,
+- C++ compiler (GNU, Intel),
+- MPI library (MPICH, OpenMPI) to use the MPI parallel code,
+- Python 3.X with NumPy and matplotlib for data read and visualization, installed from [Anaconda](https://www.anaconda.com/products/distribution).
 
 The qasMHD code is tested on Linux OSs (Ubuntu, Linux Mint, CentOS, including Windows Subsystem for Linux).
 
@@ -30,17 +30,17 @@ Above packages (excluding Intel compiler) can be installed by `apt-get` or `yum`
 Since the code is updated without notice, you may update the code via `>git pull origin main`.
 
 ## Composition
-- `1D/SERIAL/` contains serial codes for one-dimensional problems
-- `2D/` contains serial and MPI parallel codes for two-dimensional problems
-- `3D/MPI/` contains MPI parallel codes for three-dimensional problems
-- `common/` contains central functions for MHD simulations
-- `license/` contains license documents
-- `mpi/` contains functions for MPI parallelization
-- `Makefile` to make libraries there
-- `Makefile.inc` to define environment variables
-- `Readme.md` is this file
-- `libmympi.a` is the library generated from `mpi/`
-- `libqasmhd.a` is the library generated from `common/`
+- `1D/SERIAL/` contains serial codes for one-dimensional problems.
+- `2D/` contains serial and MPI parallel codes for two-dimensional problems.
+- `3D/MPI/` contains MPI parallel codes for three-dimensional problems.
+- `common/` contains central functions for MHD simulations.
+- `license/` contains license documents.
+- `mpi/` contains functions for MPI parallelization.
+- `Makefile` to make libraries there.
+- `Makefile.inc` to define environment variables.
+- `Readme.md` is this file.
+- `libmympi.a` is the library generated from `mpi/`.
+- `libqasmhd.a` is the library generated from `common/`.
 
 For information about `1D/`, `2D/`, and `3D/` problems, see `Readme.md` in each directory.
 
