@@ -15,7 +15,7 @@ Users may edit the following files contained in each directory:
 >./a.out
 ```
 
-The simulation data is stored in the `dat` directory.
+The result is stored in `dat/`.
 
 ### How to check the result
 Execute the python script `batch.py` or `batch_a.py`
