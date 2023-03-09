@@ -18,7 +18,7 @@ Users may edit the following files contained in each directory:
 The result is stored in `dat/`.
 
 ### How to check the result
-Execute the python script `batch.py` or `batch_a.py`
+Execute the python script `batch.py` or `batch_a.py`.
 ```
 >python
 >>>exec(open("batch.py").read())
