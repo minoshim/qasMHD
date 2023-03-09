@@ -21,5 +21,5 @@ The simulation data is stored in the `dat` directory.
 Call the python script `batch.py` or `batch_a.py`
 ```
 >python
->exec(open("batch.py").read())
+>>>exec(open("batch.py").read())
 ```
