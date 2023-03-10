@@ -15,17 +15,19 @@ Users may edit the following files contained in each directory:
 ```
 >cd OTvortex/
 >make
->mpiexec -np 4 -genv OMP_NUM_THREADS 2 ./a.out #for MPICH
->mpiexec -np 4 -x OMP_NUM_THREADS=2 ./a.out #for OpenMPI
+>mpiexec -np 4 -genv OMP_NUM_THREADS 2 ./a.out #for MPICH users
+>mpiexec -np 4 -x OMP_NUM_THREADS=2 ./a.out #for OpenMPI users
 ```
-Here, `4` is the number of MPI processes and `2` is the number of OpenMP threads.
+Here `4` is the number of MPI processes and `2` is the number of OpenMP threads, thus 8 cores are used for the caluclation.
 
-The number of MPI processes should be equal to the value of `mnp=MNP_X*MNP_y` defined in `global.hpp` (otherwise, the simulation does not run).
+The number of MPI processes should be equal to the value of `mnp=MNP_X*MNP_Y` defined in `global.hpp` (otherwise, the simulation does not run).
 
 The result is stored in `dat/`.
 
 ### How to check the result
-Execute the python script `batch.py`.
+The raw simulation data stored in `dat/` are MPI-decomposed, thus they should be merged via `>merge.out dat/ dat/`.
+
+Subsequently, execute the python script `batch.py`.
 ```
 >python
 >>>exec(open("batch.py").read())
