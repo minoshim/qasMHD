@@ -18,7 +18,7 @@ Users may edit the following files contained in each directory:
 >mpiexec -np 4 -genv OMP_NUM_THREADS 2 ./a.out #for MPICH users
 >mpiexec -np 4 -x OMP_NUM_THREADS=2 ./a.out    #for OpenMPI users
 ```
-Here `4` is the number of MPI processes and `2` is the number of OpenMP threads, thus 8 cores are used for the caluclation.
+Here `4` is the number of MPI processes and `2` is the number of OpenMP threads, thus 8 CPU cores are used for the caluclation.
 
 The number of MPI processes should be equal to the value of `mnp` defined in `global.hpp` (otherwise, the simulation does not run).
 
