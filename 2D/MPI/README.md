@@ -1,10 +1,10 @@
 ## qasMHD/2D/MPI
-Serial codes for the following two-dimensional problems are available:
+MPI parallel codes for the following two-dimensional problems are available:
 - `KHI`... Kelvin-Helmholtz instability[^1],
 - `MRX`... Magnetic reconnection[^2],
 - `OTvortex` ... Orszag-Tang vortex problem[^1][^2],
 - `RMI` ... Richtmyer-Meshkov instability[^1],
-- `RTI` ... Rayleigh-Taylor instability,
+- `RTI` ... Rayleigh-Taylor instability.
 
 Users may edit the following files contained in each directory:
 - `init.hpp` defines the initial condition,
@@ -16,16 +16,16 @@ Users may edit the following files contained in each directory:
 >cd OTvortex/
 >make
 >mpiexec -np 4 -genv OMP_NUM_THREADS 2 ./a.out #for MPICH users
->mpiexec -np 4 -x OMP_NUM_THREADS=2 ./a.out #for OpenMPI users
+>mpiexec -np 4 -x OMP_NUM_THREADS=2 ./a.out    #for OpenMPI users
 ```
 Here `4` is the number of MPI processes and `2` is the number of OpenMP threads, thus 8 cores are used for the caluclation.
 
-The number of MPI processes should be equal to the value of `mnp=MNP_X*MNP_Y` defined in `global.hpp` (otherwise, the simulation does not run).
+The number of MPI processes should be equal to the value of `mnp` defined in `global.hpp` (otherwise, the simulation does not run).
 
 The result is stored in `dat/`.
 
 ### How to check the result
-The raw simulation data stored in `dat/` are MPI-decomposed, thus they should be merged via `>merge.out dat/ dat/`.
+Since the raw simulation data stored in `dat/` are MPI-decomposed, they should be merged via `>merge.out dat/ dat/`.
 
 Subsequently, execute the python script `batch.py`.
 ```
