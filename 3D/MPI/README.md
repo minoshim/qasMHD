@@ -9,7 +9,7 @@ MPI parallel codes for the following three-dimensional problems are available:
 Users may edit the following files contained in each directory:
 - `init.hpp` defines the initial condition,
 - `global.hpp` defines the simulation parameters (number of grid points, time step, plasma parameters, etc.),
-- `mhd_fd3d.h` defines macros `RMN`, `ODR`, `R_K`, and `CTW` to select the Riemann solvers, spatial and temporal order of accuracy, and the multidimensional upwinding for the Constrained Transport method[^2].
+- `mhd_fd3d.h` defines macros `RMN`, `ODR`, `R_K`, and `CTW` to select the Riemann solvers, spatial and temporal order of accuracy, and the multidimensional upwinding for the Constrained Transport method.
 
 ### How to run the simulation
 ```
