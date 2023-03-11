@@ -1,9 +1,9 @@
 # qasMHD
 Quasi all-speed magnetohydrodynamic (qasMHD) simulation code is a C++ package for solving compressible MHD equations with a finite-difference method.
 
-The qasMHD code has the characteristics of
-- up to 4th order accuracy in space and 3rd order accuracy in time,
-- shock capturing by approximate Riemann solvers, including state-of-the-art low-dissipation all-speed solvers[^1][^2],
+The qasMHD code has the characteristics of:
+- up to 4th order accuracy in space and 3rd order accuracy in time;
+- shock capturing by approximate Riemann solvers, including state-of-the-art low-dissipation all-speed solvers[^1][^2];
 - preservation of the solenoidal condition of the magnetic field by a sophisticated Contrained Transport method[^3].
 
 The qasMHD code is unique in that it can accurately solve MHD flows in wide-ranging Mach numbers, even when the flow is almost incompressible!
@@ -12,9 +12,9 @@ The current version supports 1D-3D space in Cartesian coordinates and hybrid MPI
 
 ## System requirements
 Following packages are required to be installed on the system:
-- Git to install and update the qasMHD code,
-- C++ compiler (GNU, Intel),
-- MPI library (MPICH, OpenMPI) to use the MPI parallel code,
+- Git to install and update the qasMHD code;
+- C++ compiler (GNU, Intel);
+- MPI library (MPICH, OpenMPI) to use the MPI parallel code;
 - Python 3.X with NumPy and matplotlib for data read and visualization, installed from [Anaconda](https://www.anaconda.com/products/distribution).
 
 The code is tested on Linux OSs (Ubuntu, Linux Mint, CentOS, including Windows Subsystem for Linux).
