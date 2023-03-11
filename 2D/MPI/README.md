@@ -25,7 +25,7 @@ The number of MPI processes should be equal to the value of `mnp` defined in `gl
 The result is stored in `dat/`.
 
 ### How to check the result
-Since the raw simulation data stored in `dat/` are MPI-decomposed, users firstly merge them via
+Since the raw simulation data stored in `dat/` are MPI-decomposed, users firstly merge them by
 ```
 >./merge.out dat/ dat/
 ```
