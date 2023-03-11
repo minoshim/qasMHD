@@ -4,7 +4,7 @@ MPI parallel codes for the following three-dimensional problems are available:
 - `MRX`... Magnetic reconnection,
 - `OTvortex` ... Orszag-Tang vortex problem,
 - `RTI` ... Rayleigh-Taylor instability,
-- `blast` ... blast wave propagation problem
+- `blast` ... blast wave propagation problem.
 
 Users may edit the following files contained in each directory:
 - `init.hpp` defines the initial condition,
