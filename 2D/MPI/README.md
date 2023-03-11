@@ -1,14 +1,14 @@
 ## qasMHD/2D/MPI
 MPI parallel codes for the following two-dimensional problems are available:
-- `KHI`... Kelvin-Helmholtz instability[^1],
-- `MRX`... Magnetic reconnection[^2],
-- `OTvortex` ... Orszag-Tang vortex problem[^1][^2],
-- `RMI` ... Richtmyer-Meshkov instability[^1],
+- `KHI`... Kelvin-Helmholtz instability[^1];
+- `MRX`... Magnetic reconnection[^2];
+- `OTvortex` ... Orszag-Tang vortex problem[^1][^2];
+- `RMI` ... Richtmyer-Meshkov instability[^1];
 - `RTI` ... Rayleigh-Taylor instability.
 
 Users may edit the following files contained in each directory:
-- `init.hpp` defines the initial condition,
-- `global.hpp` defines the simulation parameters (number of grid points, time step, plasma parameters, etc.),
+- `init.hpp` defines the initial condition;
+- `global.hpp` defines the simulation parameters (number of grid points, time step, plasma parameters, etc.);
 - `mhd_fd2d.h` defines macros `RMN`, `ODR`, `R_K`, and `CTW` to select the Riemann solvers, spatial and temporal order of accuracy, and the multidimensional upwinding for the Constrained Transport method[^2].
 
 ### How to run the simulation
