@@ -4,7 +4,7 @@ Quasi all-speed magnetohydrodynamic (qasMHD) simulation code is a C++ package fo
 The qasMHD code has the characteristics of:
 - up to 4th order accuracy in space and 3rd order accuracy in time;
 - shock capturing by approximate Riemann solvers, including state-of-the-art low-dissipation all-speed solvers[^1][^2];
-- preservation of the solenoidal condition of the magnetic field by a sophisticated Contrained Transport method[^3].
+- preservation of the solenoidal condition of the magnetic field by a well-designed Contrained Transport method[^3].
 
 The qasMHD code is unique in that it can accurately solve MHD flows in wide-ranging Mach numbers, even when the flow is almost incompressible!
 
