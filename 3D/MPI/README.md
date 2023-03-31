@@ -22,6 +22,8 @@ Here `4` is the number of MPI processes and `2` is the number of OpenMP threads,
 
 The number of MPI processes should be equal to the value of `mnp` defined in `global.hpp` (otherwise, the simulation does not run).
 
+Users can abort the run by Ctrl+C, and restart it by the same `a.out` and command.
+
 The result is stored in `dat/`.
 
 ### How to check the result
