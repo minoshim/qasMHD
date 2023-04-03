@@ -3,7 +3,7 @@
 
 /* [IMPORTANT] Select Riemann solver, spatial and temporal accuracy */
 #define RMN (2)		 /* Riemann solver (0=Roe, 1=HLLD, 2=LHLLD, 3=MLAU) */
-#define ODR (2)		 /* Spatial order (1,2,3,4). Never set >4 */
+#define ODR (4)		 /* Spatial order (1,2,3,4). Never set >4 */
 #define R_K (3)		 /* Temporal order (1,2,3). Never set >3 */
 
 /* 1D MHD solver */

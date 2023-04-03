@@ -9,6 +9,8 @@ ssx=2**(int(np.log(nx)/np.log(2)))
 sst=2**(int(np.log(nt)/np.log(2)))
 
 val=by
+val=pr
+val=val-np.mean(val)
 
 val=val[nt-sst:nt,nx-ssx:nx]
 ff=np.fft.fftshift(np.fft.fft2(val)) # call 2D FFT
@@ -17,6 +19,16 @@ freq=np.fft.fftshift(np.fft.fftfreq(sst,t[1]-t[0]))
 kk=wnum*2*np.pi
 oo=freq*2*np.pi
 ff=np.log10(np.abs(ff))
+
+# Wave velocities
+ro0=np.mean(ro[:,0])
+pr0=np.mean(pr[:,0])
+bx0=np.mean(bx[:,0])
+bb0=np.sqrt(np.mean(bx[:,0]*bx[:,0]+by[:,0]*by[:,0]+bz[:,0]*bz[:,0]))
+ca0=np.sqrt(bb0*bb0/ro0)
+tmp=gam*pr0+bb0*bb0
+cf0=np.sqrt(0.5*(tmp+np.sqrt(tmp*tmp-4*gam*pr0*bx0*bx0))/ro0)
+cs0=np.sqrt(0.5*(tmp-np.sqrt(tmp*tmp-4*gam*pr0*bx0*bx0))/ro0)
 
 # Plot option
 xmin=0
