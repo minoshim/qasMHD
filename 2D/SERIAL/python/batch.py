@@ -79,4 +79,4 @@ for j in range(1,ny-2*yoff):
 
 # #Plot
 val=pr/ro
-a=plt2d.image(x=x,y=y,val=val,save=0,title=f"t={t[sst]:.2f}",show=1)
+a=plt2d.image(x=x,y=y,val=val,save=0,title=f"t={t[sst]:.2f}",show=1,equal=0)
