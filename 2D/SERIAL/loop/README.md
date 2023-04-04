@@ -4,7 +4,9 @@ This problem is first suggested by Gardiner & Stone[^1] to assess the capability
 
 The initial condition is *(&rho;,v<sub>x</sub>,v<sub>y</sub>,v<sub>z</sub>,B<sub>z</sub>,P)*=*(1,&radic;5cos(&theta;),&radic;5sin(&theta;),0,0,P<sub>0</sub>)*, and *(B<sub>x</sub>, B<sub>y</sub>)* are determined from the vector potential *A<sub>z</sub>=*max*(10<sup>-3</sup>(0.3-r),0)* where *r<sup>2</sup>=x<sup>2</sup>+y<sup>2</sup>* and *-1<x<1, -0.5<y<0.5*.
 
-The problem is stringent especially when the flow is well aligned to the axis *(&theta;~0 or &pi/2;)*[^2] and/or is subsonic *(P>>1)*[^3].
+The problem is stringent especially when the flow is well aligned to the axis *(&theta;~0 or &pi;/2)*[^2] and/or is subsonic *(P>>1)*[^3].
+
+The example results of the magnetic pressure for *&theta;=0.01* and *P=1* are shown below.
 
 [^1]: [Gardiner T. A., and Stone J. M. 2005, JCP](https://www.sciencedirect.com/science/article/pii/S0021999104004784)
 [^2]: [Lee, D. 2013, JCP](https://www.sciencedirect.com/science/article/pii/S0021999113001836?via%3Dihub)
