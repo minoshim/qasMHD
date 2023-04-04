@@ -5,7 +5,7 @@ Random white noise is added to the magnetic field and pressure, and their pertur
 
 Example results for high and low beta cases are shown below:
 
-(Top...spatial profiles, bottom left...spectrum of the magnetic field, bottom right...spectrum of the pressure. Users can create the spectrum plot with `wk_plt.py`)
+(Top...spatial profiles, bottom left...spectrum of the magnetic field, bottom right...spectrum of the pressure. Users can create the spectrum plot with the script `wk_plt.py`)
 
 1. Beta=10. The pressure perturbation propagates as the fast magnetosonic wave.
 ![Wave profile for beta=10](../imgs/wave/wave_b1e+1.png)
