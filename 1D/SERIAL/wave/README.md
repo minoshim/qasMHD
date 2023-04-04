@@ -3,7 +3,7 @@ This problem demonstrates the propagation of MHD waves in homogeneous plasma to 
 
 Random white noise is added to the magnetic field and pressure, and their perturabations propagate as the Alfven and magnetosonic waves.
 
-Exsample results for high and low beta cases are shown below (Top...wave profiles, bottom left...spectrum of the magnetic field, bottom right...spectrum fo the pressure):
+Example results for high and low beta cases are shown below (Top...spatial profiles, bottom left...spectrum of the magnetic field, bottom right...spectrum of the pressure):
 
 1. Beta=10. The pressure perturbation propagates as the fast magnetosonic wave.
 ![Wave profile for beta=10](../imgs/wave/wave_b1e+1.png)
