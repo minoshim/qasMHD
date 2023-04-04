@@ -1,7 +1,7 @@
 ## Wave propagation problem
 This problem demonstrates the propagation of MHD waves in homogeneous plasma to confirm that the code successfully satisfies the linear dispersion.
 
-Random white noise is added to the magnetic field and pressure, and the perturabations propagate as the Alfven and magnetosonic waves.
+Random white noise is added to the magnetic field and pressure, and their perturabations propagate as the Alfven and magnetosonic waves.
 
 Exsample results for high and low beta cases are shown below (Top...wave profiles, bottom left...spectrum of the magnetic field, bottom right...spectrum fo the pressure):
 
