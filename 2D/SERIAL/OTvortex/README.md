@@ -1,4 +1,4 @@
-## Orszag-Tang Vortex
+## Orszag-Tang Vortex Problem
 
 The Orszag-Tang vortex problem is a standard benchmark test for the two-dimensional MHD simulation adopted in many literatures, to verify the capability of capturing multiple interactions of shocks and vortices.
 
