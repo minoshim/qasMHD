@@ -1,5 +1,5 @@
 ## Wave propagation problem
-This problem demonstrates the propagation of MHD waves in homogeneous plasma to confirm that the code successfully satisfies the linear solution.
+This problem demonstrates the propagation of MHD waves in homogeneous plasma to confirm that the code successfully satisfies the linear dispersion.
 
 Random white noise is added to the magnetic field and pressure, and the perturabations propagate as the Alfven and magnetosonic waves.
 
