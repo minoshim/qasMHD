@@ -8,8 +8,7 @@ The problem is stringent especially when the flow is well aligned to the axis *(
 
 The example results of the magnetic pressure for *&theta;=0.01* and *P=1* are shown below.
 
-![Loop advection t=1](../imgs/loop/Figure_1.png)
-![Loop advection t=1](../imgs/loop/Figure_2.png)
+![Loop advection t=1](../imgs/loop/Figure_1.png) ![Loop advection t=1](../imgs/loop/Figure_2.png)
 
 [^1]: [Gardiner T. A., and Stone J. M. 2005, JCP](https://www.sciencedirect.com/science/article/pii/S0021999104004784)
 [^2]: [Lee, D. 2013, JCP](https://www.sciencedirect.com/science/article/pii/S0021999113001836?via%3Dihub)
