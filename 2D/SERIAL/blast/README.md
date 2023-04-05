@@ -6,4 +6,4 @@ The initial condition is *(&rho;,v<sub>x</sub>,v<sub>y</sub>,v<sub>z</sub>,B<sub
 
 The example result of the gas and magnetic pressures for *&theta;=30&deg;* is shown below (in logarithmic scale).
 
-<img src="../imgs/blast/Figure_1.png" alt="Gas pressure in blast wave" width="500px"> <img src="../imgs/blast/Figure_2.png" alt="Magnetic pressure in blast wave" width="500px">
+<img src="../../imgs/blast/Figure_1.png" alt="Gas pressure in blast wave" width="500px"> <img src="../../imgs/blast/Figure_2.png" alt="Magnetic pressure in blast wave" width="500px">
