@@ -13,14 +13,14 @@ Here, users can demonstrate five standard MHD shock tube problems adopted by Miy
 Example results for each problem are shown below:
 
 1. Dai & Woodward problem
-![Dai & Woodward problem](../imgs/shock/Figure_1.png)
+![Dai & Woodward problem](../../imgs/shock/Figure_1.png)
 2. Brio & Wu problem
-![Brio & Wu problem](../imgs/shock/Figure_2.png)
+![Brio & Wu problem](../../imgs/shock/Figure_2.png)
 3. Slow switch-off shock
-![Slow switch-off shock](../imgs/shock/Figure_3.png)
+![Slow switch-off shock](../../imgs/shock/Figure_3.png)
 4. Slow switch-off rarefaction
-![Slow switch-off rarefaction](../imgs/shock/Figure_4.png)
+![Slow switch-off rarefaction](../../imgs/shock/Figure_4.png)
 5. Super-fast expansion
-![Super-fast expansion](../imgs/shock/Figure_5.png)
+![Super-fast expansion](../../imgs/shock/Figure_5.png)
 
 [^1]:  [Miyoshi T. and Kusano K. 2005, JCP](https://www.sciencedirect.com/science/article/pii/S0021999105001142?via%3Dihub)
