@@ -30,9 +30,9 @@ Above packages (excluding Intel compiler) can be installed by `apt-get` or `yum`
 Since the code is updated without notice, you may update the code via `>git pull origin main`.
 
 ## Composition
-- `1D/SERIAL/` contains serial codes for one-dimensional problems.
+- `1D/` contains serial codes for one-dimensional problems.
 - `2D/` contains serial and MPI parallel codes for two-dimensional problems.
-- `3D/MPI/` contains MPI parallel codes for three-dimensional problems.
+- `3D/` contains MPI parallel codes for three-dimensional problems.
 - `common/` contains central functions for the simulation.
 - `license/` contains license documents.
 - `mpi/` contains functions for MPI parallelization.
