@@ -27,7 +27,7 @@ Above packages (excluding Intel compiler) can be installed by `apt-get` or `yum`
 3. Check `Makefile.inc` and edit environment variables `CC`, `CFLAGS`, and `MPICC` to meet users environment.
 4. Execute `>make clean` and `>make` commands to remake libraries.
 
-Since the code is updated without notice, you may update the code via `>git pull origin main`.
+Since the code is updated without notice, users may update the code via `>git pull origin main`.
 
 ## Composition
 - `1D/` contains serial codes for one-dimensional problems.
