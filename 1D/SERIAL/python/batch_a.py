@@ -14,7 +14,7 @@ while True:
     direc=input("Input data directory (Ctrl-D to exit): ")+"/"
     try:
         x=np.loadtxt(direc+"x.dat",dtype=float)
-        t=np.loadtxt(direc+"t.dat",dtype=float)
+        t=np.atleast_1d(np.loadtxt(direc+"t.dat",dtype=float))
         xoff=int(np.loadtxt(direc+"xoff.dat",dtype=int))
         para=np.loadtxt(direc+"params.dat",dtype=float)
         break
@@ -48,7 +48,8 @@ vz=data2[:,3,:]/ro
 bx=np.full((nt,nx-2*xoff),bx0)
 by=data2[:,4,:]
 bz=data2[:,5,:]
-pr=(gam-1)*(data2[:,6,:]-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
+en=data2[:,6,:]
+pr=(gam-1)*(en-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
 data2=np.array([ro,vx,vy,vz,pr,bx,by,bz])
 
 #Plot
