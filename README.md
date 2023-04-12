@@ -36,13 +36,13 @@ Since the code is updated without notice, users may update the code via `>git pu
 - `common/` contains central functions for the simulation.
 - `license/` contains license documents.
 - `mpi/` contains functions for MPI parallelization.
-- `Makefile` to make libraries here.
+- `Makefile` to make libraries.
 - `Makefile.inc` to define environment variables.
 - `Readme.md` is this file.
 - `libmympi.a` is the library generated from `mpi/`.
 - `libqasmhd.a` is the library generated from `common/`.
 
-For information about `1D/`, `2D/`, and `3D/` problems, see `README.md` in each directory.
+For information about `1D/`, `2D/`, and `3D/` problems, see `README` in each directory.
 
 [^1]: [Minoshima T., Kitamura K., and Miyoshi T. 2020, ApJS](https://iopscience.iop.org/article/10.3847/1538-4365/ab8aee/meta)
 [^2]: [Minoshima T. and Miyoshi T. 2021, JCP](https://www.sciencedirect.com/science/article/pii/S0021999121005349)
