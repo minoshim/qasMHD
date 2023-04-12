@@ -16,16 +16,16 @@ while True:
     try:
         x=np.loadtxt(direc+"merge_x.dat",dtype=float)
         y=np.loadtxt(direc+"merge_y.dat",dtype=float)
-        t=np.loadtxt(direc+"t.dat",dtype=float)
+        t=np.atleast_1d(np.loadtxt(direc+"t.dat",dtype=float))
         offs=np.loadtxt(direc+"offsets.dat",dtype=int)
-        para=float(np.loadtxt(direc+"params.dat",dtype=float))
+        para=np.atleast_1d(np.loadtxt(direc+"params.dat",dtype=float))
         break
     except:
         print("Error during file load.")
 
 xoff=offs[0]
 yoff=offs[1]
-gam=para
+gam=para[0]
 
 #Number of elements
 nx=np.size(x)
@@ -51,7 +51,8 @@ vz=data[:,3,:,:]/ro
 bx=data[:,4,:,:]                  # @ CT grid (i-1/2,j)
 by=data[:,5,:,:]                  # @ CT grid (i,j-1/2)
 bz=data[:,6,:,:]
-pr=(gam-1)*(data[:,7,:,:]-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
+en=data[:,7,:,:]
+pr=(gam-1)*(en-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
 
 # Current
 jz=np.zeros((nt,ny,nx))

@@ -16,16 +16,16 @@ while True:
     try:
         x=np.loadtxt(direc+"x.dat",dtype=float)
         y=np.loadtxt(direc+"y.dat",dtype=float)
-        t=np.loadtxt(direc+"t.dat",dtype=float)
+        t=np.atleast_1d(np.loadtxt(direc+"t.dat",dtype=float))
         offs=np.loadtxt(direc+"offsets.dat",dtype=int)
-        para=float(np.loadtxt(direc+"params.dat",dtype=float))
+        para=np.atleast_1d(np.loadtxt(direc+"params.dat",dtype=float))
         break
     except:
         print("Error during file load.")
 
 xoff=offs[0]
 yoff=offs[1]
-gam=para
+gam=para[0]
 
 #Number of elements
 nx=np.size(x)
@@ -68,7 +68,8 @@ for i in range(0,nx-2*xoff):
 for j in range(0,ny-2*yoff):
     by[j,:]=0.5*(data[5,j+yoff,xoff:nx-xoff]+data[5,j+1+yoff,xoff:nx-xoff])
 bz=data2[6,:,:]
-pr=(gam-1)*(data2[7,:,:]-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
+en=data2[7,:,:]
+pr=(gam-1)*(en-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
 data2=np.array([ro,vx,vy,vz,pr,bx,by,bz])
 
 # Current
