@@ -17,9 +17,9 @@ while True:
         x=np.loadtxt(direc+"merge_x.dat",dtype=float)
         y=np.loadtxt(direc+"merge_y.dat",dtype=float)
         z=np.loadtxt(direc+"merge_z.dat",dtype=float)
-        t=np.loadtxt(direc+"t.dat",dtype=float)
+        t=np.atleast_1d(np.loadtxt(direc+"t.dat",dtype=float))
         offs=np.loadtxt(direc+"offsets.dat",dtype=int)
-        para=float(np.loadtxt(direc+"params.dat",dtype=float))
+        para=np.atleast_1d(np.loadtxt(direc+"params.dat",dtype=float))
         break
     except:
         print("Error during file load.")
@@ -27,7 +27,7 @@ while True:
 xoff=offs[0]
 yoff=offs[1]
 zoff=offs[2]
-gam=para
+gam=para[0]
 
 #Number of elements
 nx=np.size(x)
@@ -54,5 +54,6 @@ vy=data[2,:,:,:]/ro
 vz=data[3,:,:,:]/ro
 bx=data[4,:,:,:]                  # @ CT grid (i-1/2,j,k)
 by=data[5,:,:,:]                  # @ CT grid (i,j-1/2,k)
-bz=data[6,:,:,:]                  # @ CT grid (i,j,k-1/2) 
-pr=(gam-1)*(data[7,:,:,:]-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
+bz=data[6,:,:,:]                  # @ CT grid (i,j,k-1/2)
+en=data[7,:,:,:]
+pr=(gam-1)*(en-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
