@@ -12,7 +12,7 @@
 #define N_OUT (50)		// Number of output
 #define DTOUT (1.0)		// Time step for output
 
-#define MAGNET (0)	// Flag for finite B-field (set 0 for Hydro shock)
+#define MAGNET (1)	// Flag for finite B-field (set 0 for Hydro shock)
 #define RANDOM (0)		// Flag for random perturbation (see init.hpp)
 
 int dnxs[8]={0,0,0,0,0,0,0,0};
