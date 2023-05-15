@@ -6,8 +6,9 @@ INCDIR  = -I$(DIRI)
 LDFLAGS = -L$(DIRL)
 LIBS = -lm -l$(LIBNAME)
 LIBRARY = $(DIRL)/lib$(LIBNAME).a
+BASECLASS = $(DIRI)/mhd_class.hpp
 TARGET = a.out
-OBJS = main.o mhd_fd2d.o boundary.o
+OBJS = main.o mhd2d_class.o mhd2d_init_.o mhd2d_paras.o mhd2d_solve.o
 DATADIR = dat
 
 .PHONY : all
@@ -32,6 +33,8 @@ clean:
 cdata:
 	rm -f $(DATADIR)/*.dat
 
-main.o: $(LIBRARY) myfunc.h mhd_fd2d.o mhd_fd2d.h boundary.o boundary.h dataio.hpp get.hpp global.hpp init.hpp new_delete.hpp
-mhd_fd2d.o: $(LIBRARY) mhd_fd2d.h boundary.o boundary.h
-boundary.o: $(LIBRARY) boundary.h
+main.o: $(LIBRARY) $(BASECLASS) mhd2d_class.o mhd2d_init_.o mhd2d_paras.o mhd2d_solve.o mhd2d_class.hpp mymacros.hpp
+mhd2d_class.o: $(LIBRARY) $(BASECLASS) mhd2d_class.hpp mymacros.hpp
+mhd2d_init_.o: $(LIBRARY) $(BASECLASS) mhd2d_class.o mhd2d_class.hpp mymacros.hpp
+mhd2d_paras.o: $(BASECLASS) mhd2d_class.o mhd2d_class.hpp mymacros.hpp
+mhd2d_solve.o: $(LIBRARY) $(BASECLASS) mhd2d_class.o mhd2d_class.hpp mymacros.hpp

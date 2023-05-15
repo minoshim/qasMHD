@@ -1,55 +1,12 @@
-#include "global.hpp"
-using namespace global;
+#include "mhd2d_class.hpp"
 
-#include "new_delete.hpp"
-#include "init.hpp"
-#include "get.hpp"
-#include "dataio.hpp"
+int main(){
 
-int main(void)
-{
-  int n=0,cnt=0;
-  double tim=0,trec=dtrec;
-  clock_t stim,etim;
+  MHD2D mhd2d;
+  mhd2d.paras();		// Set parameters
+  mhd2d.init_();		// Set initial condition
+  mhd2d.setdt(1);		// Set time step to satisfy CFL (if flag=1). 
+  mhd2d.exec_(1);		// Run. flag 1/O with/without modifies dt @ every step.
 
-  new_delete();
-  init_grid();
-  init_plasma();
-  double *p[]={ro,mx,my,mz,bx,by,bz,en};
-  
-  get_dt(&dt,cfl,dr,1);
-  
-  dataio(p,8,nd,n,cnt,tim,0);
-
-  stim=clock();
-  // Time integration
-  while(n++ < nmax && tim < tend){
-    tim+=dt;
-
-    // Boundary condition
-    boundary(p,8,nx,ny,xoff,yoff,stxs,dnxs,stys,dnys);
-    
-    // Upper boundary condition
-    injection(ro,mx,my,mz,bx,by,bz,en,
-	      ro_3,RANDOM*dro3,vx_1,vy_1-vref,vz_1,bx_1,by_1,bz_1,pr_1,
-	      nx,ny,xoff,yoff,gam);
-
-    // MHD update
-    mhd_fd2d(p,dt,dx,dy,8,nx,ny,xoff,yoff,gam);
-
-    // Re-calculate time step
-    if (n % 2 == 0) get_dt(&dt,cfl,dr,0);
-
-    // Output
-    if (tim >= trec){
-      trec+=dtrec;
-      cnt++;
-      dataio(p,8,nd,n,cnt,tim,1);
-    }
-  }
-  etim=clock();
-  printf("CPU time = %f sec.\n",(double)(etim-stim)/CLOCKS_PER_SEC);
-
-  new_delete();
   return 0;
 }
