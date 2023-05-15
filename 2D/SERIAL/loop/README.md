@@ -1,9 +1,7 @@
 ## Field Loop Advection Problem
 
-This problem is first suggested by Gardiner & Stone[^1] to assess the capability to preserve the shape of a weak magnetic field loop during the advection.
-
-The initial condition is *(&rho;,v<sub>x</sub>,v<sub>y</sub>,v<sub>z</sub>,B<sub>z</sub>,P)*=*(1,&radic;5cos(&theta;),&radic;5sin(&theta;),0,0,P<sub>0</sub>)*, and *(B<sub>x</sub>, B<sub>y</sub>)* are calculated from the vector potential *A<sub>z</sub>=*max*(10<sup>-3</sup>(0.3-r),0)* where *r<sup>2</sup>=x<sup>2</sup>+y<sup>2</sup>* and *-1<x<1, -0.5<y<0.5*.
-
+This problem is first suggested by Gardiner & Stone[^1] to assess the capability to preserve the shape of a weak magnetic field loop during the advection.<br>
+The initial condition is *(&rho;,v<sub>x</sub>,v<sub>y</sub>,v<sub>z</sub>,B<sub>z</sub>,P)*=*(1,&radic;5cos(&theta;),&radic;5sin(&theta;),0,0,P<sub>0</sub>)*, and *(B<sub>x</sub>, B<sub>y</sub>)* are calculated from the vector potential *A<sub>z</sub>=*max*(10<sup>-3</sup>(0.3-r),0)* where *r<sup>2</sup>=x<sup>2</sup>+y<sup>2</sup>* and *-1<x<1, -0.5<y<0.5*.<br>
 The problem is stringent especially when the flow is well aligned to the axis *(&theta;~0 or &pi;/2)*[^2] and/or the flow is subsonic *(P<sub>0</sub>>>1)*[^3].
 
 The example results of the magnetic pressure for *&theta;=0.01* and *P<sub>0</sub>=1* are shown below.
