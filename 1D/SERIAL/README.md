@@ -6,7 +6,7 @@ Serial codes for the following one-dimensional problems are available:
 Users may edit the following files contained in each directory:
 - `mhd1d_init_.cpp` defines the initial condition;
 - `mhd1d_paras.cpp` defines the simulation parameters (spatial domain and boundary condition);
-- `mymacros.hpp` defines macros about simulation space, time, and the solver design.
+- `mymacros.hpp` defines macros about simulation space, time, and the solver design (Riemann solver, spatial and temporal orders).
 
 ### How to run the simulation
 ```
