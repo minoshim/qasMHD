@@ -3,7 +3,7 @@ The shock tube problem is a standard benchmark test for compressible (M)HD simul
 
 The diaphragm is instantaneously removed at *t=0*, and then fluids evolve to produce a variety of shocks, rarefaction waves, and discontinuities depending on the initial condition.
 
-Here, users can demonstrate five standard MHD shock tube problems adopted by Miyoshi and Kusano[^1], by editting the macro `NUM` in `global.hpp`:
+Here, users can demonstrate five standard MHD shock tube problems adopted by Miyoshi and Kusano[^1], by editting the macro `NUM` in `mhd1d_init_.cpp`:
 1. Dai & Woodward problem
 2. Brio & Wu problem
 3. Slow switch-off shock
