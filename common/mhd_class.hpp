@@ -45,11 +45,11 @@ public:
   
 protected:
   double gam=5.0/3.0;		// Specific heat ratio
-  double *x,*y,*z;
-  double *ro,*mx,*my,*mz,*en;
-  double *bx,*by,*bz;		// B @ cell edge
-  double *vx,*vy,*vz,*pr;
-  double *cx,*cy,*cz;		// B @ cell center
+  double *x,*y,*z;		// Spatial coordinate
+  double *ro,*mx,*my,*mz,*en;	// Density, momentum, and total energy
+  double *bx,*by,*bz;		// Magnetic field @ cell edge
+  double *vx,*vy,*vz,*pr;	// Velocity and pressure
+  double *cx,*cy,*cz;		// Magnetic field @ cell center
   double *nu,*eta;		// Kinematic viscosity and resistivity
   double *phi_g;		// Gravitational potential
   double *val[nm];		// Pointer for MHD variables
@@ -104,6 +104,8 @@ protected:
   double (*fcen[4])(const double *f)={cal_fcen_2nd,cal_fcen_2nd,cal_fcen_4th,cal_fcen_4th};
   /* Spatial difference */
   double (*df1[4])(const double *f)={cal_df_2nd,cal_df_2nd,cal_df_4th,cal_df_4th};
+  /* 2nd spatial difference */
+  double (*df2[4])(const double *f)={cal_d2f_2nd,cal_d2f_2nd,cal_d2f_4th,cal_d2f_4th};
 };
 
 #endif
