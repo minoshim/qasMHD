@@ -11,7 +11,7 @@ MPI parallel codes for the following two-dimensional problems are available:
 Users may edit the following files contained in each directory:
 - `mhd2d_init_.cpp` defines the initial condition;
 - `mhd2d_paras.cpp` defines the simulation parameters (spatial domain and boundary condition);
-- `mymacros.hpp` defines macros about simulation space, MPI number of processes, time, and the solver design (Riemann solver, spatial and temporal orders, and the multidimensional upwinding for the Constrained Transport method[^2]).
+- `mymacros.hpp` defines macros about simulation space, MPI number of processes, time, and the solver design (Riemann solver, spatial and temporal accuracies, and the multidimensional upwinding for the Constrained Transport method[^2]).
 
 ### How to run the simulation
 ```
@@ -21,7 +21,7 @@ Users may edit the following files contained in each directory:
 >mpiexec -np 4 -x OMP_NUM_THREADS=2 ./a.out    #for OpenMPI users
 ```
 Here `4` is the number of MPI processes and `2` is the number of OpenMP threads, thus 8 CPU cores are used for this example run.<br>
-The number of MPI processes should be equal to the value of `MNP_X*MNP_Y` defined in `mymacros.hpp` (otherwise, the simulation does not run).
+The number of MPI processes should be equal to the value of the product of `MNP_X` and `MNP_Y` defined in `mymacros.hpp` (otherwise, the simulation does not run).
 
 Users can abort the run by Ctrl+C, and restart it by the same `a.out` and command.
 
