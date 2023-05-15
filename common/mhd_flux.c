@@ -88,7 +88,7 @@ void calc_flux_mlau(double rol, double vnl, double vtl, double vul, double btl, 
   /* Mass and Pressure fluxes */
   double mnc=ffl+ffr;
   double mflux=mnc*cfn;
-  mflux-=max(1.0-fabs(mnc),0)*theta*cfni*(ptr-ptl)/(rol+ror);
+  mflux-=max(1.0-fabs(mnc),0.0)*theta*cfni*(ptr-ptl)/(rol+ror);
   double dir=(mflux > 0)?1.0:(-1.0);
   double dirl=0.5*(1.0+dir);
   double dirr=1.0-dirl;

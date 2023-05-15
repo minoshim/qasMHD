@@ -140,36 +140,3 @@ void wcns4_cal_flr(const double *f, double *fl, double *fr)
 	     +w[1]*(-f[+1]+6.0*f[0]+3.0*f[-1])
 	     +w[0]*(+3.0*f[0]+6.0*f[-1]-f[-2]));
 }
-
-/* Central interpolation */
-/* f = address @ i-1/2, Return = value @ i */
-double cal_fcen_2nd(const double *f) /* 2nd order */
-{
-  return(0.5*(f[0]+f[1]));
-}
-double cal_fcen_4th(const double *f) /* 4th order */
-{
-  return(0.0625*(9.0*(f[0]+f[1])-(f[-1]+f[2])));
-}
-
-/* Central difference */
-/* f = address @ i-1/2, Return = 1st derivative @ i */
-double cal_df_2nd(const double *f) /* 2nd order */
-{
-  return(f[1]-f[0]);
-}
-double cal_df_4th(const double *f) /* 4th order */
-{
-  return((27.0*(f[1]-f[0])-(f[2]-f[-1]))/24.0);
-}
-
-/* 2nd central difference */
-/* f = address @ i, Return = 2nd derivative @ i */
-double cal_d2f_2nd(const double *f) /* 2nd order */
-{
-  return ( (f[1]+f[-1])-2.0*f[0] );
-}
-double cal_d2f_4th(const double *f) /* 4th order */
-{
-  return ( (-(f[2]+f[-2])+16.0*(f[1]+f[-1])-30.0*f[0])/12.0 );
-}

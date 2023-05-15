@@ -204,52 +204,30 @@ void mhd_lr_single(const double *f, int offset,
   func_lr(&val[ns/2],vl,vr);
 }
 
-void mhd_updt1d(double *val[], const double *val0,
-		const double *fx, double dtdx, const double rk_fac[2],
+void mhd_updt1d(double *val, double val0, const double *fx,
+		double dtdx, const double rk_fac[2], int xoffset,
 		double (*func_df)(const double*))
 /* Update 1D MHD variables */
+/* xoffset is 1 */
 {
-  const int nm=7;		/* Number of variables */
   int sm1,ss0,sp1,sp2;
-  sm1=-1;
+  sm1=-1*xoffset;
   ss0=0;
-  sp1=+1;
-  sp2=+2;
-  double du[nm];
-  double valx[nm][4]={{fx[nm*sm1+0],fx[nm*ss0+0],fx[nm*sp1+0],fx[nm*sp2+0]},
-		      {fx[nm*sm1+1],fx[nm*ss0+1],fx[nm*sp1+1],fx[nm*sp2+1]},
-		      {fx[nm*sm1+2],fx[nm*ss0+2],fx[nm*sp1+2],fx[nm*sp2+2]},
-		      {fx[nm*sm1+3],fx[nm*ss0+3],fx[nm*sp1+3],fx[nm*sp2+3]},
-		      {fx[nm*sm1+4],fx[nm*ss0+4],fx[nm*sp1+4],fx[nm*sp2+4]},
-		      {fx[nm*sm1+5],fx[nm*ss0+5],fx[nm*sp1+5],fx[nm*sp2+5]},
-		      {fx[nm*sm1+6],fx[nm*ss0+6],fx[nm*sp1+6],fx[nm*sp2+6]}};
-  du[0]=func_df(&valx[0][1]);
-  du[1]=func_df(&valx[1][1]);
-  du[2]=func_df(&valx[2][1]);
-  du[3]=func_df(&valx[3][1]);
-  du[4]=func_df(&valx[4][1]);
-  du[5]=func_df(&valx[5][1]);
-  du[6]=func_df(&valx[6][1]);
-
-  rk_updt(val[0],val0[0],-dtdx*du[0],rk_fac[0],rk_fac[1]);
-  rk_updt(val[1],val0[1],-dtdx*du[1],rk_fac[0],rk_fac[1]);
-  rk_updt(val[2],val0[2],-dtdx*du[2],rk_fac[0],rk_fac[1]);
-  rk_updt(val[3],val0[3],-dtdx*du[3],rk_fac[0],rk_fac[1]);
-  rk_updt(val[4],val0[4],-dtdx*du[4],rk_fac[0],rk_fac[1]);
-  rk_updt(val[5],val0[5],-dtdx*du[5],rk_fac[0],rk_fac[1]);
-  rk_updt(val[6],val0[6],-dtdx*du[6],rk_fac[0],rk_fac[1]);
+  sp1=+1*xoffset;
+  sp2=+2*xoffset;
+  double valx[4]={fx[sm1],fx[ss0],fx[sp1],fx[sp2]};
+  double du=func_df(&valx[1]);
+  rk_updt(val,val0,-dtdx*du,rk_fac[0],rk_fac[1]);
 }
-		
-void mhd_updt2d(double *val[], const double *val0,
+
+void mhd_updt2d(double *val, double val0,
 		const double *fx, const double *fy,
-		double dtdx, double dtdy, const double rk_fac[2], const double flag[],
+		double dtdx, double dtdy, const double rk_fac[2],
 		int xoffset, int yoffset,
 		double (*func_df)(const double*))
 /* Update 2D MHD variables @ cell center */
-/* Flag = 1 or 0. Update ith-variable if flag[i]=1 */
 /* xoffset and yoffset are 1 and nx */
 {
-  const int nm=8;		/* Number of variables */
   int sim,si0,sip,sip2;
   int sjm,sj0,sjp,sjp2;
   sim=-xoffset;
@@ -260,51 +238,61 @@ void mhd_updt2d(double *val[], const double *val0,
   sj0=0;
   sjp=+yoffset;
   sjp2=2*yoffset;
-  double du[2][nm];
+  double du[2];
   /* dF/dx */
-  double valx[nm][4]={{fx[nm*sim+0],fx[nm*si0+0],fx[nm*sip+0],fx[nm*sip2+0]},
-		      {fx[nm*sim+1],fx[nm*si0+1],fx[nm*sip+1],fx[nm*sip2+1]},
-		      {fx[nm*sim+2],fx[nm*si0+2],fx[nm*sip+2],fx[nm*sip2+2]},
-		      {fx[nm*sim+3],fx[nm*si0+3],fx[nm*sip+3],fx[nm*sip2+3]},
-		      {fx[nm*sim+4],fx[nm*si0+4],fx[nm*sip+4],fx[nm*sip2+4]},
-		      {fx[nm*sim+5],fx[nm*si0+5],fx[nm*sip+5],fx[nm*sip2+5]},
-		      {fx[nm*sim+6],fx[nm*si0+6],fx[nm*sip+6],fx[nm*sip2+6]},
-		      {fx[nm*sim+7],fx[nm*si0+7],fx[nm*sip+7],fx[nm*sip2+7]}};
-  du[0][0]=func_df(&valx[0][1]);
-  du[0][1]=func_df(&valx[1][1]);
-  du[0][2]=func_df(&valx[2][1]);
-  du[0][3]=func_df(&valx[3][1]);
-  du[0][4]=func_df(&valx[4][1]);
-  du[0][5]=func_df(&valx[5][1]);
-  du[0][6]=func_df(&valx[6][1]);
-  du[0][7]=func_df(&valx[7][1]);
+  double valx[4]={fx[sim],fx[si0],fx[sip],fx[sip2]};
+  du[0]=func_df(&valx[1]);
   /* dG/dy */
-  double valy[nm][4]={{fy[nm*sjm+0],fy[nm*sj0+0],fy[nm*sjp+0],fy[nm*sjp2+0]},
-		      {fy[nm*sjm+1],fy[nm*sj0+1],fy[nm*sjp+1],fy[nm*sjp2+1]},
-		      {fy[nm*sjm+2],fy[nm*sj0+2],fy[nm*sjp+2],fy[nm*sjp2+2]},
-		      {fy[nm*sjm+3],fy[nm*sj0+3],fy[nm*sjp+3],fy[nm*sjp2+3]},
-		      {fy[nm*sjm+4],fy[nm*sj0+4],fy[nm*sjp+4],fy[nm*sjp2+4]},
-		      {fy[nm*sjm+5],fy[nm*sj0+5],fy[nm*sjp+5],fy[nm*sjp2+5]},
-		      {fy[nm*sjm+6],fy[nm*sj0+6],fy[nm*sjp+6],fy[nm*sjp2+6]},
-		      {fy[nm*sjm+7],fy[nm*sj0+7],fy[nm*sjp+7],fy[nm*sjp2+7]}};
-  du[1][0]=func_df(&valy[0][1]);
-  du[1][1]=func_df(&valy[1][1]);
-  du[1][2]=func_df(&valy[2][1]);
-  du[1][3]=func_df(&valy[3][1]);
-  du[1][4]=func_df(&valy[4][1]);
-  du[1][5]=func_df(&valy[5][1]);
-  du[1][6]=func_df(&valy[6][1]);
-  du[1][7]=func_df(&valy[7][1]);
+  double valy[4]={fy[sjm],fy[sj0],fy[sjp],fy[sjp2]};
+  du[1]=func_df(&valy[1]);
 
-  rk_updt(val[0],val0[0],flag[0]*(-dtdx*du[0][0]-dtdy*du[1][0]),rk_fac[0],rk_fac[1]);
-  rk_updt(val[1],val0[1],flag[1]*(-dtdx*du[0][1]-dtdy*du[1][1]),rk_fac[0],rk_fac[1]);
-  rk_updt(val[2],val0[2],flag[2]*(-dtdx*du[0][2]-dtdy*du[1][2]),rk_fac[0],rk_fac[1]);
-  rk_updt(val[3],val0[3],flag[3]*(-dtdx*du[0][3]-dtdy*du[1][3]),rk_fac[0],rk_fac[1]);
-  rk_updt(val[4],val0[4],flag[4]*(-dtdx*du[0][4]-dtdy*du[1][4]),rk_fac[0],rk_fac[1]);
-  rk_updt(val[5],val0[5],flag[5]*(-dtdx*du[0][5]-dtdy*du[1][5]),rk_fac[0],rk_fac[1]);
-  rk_updt(val[6],val0[6],flag[6]*(-dtdx*du[0][6]-dtdy*du[1][6]),rk_fac[0],rk_fac[1]);
-  rk_updt(val[7],val0[7],flag[7]*(-dtdx*du[0][7]-dtdy*du[1][7]),rk_fac[0],rk_fac[1]);
+  rk_updt(val,val0,(-dtdx*du[0]-dtdy*du[1]),rk_fac[0],rk_fac[1]);
 }
+
+void mhd_updt2d_ctb(double *val, double val0, const double *ez,
+		    double dtdy, const double rk_fac[2], int offset,
+		    double (*func_df)(const double*))
+/* Update 2D MHD B @ cell face (bx or by) by CT method */
+/* dtdy should include the direction. For exsample, it is negative when val=by */
+{
+  int sm1,ss0,sp1,sp2;
+  sm1=-1*offset;
+  ss0=0;
+  sp1=+1*offset;
+  sp2=+2*offset;
+  double ezs[4]={ez[sm1],ez[ss0],ez[sp1],ez[sp2]};
+  double du=func_df(&ezs[1]);
+  rk_updt(val,val0,-dtdy*du,rk_fac[0],rk_fac[1]);
+}
+		    
+void mhd_updt3d_ctb(double *bx, double bx0, const double *ey, const double *ez,
+		    double dtdy, double dtdz, const double rk_fac[2],
+		    int yoffset, int zoffset,
+		    double (*func_df)(const double*))
+/* Update 3D MHD Bx @ cell face by CT method */
+/* yoffset and zoffset are nx and nx*ny */
+{
+  int sjm1,sj00,sjp1,sjp2;
+  int skm1,sk00,skp1,skp2;
+  sjm1=-1*yoffset;
+  sj00=0;
+  sjp1=+1*yoffset;
+  sjp2=+2*yoffset;
+  skm1=-1*zoffset;
+  sk00=0;
+  skp1=+1*zoffset;
+  skp2=+2*zoffset;
+  double eys[4]={ey[skm1],ey[sk00],ey[skp1],ey[skp2]};
+  double ezs[4]={ez[sjm1],ez[sj00],ez[sjp1],ez[sjp2]};
+  double du[2];
+  du[0]=+func_df(&ezs[1]);
+  du[1]=-func_df(&eys[1]);
+  rk_updt(bx,bx0,-dtdy*du[0]-dtdz*du[1],rk_fac[0],rk_fac[1]);
+}
+
+
+
+/* below is obsolete and will be deleted */
 
 void mhd_updt3d(double *val[], const double *val0,
 		const double *fx, const double *fy, const double *fz,
@@ -392,45 +380,4 @@ void mhd_updt3d(double *val[], const double *val0,
   rk_updt(val[5],val0[5],flag[5]*(-dtdx*du[0][5]-dtdy*du[1][5]-dtdz*du[2][5]),rk_fac[0],rk_fac[1]);
   rk_updt(val[6],val0[6],flag[6]*(-dtdx*du[0][6]-dtdy*du[1][6]-dtdz*du[2][6]),rk_fac[0],rk_fac[1]);
   rk_updt(val[7],val0[7],flag[7]*(-dtdx*du[0][7]-dtdy*du[1][7]-dtdz*du[2][7]),rk_fac[0],rk_fac[1]);
-}
-
-void mhd_updt2d_ctb(double *val, double val0, const double *ez,
-		    double dtdy, const double rk_fac[2], int offset,
-		    double (*func_df)(const double*))
-/* Update 2D MHD B @ cell face (bx or by) by CT method */
-/* dtdy should include the direction. For exsample, it is negative when val=by */
-{
-  int sm1,ss0,sp1,sp2;
-  sm1=-1*offset;
-  ss0=0;
-  sp1=+1*offset;
-  sp2=+2*offset;
-  double ezs[4]={ez[sm1],ez[ss0],ez[sp1],ez[sp2]};
-  double du=func_df(&ezs[1]);
-  rk_updt(val,val0,-dtdy*du,rk_fac[0],rk_fac[1]);
-}
-		    
-void mhd_updt3d_ctb(double *bx, double bx0, const double *ey, const double *ez,
-		    double dtdy, double dtdz, const double rk_fac[2],
-		    int yoffset, int zoffset,
-		    double (*func_df)(const double*))
-/* Update 3D MHD Bx @ cell face by CT method */
-/* yoffset and zoffset are nx and nx*ny */
-{
-  int sjm1,sj00,sjp1,sjp2;
-  int skm1,sk00,skp1,skp2;
-  sjm1=-1*yoffset;
-  sj00=0;
-  sjp1=+1*yoffset;
-  sjp2=+2*yoffset;
-  skm1=-1*zoffset;
-  sk00=0;
-  skp1=+1*zoffset;
-  skp2=+2*zoffset;
-  double eys[4]={ey[skm1],ey[sk00],ey[skp1],ey[skp2]};
-  double ezs[4]={ez[sjm1],ez[sj00],ez[sjp1],ez[sjp2]};
-  double du[2];
-  du[0]=+func_df(&ezs[1]);
-  du[1]=-func_df(&eys[1]);
-  rk_updt(bx,bx0,-dtdy*du[0]-dtdz*du[1],rk_fac[0],rk_fac[1]);
 }

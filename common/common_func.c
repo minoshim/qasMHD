@@ -3,28 +3,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-double max(double a, double b)
-{
-  return( (a >= b)?a:b );
-}
-
-double min(double a, double b)
-{
-  return( (a >= b)?b:a );
-}
-
-double minmod(double a, double b)
-{
-  return(+min(max(a,b),0)
-	 +max(min(a,b),0));
-}
-
-double minmod3(double a, double b, double c)
-{
-  return(+min(max(max(a,b),c),0)
-	 +max(min(min(a,b),c),0));
-}
-
 double rand_noise(const double *params, unsigned seed)
 {
   static int r_flag=0;
@@ -51,12 +29,6 @@ void conv_f2d(double *valo, const float *vali, int n)
 {
   int i;
   for (i=0;i<n;i++) valo[i]=(double)vali[i];
-}
-
-void rk_updt(double *f1, double f0, double df, double rkfac0, double rkfac1)
-/* TVD Runge-Kutta update */
-{
-  (*f1)=rkfac0*f0+rkfac1*((*f1)+df);
 }
 
 void bc1d(double *f, int nx, int xoff, int dnx)

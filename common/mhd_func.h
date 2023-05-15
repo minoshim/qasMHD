@@ -66,28 +66,19 @@ void mhd_lr_single(const double *f, int offset,
 		   void (*func_lr)(const double*, double*, double*),
 		   double *vl, double *vr);
 
-/* Update MHD 1D variables */
+/* Update 1D MHD variables */
+/* xoffset is 1 */
 /* func_df = 1st derivative */
-void mhd_updt1d(double *val[], const double *val0,
-		const double *fx, double dtdx, const double rk_fac[2],
+void mhd_updt1d(double *val, double val0, const double *fx,
+		double dtdx, const double rk_fac[2], int xoffset,
 		double (*func_df)(const double*));
 
 /* Update 2D MHD variables @ cell center */
-/* Flag = 1 or 0. Update ith-variable if flag[i]=1 */
 /* xoffset and yoffset are 1 and nx */
-void mhd_updt2d(double *val[], const double *val0,
+void mhd_updt2d(double *val, double val0,
 		const double *fx, const double *fy,
-		double dtdx, double dtdy, const double rk_fac[2], const double flag[],
+		double dtdx, double dtdy, const double rk_fac[2],
 		int xoffset, int yoffset,
-		double (*func_df)(const double*));
-
-/* Update 3D MHD variables @ cell center */
-/* Flag = 1 or 0. Update ith-variable if flag[i]=1 */
-/* xoffset,yoffset,zoffset are 1,nx,nx*ny */
-void mhd_updt3d(double *val[], const double *val0,
-		const double *fx, const double *fy, const double *fz,
-		double dtdx, double dtdy, double dtdz, const double rk_fac[2], const double flag[],
-		int xoffset, int yoffset, int zoffset,
 		double (*func_df)(const double*));
 
 /* Update 2D MHD B @ cell face (bx or by) by CT method */
@@ -102,5 +93,18 @@ void mhd_updt3d_ctb(double *bx, double bx0, const double *ey, const double *ez,
 		    double dtdy, double dtdz, const double rk_fac[2],
 		    int yoffset, int zoffset,
 		    double (*func_df)(const double*));
+
+
+
+/* Below is obsolete and will be deleted */
+
+/* Update 3D MHD variables @ cell center */
+/* Flag = 1 or 0. Update ith-variable if flag[i]=1 */
+/* xoffset,yoffset,zoffset are 1,nx,nx*ny */
+void mhd_updt3d(double *val[], const double *val0,
+		const double *fx, const double *fy, const double *fz,
+		double dtdx, double dtdy, double dtdz, const double rk_fac[2], const double flag[],
+		int xoffset, int yoffset, int zoffset,
+		double (*func_df)(const double*));
 
 #endif

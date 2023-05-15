@@ -1,13 +1,35 @@
 #ifndef _COMMON_FUNC_H_
 #define _COMMON_FUNC_H_
 
-double max(double a, double b);	/* return max(a,b) */
+template <typename TYPE>
+inline TYPE max(TYPE a, TYPE b)
+{
+  return( (a >= b)?a:b );
+}
 
-double min(double a, double b);	/* return min(a,b) */
+template <typename TYPE>
+inline TYPE min(TYPE a, TYPE b)
+{
+  return( (a >= b)?b:a );
+}
 
-double minmod(double a, double b); /* return minmod(a,b) */
+inline double minmod(double a, double b)
+{
+  return(+min(max(a,b),0.0)
+	 +max(min(a,b),0.0));
+}
 
-double minmod3(double a, double b, double c); /* return minmod(a,b,c) */
+inline double minmod3(double a, double b, double c)
+{
+  return(+min(max(max(a,b),c),0.0)
+	 +max(min(min(a,b),c),0.0));
+}
+
+inline void rk_updt(double *f1, double f0, double df, double rkfac0, double rkfac1)
+/* TVD Runge-Kutta update */
+{
+  (*f1)=rkfac0*f0+rkfac1*((*f1)+df);
+}
 
 double rand_noise(const double *params, unsigned seed); /* return uniform random distribution (params[0] +- paramas[1]) */
 
@@ -16,9 +38,6 @@ void cpy_array(double *a, const double *b, int n); /* copy b to a. n = length */
 void conv_d2f(float *valo, const double *vali, int n); /* convert double (vali) to single (valo) presicion */
 
 void conv_f2d(double *valo, const float *vali, int n); /* convert single (vali) to double (valo) presicion */
-
-void rk_updt(double *f1, double f0, double df, double rkfac0, double rkfac1);
-/* TVD Runge-Kutta update. f1=rkfac0*f0+rkfac1*(f1+df) */
 
 void bc1d(double *f, int nx, int xoff, int dnx);
 /* 1D boundary condition */
