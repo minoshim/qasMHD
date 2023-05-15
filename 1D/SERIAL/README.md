@@ -4,9 +4,9 @@ Serial codes for the following one-dimensional problems are available:
 - `wave`... MHD wave propagation problems[^2].
 
 Users may edit the following files contained in each directory:
-- `init.hpp` defines the initial condition;
-- `global.hpp` defines the simulation parameters (number of grid points, time step, plasma parameters, etc.);
-- `mhd_fd1d.h` defines macros `RMN`, `ODR`, and `R_K` to select the Riemann solvers, spatial and temporal order of accuracy.
+- `mhd1d_init_.cpp` defines the initial condition;
+- `mhd1d_paras.cpp` defines the simulation parameters (spatial domain and boundary condition);
+- `mymacros.hpp` defines macros about simulation space, time, and the solver design.
 
 ### How to run the simulation
 ```
