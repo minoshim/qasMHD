@@ -1,1 +1,1 @@
-python/wk_plt.py
+../python/wk_plt.py

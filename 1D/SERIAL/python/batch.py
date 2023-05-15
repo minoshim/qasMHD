@@ -16,18 +16,17 @@ while True:
         x=np.loadtxt(direc+"x.dat",dtype=float)
         t=np.atleast_1d(np.loadtxt(direc+"t.dat",dtype=float))
         xoff=int(np.loadtxt(direc+"xoff.dat",dtype=int))
-        para=np.loadtxt(direc+"params.dat",dtype=float)
+        para=np.atleast_1d(np.loadtxt(direc+"params.dat",dtype=float))
         break
     except:
         print("Error during file load.")
     
-bx0=para[0]
-gam=para[1]
+gam=para[0]
 
 #Number of elements
 nx=np.size(x)
 nt=np.size(t)
-nd=7 #Number of dependent variables in MHD-1D
+nd=8 #Number of dependent variables
 
 #Read MHD data @ particular time
 sst=-1
@@ -45,10 +44,10 @@ ro=data2[0,:]
 vx=data2[1,:]/ro
 vy=data2[2,:]/ro
 vz=data2[3,:]/ro
-bx=np.array([bx0]*(nx-2*xoff))
-by=data2[4,:]
-bz=data2[5,:]
-en=data2[6,:]
+bx=data2[4,:]
+by=data2[5,:]
+bz=data2[6,:]
+en=data2[7,:]
 pr=(gam-1)*(en-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
 data2=np.array([ro,vx,vy,vz,pr,bx,by,bz])
 
