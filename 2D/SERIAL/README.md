@@ -9,9 +9,9 @@ Serial codes for the following two-dimensional problems are available:
 - `loop` ... field loop advection problem[^2].
 
 Users may edit the following files contained in each directory:
-- `init.hpp` defines the initial condition;
-- `global.hpp` defines the simulation parameters (number of grid points, time step, plasma parameters, etc.);
-- `mhd_fd2d.h` defines macros `RMN`, `ODR`, `R_K`, and `CTW` to select the Riemann solvers, spatial and temporal order of accuracy, and the multidimensional upwinding for the Constrained Transport method[^2].
+- `mhd2d_init_.cpp` defines the initial condition;
+- `mhd2d_paras.cpp` defines the simulation parameters (spatial domain and boundary condition);
+- `mymacros.hpp` defines macros about simulation space, time, and the solver design (Riemann solver, spatial and temporal orders, and the multidimensional upwinding for the Constrained Transport method[^2]).
 
 ### How to run the simulation
 ```
