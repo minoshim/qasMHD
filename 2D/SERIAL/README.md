@@ -11,7 +11,7 @@ Serial codes for the following two-dimensional problems are available:
 Users may edit the following files contained in each directory:
 - `mhd2d_init_.cpp` defines the initial condition;
 - `mhd2d_paras.cpp` defines the simulation parameters (spatial domain and boundary condition);
-- `mymacros.hpp` defines macros about simulation space, time, and the solver design (Riemann solver, spatial and temporal orders, and the multidimensional upwinding for the Constrained Transport method[^2]).
+- `mymacros.hpp` defines macros about simulation space, time, and the solver design (Riemann solver, spatial and temporal accuracies, and the multidimensional upwinding for the Constrained Transport method[^2]).
 
 ### How to run the simulation
 ```
