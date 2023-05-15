@@ -6,8 +6,7 @@ The qasMHD code has the characteristics of:
 - shock capturing by approximate Riemann solvers, including state-of-the-art low-dissipation all-speed solvers[^1][^2];
 - preservation of the solenoidal condition of the magnetic field by a well-designed Contrained Transport method[^3].
 
-The qasMHD code is unique in that it can accurately solve MHD flows in wide-ranging Mach numbers, even when the flow is almost incompressible!
-
+The qasMHD code is unique in that it can accurately solve MHD flows in wide-ranging Mach numbers, even when the flow is almost incompressible!<br>
 The current version supports 1D-3D space in Cartesian coordinates and hybrid MPI/OpenMP parallel computation.
 
 ## System requirements
@@ -17,8 +16,7 @@ Following packages are required to be installed on the system:
 - MPI library (MPICH, OpenMPI) to use the MPI parallel code;
 - Python 3.X with NumPy and matplotlib for data read and visualization (can be downloaded from [Anaconda](https://www.anaconda.com/products/distribution)).
 
-The code is tested on Linux OSs (Ubuntu, Linux Mint, CentOS, including Windows Subsystem for Linux).
-
+The code is tested on Linux OSs (Ubuntu, Linux Mint, CentOS, including Windows Subsystem for Linux).<br>
 Above packages (excluding Intel compiler) can be installed by `apt-get` or `yum` commands.
 
 ## Installation
@@ -27,7 +25,7 @@ Above packages (excluding Intel compiler) can be installed by `apt-get` or `yum`
 3. Check `Makefile.inc` and edit environment variables `CC`, `CFLAGS`, and `MPICC` to meet users environment.
 4. Execute `>make clean` and `>make` commands to remake libraries.
 
-Since the code is updated without notice, users may update the code via `>git pull origin main`.
+Since the code is updated without notice, users may need to update the code via `>git pull origin main`.
 
 ## Composition
 - `1D/` contains serial codes for one-dimensional problems.
@@ -38,9 +36,12 @@ Since the code is updated without notice, users may update the code via `>git pu
 - `mpi/` contains functions for MPI parallelization.
 - `Makefile` to make libraries.
 - `Makefile.inc` to define environment variables.
-- `Readme.md` is this file.
+- `README.md` is this file.
 - `libmympi.a` is the library generated from `mpi/`.
 - `libqasmhd.a` is the library generated from `common/`.
+
+`common/mhd_class.hpp` and `mpi/mympi_class.hpp` define the base class of the MHD simulation and MPI parallelization.<br>
+Users are recommended to read them (without editting) to know member variables defined there.
 
 For information about `1D/`, `2D/`, and `3D/` problems, see `README` in each directory.
 
