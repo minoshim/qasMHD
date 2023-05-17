@@ -5,7 +5,7 @@
 #include "mympi_class.hpp"
 #include "mymacros.hpp"
 
-class MHD2D : public MHD, public MYMPI{
+class MHD2D : public MYMPI, public MHD{
 
 public:
   const int xoff=4,yoff=xoff;		// Number of ghost cells in each side
