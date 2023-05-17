@@ -89,6 +89,13 @@ protected:
     double val[4]={b_ct[-offset],b_ct[0],b_ct[+offset],b_ct[+2*offset]};
     return fcen(&val[1]);
   }
+  void bb2cc(int i, double (*fcen)(const double *f), int xoffset=0, int yoffset=0, int zoffset=0)
+  {
+    // B @ cell center from cell edge (3-components)
+    cx[i]=bcell(&bx[i],xoffset,fcen);
+    cy[i]=bcell(&by[i],yoffset,fcen);
+    cz[i]=bcell(&bz[i],zoffset,fcen);
+  }
 
   // Routines for MHD solver from mhd_common.h
   /* Riemann solvers */
