@@ -19,7 +19,7 @@ The code is tested on Linux OSs (Ubuntu, Linux Mint, CentOS, including Windows S
 Above packages (excluding Intel compiler) can be installed by `apt-get` or `yum` commands.
 
 ## Installation
-1. Download the qasMHD code from GitHub via `>git clone hppts://github.com/minoshim/qasMHD`.
+1. Download the qasMHD code from GitHub via `>git clone https://github.com/minoshim/qasMHD`.
 2. Move to the main directory `qasMHD/`.
 3. Check `Makefile.inc` and edit environment variables `CC`, `CFLAGS`, and `MPICC` to meet users environment.
 4. Execute `>make clean` and `>make` commands to remake libraries.
