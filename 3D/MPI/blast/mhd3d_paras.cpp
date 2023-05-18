@@ -3,12 +3,12 @@
 void MHD3D::paras()
 {
   // Simulation parameters
-  xmin=0.0;
-  xmax=2.0*M_PI;
-  ymin=0.0;
-  ymax=2.0*M_PI;
-  zmin=0.0;
-  zmax=2.0*M_PI;
+  xmin=-2.0;
+  xmax=+2.0;
+  ymin=-2.0;
+  ymax=+2.0;
+  zmin=-2.0;
+  zmax=+2.0;
   dx=(xmax-xmin)/XMESH;
   dy=(ymax-ymin)/YMESH;
   dz=(zmax-zmin)/ZMESH;

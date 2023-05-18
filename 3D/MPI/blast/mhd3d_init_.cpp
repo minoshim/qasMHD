@@ -1,11 +1,5 @@
 #include "mhd3d_class.hpp"
 
-#define NUM (0)
-// Flag for initial condition
-// 0,1,2: X-Y plane, Y-Z plane, Z-X plane
-// 3,4,5: Transpose of 0,1,2
-// 6: 3D
-
 void MHD3D::init_()
 {
   int i,j,k;
@@ -19,76 +13,36 @@ void MHD3D::init_()
   for (m=0;m<mpi_ranz;m++){
     ksum+=(ZMESH+m)/mpi_numz;
   }
-  for (i=0;i<nx;i++) x[i]=(i-xoff+isum)*dx+xmin;
-  for (j=0;j<ny;j++) y[j]=(j-yoff+jsum)*dy+ymin;
-  for (k=0;k<nz;k++) z[k]=(k-zoff+ksum)*dz+zmin;
+  for (i=0;i<nx;i++) x[i]=(i-xoff+isum+0.5)*dx+xmin;
+  for (j=0;j<ny;j++) y[j]=(j-yoff+jsum+0.5)*dy+ymin;
+  for (k=0;k<nz;k++) z[k]=(k-zoff+ksum+0.5)*dz+zmin;
 
-  // Orszag-Tang vortex
+  // Blast wave
+
+  // Initial condition parameters
+  const double r_0=0.25;       // Radius of imposed high-P cylinder
+  const double ro0=1e0;         // Ambient density
+  const double ro1=1e0;         // Density in cylinder
+  const double pr0=1e0;         // Ambient pressure
+  const double pr1=1e2;         // Pressure in cylinder
+  const double b_0=10.0;        // Ambient |B|
+  const double bthe=90.0;	// B angle relative to z axis
+  const double bphi=30.0;       // B angle relative to x axis
+  
   for (k=0;k<nz;k++){
     for (j=0;j<ny;j++){
       for (i=0;i<nx;i++){
 	int ss=nx*(ny*k+j)+i;
-
-	ro[ss]=gam*gam;
-	pr[ss]=gam;
-
-#if (NUM == 0)
-	// X-Y plane
-	vx[ss]=-sin(y[j]);
-	vy[ss]=+sin(x[i]);
-	vz[ss]=0.0;
-	bx[ss]=-sin(y[j]);
-	by[ss]=+sin(2*x[i]);
-	bz[ss]=0.0;
-#elif (NUM ==1)
-	// Y-Z plane
-	vy[ss]=-sin(z[k]);
-	vz[ss]=+sin(y[j]);
+	double rr=sqrt(x[i]*x[i]+y[j]*y[j]+z[k]*z[k]);
+	
+	ro[ss]=(rr <= r_0)?ro1:ro0;
 	vx[ss]=0.0;
-	by[ss]=-sin(z[k]);
-	bz[ss]=+sin(2*y[j]);
-	bx[ss]=0.0;
-#elif (NUM ==2)
-	// Z-X plane
-	vz[ss]=-sin(x[i]);
-	vx[ss]=+sin(z[k]);
 	vy[ss]=0.0;
-	bz[ss]=-sin(x[i]);
-	bx[ss]=+sin(2*z[k]);
-	by[ss]=0.0;
-#elif (NUM ==3)
-	// X-Y plane (transpose)
-	vx[ss]=+sin(y[j]);
-	vy[ss]=-sin(x[i]);
 	vz[ss]=0.0;
-	bx[ss]=+sin(2*y[j]);
-	by[ss]=-sin(x[i]);
-	bz[ss]=0.0;
-#elif (NUM ==4)
-	// Y-Z plane (transpose)
-	vy[ss]=+sin(z[k]);
-	vz[ss]=-sin(y[j]);
-	vx[ss]=0.0;
-	by[ss]=+sin(2*z[k]);
-	bz[ss]=-sin(y[j]);
-	bx[ss]=0.0;
-#elif (NUM ==5)
-	// Z-X plane (transpose)
-	vz[ss]=+sin(x[i]);
-	vx[ss]=-sin(z[k]);
-	vy[ss]=0.0;
-	bz[ss]=+sin(2*x[i]);
-	bx[ss]=-sin(z[k]);
-	by[ss]=0.0;
-#else
-	vx[ss]=0.5*(+sin(2*z[k])-sin(y[j]));
-	vy[ss]=0.5*(+sin(3*x[i])-sin(z[k]));
-	vz[ss]=0.5*(+sin(4*y[j])-sin(x[i]));
-	bx[ss]=0.5*(+sin(3*z[k])-sin(y[j]));
-	by[ss]=0.5*(+sin(4*x[i])-sin(z[k]));
-	bz[ss]=0.5*(+sin(2*y[j])-sin(x[i]));
-#endif
-
+	bx[ss]=b_0*sin(bthe*dtor)*cos(bphi*dtor);
+	by[ss]=b_0*sin(bthe*dtor)*sin(bphi*dtor);
+	bz[ss]=b_0*cos(bthe*dtor);
+	pr[ss]=(rr <= r_0)?pr1:pr0;
 	cx[ss]=bx[ss];
 	cy[ss]=by[ss];
 	cz[ss]=bz[ss];
