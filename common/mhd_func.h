@@ -67,18 +67,23 @@ void mhd_lr_single(const double *f, int offset,
 		   double *vl, double *vr);
 
 /* Update 1D MHD variables */
-/* xoffset is 1 */
 /* func_df = 1st derivative */
 void mhd_updt1d(double *val, double val0, const double *fx,
 		double dtdx, const double rk_fac[2], int xoffset,
 		double (*func_df)(const double*));
 
 /* Update 2D MHD variables @ cell center */
-/* xoffset and yoffset are 1 and nx */
 void mhd_updt2d(double *val, double val0,
 		const double *fx, const double *fy,
 		double dtdx, double dtdy, const double rk_fac[2],
 		int xoffset, int yoffset,
+		double (*func_df)(const double*));
+
+/* Update 3D MHD variables @ cell center */
+void mhd_updt3d(double *val, double val0,
+		const double *fx, const double *fy, const double *fz,
+		double dtdx, double dtdy, double dtdz, const double rk_fac[2],
+		int xoffset, int yoffset, int zoffset,
 		double (*func_df)(const double*));
 
 /* Update 2D MHD B @ cell face (bx or by) by CT method */

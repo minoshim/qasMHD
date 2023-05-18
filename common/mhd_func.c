@@ -208,7 +208,6 @@ void mhd_updt1d(double *val, double val0, const double *fx,
 		double dtdx, const double rk_fac[2], int xoffset,
 		double (*func_df)(const double*))
 /* Update 1D MHD variables */
-/* xoffset is 1 */
 {
   int sm1,ss0,sp1,sp2;
   sm1=-1*xoffset;
@@ -226,7 +225,6 @@ void mhd_updt2d(double *val, double val0,
 		int xoffset, int yoffset,
 		double (*func_df)(const double*))
 /* Update 2D MHD variables @ cell center */
-/* xoffset and yoffset are 1 and nx */
 {
   int sim,si0,sip,sip2;
   int sjm,sj0,sjp,sjp2;
@@ -247,6 +245,42 @@ void mhd_updt2d(double *val, double val0,
   du[1]=func_df(&valy[1]);
 
   rk_updt(val,val0,(-dtdx*du[0]-dtdy*du[1]),rk_fac[0],rk_fac[1]);
+}
+
+void mhd_updt3d(double *val, double val0,
+		const double *fx, const double *fy, const double *fz,
+		double dtdx, double dtdy, double dtdz, const double rk_fac[2],
+		int xoffset, int yoffset, int zoffset,
+		double (*func_df)(const double*))
+/* Update 3D MHD variables @ cell center */
+{
+  int sim,si0,sip,sip2;
+  int sjm,sj0,sjp,sjp2;
+  int skm,sk0,skp,skp2;
+  sim=-xoffset;
+  si0=0;
+  sip=+xoffset;
+  sip2=2*xoffset;
+  sjm=-yoffset;
+  sj0=0;
+  sjp=+yoffset;
+  sjp2=2*yoffset;
+  skm=-zoffset;
+  sk0=0;
+  skp=+zoffset;
+  skp2=2*zoffset;
+  double du[3];
+  /* dF/dx */
+  double valx[4]={fx[sim],fx[si0],fx[sip],fx[sip2]};
+  du[0]=func_df(&valx[1]);
+  /* dG/dy */
+  double valy[4]={fy[sjm],fy[sj0],fy[sjp],fy[sjp2]};
+  du[1]=func_df(&valy[1]);
+  /* dH/dz */
+  double valz[4]={fz[skm],fz[sk0],fz[skp],fz[skp2]};
+  du[2]=func_df(&valz[1]);
+  
+  rk_updt(val,val0,(-dtdx*du[0]-dtdy*du[1]-dtdz*du[2]),rk_fac[0],rk_fac[1]);
 }
 
 void mhd_updt2d_ctb(double *val, double val0, const double *ez,
