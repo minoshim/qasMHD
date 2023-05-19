@@ -3,12 +3,13 @@
 void MHD3D::paras()
 {
   // Simulation parameters
+  setgam(2.0);
   xmin=0.0;
-  xmax=2.0*M_PI;
+  xmax=20.0;
   ymin=0.0;
-  ymax=2.0*M_PI;
+  ymax=ymin+(xmax-xmin)*(double)YMESH/XMESH;
   zmin=0.0;
-  zmax=2.0*M_PI;
+  zmax=zmin+(xmax-xmin)*(double)ZMESH/XMESH;
   dx=(xmax-xmin)/XMESH;
   dy=(ymax-ymin)/YMESH;
   dz=(zmax-zmin)/ZMESH;
@@ -28,14 +29,14 @@ void MHD3D::paras()
   dnxs[6]=+0;			// bz
   dnxs[7]=+0;			// en
 
-  dnys[0]=+0;			// ro
-  dnys[1]=+0;			// mx
-  dnys[2]=+0;			// my
-  dnys[3]=+0;			// mz
-  dnys[4]=+0;			// bx
-  dnys[5]=+0;			// by
-  dnys[6]=+0;			// bz
-  dnys[7]=+0;			// en
+  dnys[0]=+1;			// ro
+  dnys[1]=+1;			// mx
+  dnys[2]=-1;			// my
+  dnys[3]=+1;			// mz
+  dnys[4]=+1;			// bx
+  dnys[5]=-1;			// by
+  dnys[6]=+1;			// bz
+  dnys[7]=+1;			// en
 
   dnzs[0]=+0;			// ro
   dnzs[1]=+0;			// mx

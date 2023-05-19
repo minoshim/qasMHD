@@ -1,11 +1,5 @@
 #include "mhd3d_class.hpp"
 
-#define NUM (0)
-// Flag for initial condition
-// 0,1,2: X-Y plane, Y-Z plane, Z-X plane
-// 3,4,5: Transpose of 0,1,2
-// 6: 3D
-
 void MHD3D::init_()
 {
   int i,j,k;
@@ -19,76 +13,74 @@ void MHD3D::init_()
   for (m=0;m<mpi_ranz;m++){
     ksum+=(ZMESH+m)/mpi_numz;
   }
-  for (i=0;i<nx;i++) x[i]=(i-xoff+isum)*dx+xmin;
-  for (j=0;j<ny;j++) y[j]=(j-yoff+jsum)*dy+ymin;
-  for (k=0;k<nz;k++) z[k]=(k-zoff+ksum)*dz+zmin;
+  for (i=0;i<nx;i++) x[i]=(i-xoff+isum+0.5)*dx+xmin;
+  for (j=0;j<ny;j++) y[j]=(j-yoff+jsum+0.5)*dy+ymin;
+  for (k=0;k<nz;k++) z[k]=(k-zoff+ksum+0.5)*dz+zmin;
 
-  // Orszag-Tang vortex
+  // KH instability
+
+  // Initial condition parameters
+  const double beta=1e2;	// Ambient plasma beta
+  const double angle_u=90.0;	// B field angle in upper domain. 90deg: B=Bz, 0deg: B=Bx
+  const double angle_l=angle_u;	// B field angle in lower domain.
+  const double vamp=0.5;	// Shear velocity amplitude
+  const int nmode=1;		// Number of mode for perturbation
+  const double wlen=getlx()/nmode;
+  const double lambda=1.0;	// Shear layer width
+  const double s0=ymin+0.5*(ymax-ymin);	// Shear position
+  const double ro_u=1.0;	// Density in upper domain
+  const double ro_l=1.0;	// Density in lower domain
+  const double b0=1.0;		// B field strength
+  const double pr0=0.5*beta*b0*b0; // Pressure
+  const double dv=0.01;		// Perturbation amplitude
+  const double dvparax[2]={0,dv};	// Perturbation parameter for vx
+  const double dvparay[2]={0,dv};	// Perturbation paeameter for vy
+
+  double dvy[nz][nx];
+  unsigned seed;
+  double stim;			// Time at node 0, used for seed of rand_noise
+  if (mpi_rank == 0) stim=MPI_Wtime();
+  MPI_Bcast(&stim,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+  //Random seed depending on x and z, used for vy perturbation
+  seed=(unsigned)(stim*(1+mpi_ranx+(mpi_numx*mpi_ranz)));
+  
   for (k=0;k<nz;k++){
+    for (i=0;i<nx;i++){
+      dvy[k][i]=0.0;
+#if (RANDOM)
+      dvy[k][i]+=rand_noise(dvparay,seed); // Multiple mode perturbation
+#else
+      dvy[k][i]+=dv*sin(2*M_PI*x[i]/wlen); // Single mode perturbation
+#endif    
+    }
+  }
+
+  //Reset random seed depending on z, used for vx perturbation
+  seed=(unsigned)(stim*(1+mpi_ranz));
+  srandom(seed);
+  
+  for (k=0;k<nz;k++){
+    double vampx=vamp+rand_noise(dvparax,seed); // Perturbation to vx is independent of x and y    
     for (j=0;j<ny;j++){
+      double angle=0.5*((angle_u+angle_l)+(angle_u-angle_l)*tanh((y[j]-s0)/lambda));
       for (i=0;i<nx;i++){
 	int ss=nx*(ny*k+j)+i;
 
-	ro[ss]=gam*gam;
-	pr[ss]=gam;
-
-#if (NUM == 0)
-	// X-Y plane
-	vx[ss]=-sin(y[j]);
-	vy[ss]=+sin(x[i]);
+	ro[ss]=0.5*((ro_u+ro_l)+(ro_u-ro_l)*tanh((y[j]-s0)/lambda));
+	vx[ss]=+vampx*tanh((y[j]-s0)/lambda);
+	vy[ss]=dvy[k][i]*exp(-((y[j]-s0)*(y[j]-s0))/(4*lambda*lambda));
 	vz[ss]=0.0;
-	bx[ss]=-sin(y[j]);
-	by[ss]=+sin(2*x[i]);
-	bz[ss]=0.0;
-#elif (NUM ==1)
-	// Y-Z plane
-	vy[ss]=-sin(z[k]);
-	vz[ss]=+sin(y[j]);
-	vx[ss]=0.0;
-	by[ss]=-sin(z[k]);
-	bz[ss]=+sin(2*y[j]);
-	bx[ss]=0.0;
-#elif (NUM ==2)
-	// Z-X plane
-	vz[ss]=-sin(x[i]);
-	vx[ss]=+sin(z[k]);
-	vy[ss]=0.0;
-	bz[ss]=-sin(x[i]);
-	bx[ss]=+sin(2*z[k]);
-	by[ss]=0.0;
-#elif (NUM ==3)
-	// X-Y plane (transpose)
-	vx[ss]=+sin(y[j]);
-	vy[ss]=-sin(x[i]);
-	vz[ss]=0.0;
-	bx[ss]=+sin(2*y[j]);
-	by[ss]=-sin(x[i]);
-	bz[ss]=0.0;
-#elif (NUM ==4)
-	// Y-Z plane (transpose)
-	vy[ss]=+sin(z[k]);
-	vz[ss]=-sin(y[j]);
-	vx[ss]=0.0;
-	by[ss]=+sin(2*z[k]);
-	bz[ss]=-sin(y[j]);
-	bx[ss]=0.0;
-#elif (NUM ==5)
-	// Z-X plane (transpose)
-	vz[ss]=+sin(x[i]);
-	vx[ss]=-sin(z[k]);
-	vy[ss]=0.0;
-	bz[ss]=+sin(2*x[i]);
-	bx[ss]=-sin(z[k]);
-	by[ss]=0.0;
-#else
-	vx[ss]=0.5*(+sin(2*z[k])-sin(y[j]));
-	vy[ss]=0.5*(+sin(3*x[i])-sin(z[k]));
-	vz[ss]=0.5*(+sin(4*y[j])-sin(x[i]));
-	bx[ss]=0.5*(+sin(3*z[k])-sin(y[j]));
-	by[ss]=0.5*(+sin(4*x[i])-sin(z[k]));
-	bz[ss]=0.5*(+sin(2*y[j])-sin(x[i]));
-#endif
-
+	pr[ss]=pr0;
+	
+	if (angle == 90){
+	  bx[ss]=0.0;
+	  by[ss]=0.0;
+	  bz[ss]=b0;
+	} else{
+	  bx[ss]=b0*cos(angle*dtor);
+	  by[ss]=0.0;
+	  bz[ss]=b0*sin(angle*dtor);
+	}
 	cx[ss]=bx[ss];
 	cy[ss]=by[ss];
 	cz[ss]=bz[ss];
