@@ -1,7 +1,7 @@
 from mayavi import mlab
 import numpy as np
 
-# 3D volume rendering using mayavi.mlab
+# 3D visualization using mayavi.mlab
 
 def volume(x0,y0,z0,val,
            contours=10,
