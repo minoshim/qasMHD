@@ -18,15 +18,11 @@ while True:
         y=np.loadtxt(direc+"merge_y.dat",dtype=float)
         z=np.loadtxt(direc+"merge_z.dat",dtype=float)
         t=np.atleast_1d(np.loadtxt(direc+"t.dat",dtype=float))
-        offs=np.loadtxt(direc+"offsets.dat",dtype=int)
         para=np.atleast_1d(np.loadtxt(direc+"params.dat",dtype=float))
         break
     except:
         print("Error during file load.")
 
-xoff=offs[0]
-yoff=offs[1]
-zoff=offs[2]
 gam=para[0]
 
 #Number of elements
