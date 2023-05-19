@@ -262,7 +262,6 @@ void MHD3D::ideal(double dt)
 #endif
       for (k=0;k<nz;k++){
 	int s1l,s1r;
-	int sl,sr;
 	double *ul,*ur;
 	ul=new double[2*ny];
 	ur=new double[2*ny];
@@ -273,8 +272,6 @@ void MHD3D::ideal(double dt)
 	    ss=nx*(ny*k+j)+i;
 	    s1l=j+1;
 	    s1r=j;
-	    sl=nx*(ny*k+(j+1))+i;
-	    sr=nx*(ny*k+j)+i;
 	    double vl,vr;
 	    mhd_lr_single(&fx[nm*ss+5],nm*nx,lfun_lr,&vl,&vr); /* Upwind part */
 	    ul[2*s1l+0]=vl;
@@ -300,7 +297,6 @@ void MHD3D::ideal(double dt)
 #endif
       for (j=0;j<ny;j++){
 	int s1l,s1r;
-	int sl,sr;
 	double *ul,*ur;
 	ul=new double[2*nz];
 	ur=new double[2*nz];
@@ -311,8 +307,6 @@ void MHD3D::ideal(double dt)
 	    ss=nx*(ny*k+j)+i;
 	    s1l=k+1;
 	    s1r=k;
-	    sl=nx*(ny*(k+1)+j)+i;
-	    sr=nx*(ny*k+j)+i;
 	    double vl,vr;
 	    mhd_lr_single(&fx[nm*ss+6],nm*nxy,lfun_lr,&vl,&vr); /* Upwind part */
 	    ul[2*s1l+0]=vl;
@@ -432,7 +426,6 @@ void MHD3D::ideal(double dt)
 #endif
       for (j=3;j<ny-2;j++){
 	int s1l,s1r;
-	int sl,sr;
 	double *ul,*ur;
 	ul=new double[2*nz];
 	ur=new double[2*nz];
@@ -443,8 +436,6 @@ void MHD3D::ideal(double dt)
 	    ss=nx*(ny*k+j)+i;
 	    s1l=k+1;
 	    s1r=k;
-	    sl=nx*(ny*(k+1)+j)+i;
-	    sr=nx*(ny*k+j)+i;
 	    double vl,vr;
 	    mhd_lr_single(&fy[nm*ss+6],nm*nxy,lfun_lr,&vl,&vr); /* Upwind part */
 	    ul[2*s1l+0]=vl;
@@ -470,7 +461,6 @@ void MHD3D::ideal(double dt)
 #endif
       for (k=0;k<nz;k++){
 	int s1l,s1r;
-	int sl,sr;
 	double *ul,*ur;
 	ul=new double[2*nx];
 	ur=new double[2*nx];
@@ -481,8 +471,6 @@ void MHD3D::ideal(double dt)
 	    ss=nx*(ny*k+j)+i;
 	    s1l=i+1;
 	    s1r=i;
-	    sl=nx*(ny*k+j)+(i+1);
-	    sr=nx*(ny*k+j)+i;
 	    double vl,vr;
 	    mhd_lr_single(&fy[nm*ss+4],nm,lfun_lr,&vl,&vr); /* Upwind part */
 	    ul[2*s1l+0]=vl;
@@ -602,7 +590,6 @@ void MHD3D::ideal(double dt)
 #endif
       for (k=3;k<nz-2;k++){
 	int s1l,s1r;
-	int sl,sr;
 	double *ul,*ur;
 	ul=new double[2*nx];
 	ur=new double[2*nx];
@@ -613,8 +600,6 @@ void MHD3D::ideal(double dt)
 	    ss=nx*(ny*k+j)+i;
 	    s1l=i+1;
 	    s1r=i;
-	    sl=nx*(ny*k+j)+(i+1);
-	    sr=nx*(ny*k+j)+i;
 	    double vl,vr;
 	    mhd_lr_single(&fz[nm*ss+4],nm,lfun_lr,&vl,&vr); /* Upwind part */
 	    ul[2*s1l+0]=vl;
@@ -640,7 +625,6 @@ void MHD3D::ideal(double dt)
 #endif
       for (k=3;k<nz-2;k++){
 	int s1l,s1r;
-	int sl,sr;
 	double *ul,*ur;
 	ul=new double[2*ny];
 	ur=new double[2*ny];
@@ -651,8 +635,6 @@ void MHD3D::ideal(double dt)
 	    ss=nx*(ny*k+j)+i;
 	    s1l=j+1;
 	    s1r=j;
-	    sl=nx*(ny*k+(j+1))+i;
-	    sr=nx*(ny*k+j)+i;
 	    double vl,vr;
 	    mhd_lr_single(&fz[nm*ss+5],nm*nx,lfun_lr,&vl,&vr); /* Upwind part */
 	    ul[2*s1l+0]=vl;

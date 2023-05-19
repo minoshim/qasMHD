@@ -1,0 +1,101 @@
+スクリプトは 2023年05月19日 14時09分11秒
+ に開始しましたma[1m[3m%[23m[1m[0m                                                                                                                                                                                                                                        [0m[23m[24m[J[00;36mminoshim[00;31m@etude[00m[1][00;32m%[00m [K[187C~/qasMHD/3D/MPI/OTvortex/[212Dmmake clean
+rm -f a.out main.o mhd3d_class.o mhd3d_init_.o mhd3d_paras.o mhd3d_solve.o
+[1m[3m%[23m[1m[0m                                                                                                                                                                                                                                        [0m[23m[24m[J[00;36mminoshim[00;31m@etude[00m[1][00;32m%[00m [K[187C~/qasMHD/3D/MPI/OTvortex/[212Dmmake
+mpic++ -c mhd3d_class.cpp -O2 -fopenmp -std=c++11 -lm -lqasmhd -lmympi -L../../.. -I../../../common -I../../../mpi -o mhd3d_class.o
+mpic++ -c mhd3d_init_.cpp -O2 -fopenmp -std=c++11 -lm -lqasmhd -lmympi -L../../.. -I../../../common -I../../../mpi -o mhd3d_init_.o
+mpic++ -c mhd3d_paras.cpp -O2 -fopenmp -std=c++11 -lm -lqasmhd -lmympi -L../../.. -I../../../common -I../../../mpi -o mhd3d_paras.o
+mpic++ -c mhd3d_solve.cpp -O2 -fopenmp -std=c++11 -lm -lqasmhd -lmympi -L../../.. -I../../../common -I../../../mpi -o mhd3d_solve.o
+[01m[Kmhd3d_solve.cpp:55:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:62:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:74:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:107:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:120:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:128:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:144:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:208:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:224:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:270:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:284:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:305:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:319:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:372:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:388:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:434:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:448:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:469:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:483:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:536:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:552:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:598:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:612:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:633:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:647:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:664:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:683:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:690:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+[01m[Kmhd3d_solve.cpp:703:0:[m[K [01;35m[K警告: [m[K#pragma simd  を無視します [-Wunknown-pragmas]
+ #pragma simd
+[01;32m[K ^[m[K
+mpic++ -c main.cpp -O2 -fopenmp -std=c++11 -lm -lqasmhd -lmympi -L../../.. -I../../../common -I../../../mpi -o main.o
+mpic++ main.o mhd3d_class.o mhd3d_init_.o mhd3d_paras.o mhd3d_solve.o -O2 -fopenmp -std=c++11 -lm -lqasmhd -lmympi -L../../.. -I../../../common -I../../../mpi -o a.out
+[1m[3m%[23m[1m[0m                                                                                                                                                                                                                                        [0m[23m[24m[J[00;36mminoshim[00;31m@etude[00m[1][00;32m%[00m [K[187C~/qasMHD/3D/MPI/OTvortex/[212Deexit
+
+スクリプトは 2023年05月19日 14時09分17秒
+ に終了しました
