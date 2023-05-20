@@ -16,7 +16,6 @@ void MHD1D::init_()
   double para1[]={0,0.01},para2[]={1,0.01};
 
   for (int i=0;i<nx;i++){
-    x[i]=(i-xoff+0.5)*dx+xmin;
 
     ro[i]=ro0;
     vx[i]=vx0;

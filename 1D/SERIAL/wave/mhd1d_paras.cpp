@@ -5,9 +5,6 @@ void MHD1D::paras()
   // Simulation parameters
   xmin=+0.0;
   xmax=+1.0;
-  dx=(xmax-xmin)/XMESH;
-  dt=cfl*dx;
-  // dt will be re-calculated later
   sprintf(fildir,"./dat/");
   
   // Boundary condition flag for ro,mx,my,mz,bx,by,bz,en
@@ -21,4 +18,10 @@ void MHD1D::paras()
   dnxs[6]=+0;			// bz
   dnxs[7]=+0;			// en
 
+  dx=(xmax-xmin)/XMESH;
+  dt=cfl*dx;			// dt will be re-calculated later
+  for (int i=0;i<nx;i++){
+    x[i]=(i-xoff+0.5)*dx+xmin;
+  }
+  
 }

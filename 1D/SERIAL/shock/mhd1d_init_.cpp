@@ -16,7 +16,6 @@ void MHD1D::init_()
 #endif
 
   for (int i=0;i<nx;i++){
-    x[i]=(i-xoff+0.5)*dx+xmin;
     char flag=(x[i] <= 0);
 
 #if (NUM == 2)
