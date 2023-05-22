@@ -2,12 +2,8 @@
 
 void MHD2D::init_()
 {
-  int i,j;
-  for (i=0;i<nx;i++) x[i]=(i-xoff+0.5)*dx+xmin;
-  for (j=0;j<ny;j++) y[j]=(j-yoff+0.5)*dy+ymin;
-
   // KH instability
-
+  int i,j;
   // Initial condition parameters
   const double beta=1e3;	// Ambient plasma beta
   const double angle_u=71.5651;	// B field angle in upper domain. 90deg: B=Bz, 0deg: B=Bx
@@ -16,7 +12,7 @@ void MHD2D::init_()
   const int nmode=1;		// Number of mode for perturbation
   const double wlen=getlx()/nmode;
   const double lambda=1.0;	// Shear layer width
-  const double s0=ymin+0.5*(ymax-ymin); // Shear position
+  const double s0=ymin+0.5*getly(); // Shear position
   const double ro_u=1.0;	// Density in upper domain
   const double ro_l=1.0;	// Density in lower domain
   const double b0=1.0;		// B field strength
