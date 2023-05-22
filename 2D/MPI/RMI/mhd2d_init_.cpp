@@ -55,15 +55,6 @@ void MHD2D::init_()
   }	 // End of injection
   else {			// Start initialization
     flg=1;
-    int isum=0,jsum=0,m;
-    for (m=0;m<mpi_ranx;m++){
-      isum+=(XMESH+m)/mpi_numx;
-    }
-    for (m=0;m<mpi_rany;m++){
-      jsum+=(YMESH+m)/mpi_numy;
-    }
-    for (i=0;i<nx;i++) x[i]=(i-xoff+isum+0.5)*dx+xmin;
-    for (j=0;j<ny;j++) y[j]=(j-yoff+jsum+0.5)*dy+ymin;
     
     // Shock downstream parameters satisfies R-H relation
     double gp1=gam+1.0;

@@ -55,8 +55,6 @@ void MHD2D::init_()
   }	 // End of injection
   else {			// Start initialization
     flg=1;
-    for (i=0;i<nx;i++) x[i]=(i-xoff+0.5)*dx+xmin;
-    for (j=0;j<ny;j++) y[j]=(j-yoff+0.5)*dy+ymin;
     
     // Shock downstream parameters satisfies R-H relation
     double gp1=gam+1.0;
