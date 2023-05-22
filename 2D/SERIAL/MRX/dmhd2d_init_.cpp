@@ -5,12 +5,8 @@ inline double harris_density(double x, const double *params);
 
 void DMHD2D::init_()
 {
-  int i,j;
-  for (i=0;i<nx;i++) x[i]=(i-xoff+0.5)*dx+xmin;
-  for (j=0;j<ny;j++) y[j]=(j-yoff+0.5)*dy+ymin;
-
   // Magnetic reconnection
-
+  int i,j;
   // Initial condition parameters
   const double lambda=1.0;	// Current sheet thickness
   const double beta=0.2;	// Plasma beta @ lobe
