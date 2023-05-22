@@ -2,18 +2,8 @@
 
 void MHD2D::init_()
 {
-  int i,j;
-  int isum=0,jsum=0,m;
-  for (m=0;m<mpi_ranx;m++){
-    isum+=(XMESH+m)/mpi_numx;
-  }
-  for (m=0;m<mpi_rany;m++){
-    jsum+=(YMESH+m)/mpi_numy;
-  }
-  for (i=0;i<nx;i++) x[i]=(i-xoff+isum)*dx+xmin;
-  for (j=0;j<ny;j++) y[j]=(j-yoff+jsum)*dy+ymin;
-  
   // Orszag-Tang vortex
+  int i,j;
   for (j=0;j<ny;j++){
     for (i=0;i<nx;i++){
       int ss=nx*j+i;

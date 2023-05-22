@@ -2,11 +2,8 @@
 
 void MHD2D::init_()
 {
-  int i,j;
-  for (i=0;i<nx;i++) x[i]=(i-xoff)*dx+xmin;
-  for (j=0;j<ny;j++) y[j]=(j-yoff)*dy+ymin;
-  
   // Orszag-Tang vortex
+  int i,j;
   for (j=0;j<ny;j++){
     for (i=0;i<nx;i++){
       int ss=nx*j+i;
