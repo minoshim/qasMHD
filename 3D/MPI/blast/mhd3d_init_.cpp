@@ -2,23 +2,8 @@
 
 void MHD3D::init_()
 {
-  int i,j,k;
-  int isum=0,jsum=0,ksum=0,m;
-  for (m=0;m<mpi_ranx;m++){
-    isum+=(XMESH+m)/mpi_numx;
-  }
-  for (m=0;m<mpi_rany;m++){
-    jsum+=(YMESH+m)/mpi_numy;
-  }
-  for (m=0;m<mpi_ranz;m++){
-    ksum+=(ZMESH+m)/mpi_numz;
-  }
-  for (i=0;i<nx;i++) x[i]=(i-xoff+isum+0.5)*dx+xmin;
-  for (j=0;j<ny;j++) y[j]=(j-yoff+jsum+0.5)*dy+ymin;
-  for (k=0;k<nz;k++) z[k]=(k-zoff+ksum+0.5)*dz+zmin;
-
   // Blast wave
-
+  int i,j,k;
   // Initial condition parameters
   const double r_0=0.25;       // Radius of imposed high-P cylinder
   const double ro0=1e0;         // Ambient density

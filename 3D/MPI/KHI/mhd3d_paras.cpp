@@ -10,12 +10,6 @@ void MHD3D::paras()
   ymax=ymin+(xmax-xmin)*(double)YMESH/XMESH;
   zmin=0.0;
   zmax=zmin+(xmax-xmin)*(double)ZMESH/XMESH;
-  dx=(xmax-xmin)/XMESH;
-  dy=(ymax-ymin)/YMESH;
-  dz=(zmax-zmin)/ZMESH;
-  dr=min(min(dx,dy),dz);
-  dt=cfl*dr;
-  // dt will be re-calculated later
   sprintf(fildir,"./dat/");
   
   // Boundary condition flag for ro,mx,my,mz,bx,by,bz,en
@@ -47,4 +41,23 @@ void MHD3D::paras()
   dnzs[6]=+0;			// bz
   dnzs[7]=+0;			// en
   
+  dx=(xmax-xmin)/XMESH;
+  dy=(ymax-ymin)/YMESH;
+  dz=(zmax-zmin)/ZMESH;
+  dr=min(min(dx,dy),dz);
+  dt=cfl*dr;			// dt will be re-calculated later
+  int isum=0,jsum=0,ksum=0,m;
+  for (m=0;m<mpi_ranx;m++){
+    isum+=(XMESH+m)/mpi_numx;
+  }
+  for (m=0;m<mpi_rany;m++){
+    jsum+=(YMESH+m)/mpi_numy;
+  }
+  for (m=0;m<mpi_ranz;m++){
+    ksum+=(ZMESH+m)/mpi_numz;
+  }
+  for (int i=0;i<nx;i++) x[i]=(i-xoff+isum+0.5)*dx+xmin;
+  for (int j=0;j<ny;j++) y[j]=(j-yoff+jsum+0.5)*dy+ymin;
+  for (int k=0;k<nz;k++) z[k]=(k-zoff+ksum+0.5)*dz+zmin;
+
 }
