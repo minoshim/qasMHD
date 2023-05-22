@@ -2,12 +2,8 @@
 
 void MHD2D::init_()
 {
-  int i,j;
-  for (i=0;i<nx;i++) x[i]=(i-xoff+0.5)*dx+xmin;
-  for (j=0;j<ny;j++) y[j]=(j-yoff+0.5)*dy+ymin;
-
   // Blast wave
-  
+  int i,j;
   // Initial condition parameters
   const double r_0=0.125;       // Radius of imposed high-P cylinder
   const double ro0=1e0;         // Ambient density
