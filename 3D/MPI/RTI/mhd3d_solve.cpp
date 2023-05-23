@@ -2,7 +2,7 @@
 
 void MHD3D::ideal(double dt)
 {
-  // 3D ideal MHD simulation
+  // 3D ideal MHD simulation with gravity
   int i,j,k,ss,s1,rk;
   static const double rk_fac[3][2]={{0.0,1.0},{0.5+(R_K-2)*0.25,0.5-(R_K-2)*0.25},{1./3.,2./3.}};
   static const int nxy=nx*ny,nxyz=nx*ny*nz;
@@ -92,7 +92,9 @@ void MHD3D::ideal(double dt)
 #pragma omp for
 #endif
       for (ss=0;ss<nxyz;ss++){
+	en[ss]-=ro[ss]*phi_g[ss]; // Subtract G-potential before calling prmtv()
 	prmtv(ss);
+	en[ss]+=ro[ss]*phi_g[ss]; // Return G-potential after calling prmtv()
 	ex[ss]=ey[ss]=ez[ss]=0.0; // Necessary initialize @ cell corner
 	ct[nxyz*0+ss]=ct[nxyz*1+ss]=ct[nxyz*2+ss]=0.5;	
       }
@@ -242,6 +244,7 @@ void MHD3D::ideal(double dt)
 	    fx[nm*ss+5]=flux[5]; /* by */
 	    fx[nm*ss+6]=flux[6]; /* bz */
 	    fx[nm*ss+7]=flux[7]; /* en */
+	    fx[nm*ss+7]+=flux[0]*0.5*(phi_g[ss-  1]+phi_g[ss]); /* Work done by gravity */
 
 	    /* Split central and upwind parts in numerical flux of By */
 	    fc[2*ss+0]=0.5*(ql[2*s1+0]+qr[2*s1+0]); /* Central part */
@@ -406,6 +409,7 @@ void MHD3D::ideal(double dt)
 	    fy[nm*ss+6]=flux[5]; /* bz */
 	    fy[nm*ss+4]=flux[6]; /* bx */
 	    fy[nm*ss+7]=flux[7]; /* en */
+	    fy[nm*ss+7]+=flux[0]*0.5*(phi_g[ss- nx]+phi_g[ss]); /* Work done by gravity */
 
 	    /* Split central and upwind parts in numerical flux of Bz */
 	    fc[2*ss+0]=0.5*(ql[2*s1+0]+qr[2*s1+0]); /* Central part */
@@ -570,6 +574,7 @@ void MHD3D::ideal(double dt)
 	    fz[nm*ss+4]=flux[5]; /* bx */
 	    fz[nm*ss+5]=flux[6]; /* by */
 	    fz[nm*ss+7]=flux[7]; /* en */
+	    fz[nm*ss+7]+=flux[0]*0.5*(phi_g[ss-nxy]+phi_g[ss]); /* Work done by gravity */
 
 	    /* Split central and upwind parts in numerical flux of Bx */
 	    fc[2*ss+0]=0.5*(ql[2*s1+0]+qr[2*s1+0]); /* Central part */
@@ -671,6 +676,9 @@ void MHD3D::ideal(double dt)
 	    mhd_updt3d(val1[2],val0[2],&fx[nm*ss+2],&fy[nm*ss+2],&fz[nm*ss+2],dtdx,dtdy,dtdz,rk_fac[rk],nm,nm*nx,nm*nxy,func_df); // my
 	    mhd_updt3d(val1[3],val0[3],&fx[nm*ss+3],&fy[nm*ss+3],&fz[nm*ss+3],dtdx,dtdy,dtdz,rk_fac[rk],nm,nm*nx,nm*nxy,func_df); // mz
 	    mhd_updt3d(val1[7],val0[7],&fx[nm*ss+7],&fy[nm*ss+7],&fz[nm*ss+7],dtdx,dtdy,dtdz,rk_fac[rk],nm,nm*nx,nm*nxy,func_df); // en
+	    mx[ss]+=-rk_fac[rk][1]*ro[ss]*0.5*(phi_g[ss+  1]-phi_g[ss-  1])*dtdx; /* Work done by gravity */
+	    my[ss]+=-rk_fac[rk][1]*ro[ss]*0.5*(phi_g[ss+ nx]-phi_g[ss- nx])*dtdy; /* Work done by gravity */
+	    mz[ss]+=-rk_fac[rk][1]*ro[ss]*0.5*(phi_g[ss+nxy]-phi_g[ss-nxy])*dtdz; /* Work done by gravity */
 	  }
 	}
       }

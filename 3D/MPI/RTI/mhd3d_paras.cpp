@@ -3,13 +3,12 @@
 void MHD3D::paras()
 {
   // Simulation parameters
-  setgam(2.0);
   xmin=0.0;
   xmax=20.0;
   ymin=0.0;
-  ymax=ymin+(xmax-xmin)*(double)YMESH/XMESH;
-  zmin=0.0;
-  zmax=zmin+(xmax-xmin)*(double)ZMESH/XMESH;
+  ymax=20.0;
+  zmin=-0.5*(xmax-xmin)*(double)ZMESH/XMESH;
+  zmax=+0.5*(xmax-xmin)*(double)ZMESH/XMESH;
   sprintf(fildir,"./dat/");
   
   // Boundary condition flag for ro,mx,my,mz,bx,by,bz,en
@@ -23,23 +22,23 @@ void MHD3D::paras()
   dnxs[6]=+0;			// bz
   dnxs[7]=+0;			// en
 
-  dnys[0]=+1;			// ro
-  dnys[1]=+1;			// mx
-  dnys[2]=-1;			// my
-  dnys[3]=+1;			// mz
-  dnys[4]=+1;			// bx
-  dnys[5]=-1;			// by
-  dnys[6]=+1;			// bz
-  dnys[7]=+1;			// en
+  dnys[0]=+0;			// ro
+  dnys[1]=+0;			// mx
+  dnys[2]=+0;			// my
+  dnys[3]=+0;			// mz
+  dnys[4]=+0;			// bx
+  dnys[5]=+0;			// by
+  dnys[6]=+0;			// bz
+  dnys[7]=+0;			// en
 
-  dnzs[0]=+0;			// ro
-  dnzs[1]=+0;			// mx
-  dnzs[2]=+0;			// my
-  dnzs[3]=+0;			// mz
-  dnzs[4]=+0;			// bx
-  dnzs[5]=+0;			// by
-  dnzs[6]=+0;			// bz
-  dnzs[7]=+0;			// en
+  dnzs[0]=+2;			// ro
+  dnzs[1]=+2;			// mx
+  dnzs[2]=+2;			// my
+  dnzs[3]=+2;			// mz
+  dnzs[4]=+2;			// bx
+  dnzs[5]=+2;			// by
+  dnzs[6]=+2;			// bz
+  dnzs[7]=+2;			// en
   
   dx=(xmax-xmin)/XMESH;
   dy=(ymax-ymin)/YMESH;

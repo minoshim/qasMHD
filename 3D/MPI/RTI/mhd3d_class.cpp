@@ -10,6 +10,34 @@ void MHD3D::bound(double *val[], int nm, const int stxs[], const int dnxs[], con
     mpi_ybc3d(val[m],nx,ny,nz,xoff,yoff,zoff,stys[m],dnys[m],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
     mpi_zbc3d(val[m],nx,ny,nz,xoff,yoff,zoff,stzs[m],dnzs[m],mpi_rank,mpi_numx,mpi_numy,mpi_numz);
   }
+
+  /* With finite gravity along Z, Z boundary for energy needs special care */
+  if (nm == 8){
+    int i,j,k,ss,sb;
+    double fac=(2.0-gam)/(gam-1.0);
+    if (mpi_ranz == 0){
+      for (k=0;k<zoff;k++){
+	for (j=0;j<ny;j++){
+	  for (i=0;i<nx;i++){
+	    ss=nx*(ny*k+j)+i;
+	    sb=nx*(ny*zoff+j)+i;
+	    en[ss]=en[sb]-fac*ro[sb]*(phi_g[ss]-phi_g[sb]);
+	  }
+	}
+      }
+    }
+    if (mpi_ranz == (mpi_numz-1)){
+      for (k=nz-zoff;k<nz;k++){
+	for (j=0;j<ny;j++){
+	  for (i=0;i<nx;i++){
+	    ss=nx*(ny*k+j)+i;
+	    sb=nx*(ny*(nz-zoff-1)+j)+i;
+	    en[ss]=en[sb]-fac*ro[sb]*(phi_g[ss]-phi_g[sb]);
+	  }
+	}
+      }
+    }
+  }
 }
 
 void MHD3D::setdt(int flg)
@@ -25,7 +53,9 @@ void MHD3D::setdt(int flg)
 	  cx[ss]=0.5*(bx[ss]+bx[nx*(ny*k+j)+(i+stxs[4])]);
 	  cy[ss]=0.5*(by[ss]+by[nx*(ny*k+(j+stys[5]))+i]);
 	  cz[ss]=0.5*(bz[ss]+bz[nx*(ny*(k+stzs[6])+j)+i]);
+	  en[ss]-=ro[ss]*phi_g[ss]; // Subtract G-potential before calling prmtv()
 	  prmtv(ss);
+	  en[ss]+=ro[ss]*phi_g[ss]; // Return G-potential after calling prmtv()
 	  vtmp=sqrt(vx[ss]*vx[ss]+vy[ss]*vy[ss]+vz[ss]*vz[ss])+vfast(ss);
 	  if (vtmp > vmax) vmax=vtmp;
 	}
@@ -123,6 +153,12 @@ void MHD3D::dout_(int msg)
       for (i=0;i<nz;i++) fprintf(outfil,"%.12f\n",z[i]);
       fclose(outfil);
     }
+
+    sprintf(filname,"%s/g_potential_%05d.dat",fildir,mpi_rank);
+    outfil=fopen(filname,"wb");
+    conv_d2f(fval,phi_g,nd);
+    fwrite(fval,sizeof(*fval),nd,outfil);
+    fclose(outfil);
   } else{
     if (mpi_rank == 0){
       sprintf(filname,"%s/t.dat",fildir);
@@ -166,6 +202,8 @@ MHD3D::MHD3D(int* argc, char*** argv, int mnp) : MYMPI(argc,argv,mnp)
   cx=new double[nd];
   cy=new double[nd];
   cz=new double[nd];
+  // Gravitational potential
+  phi_g=new double[nd];
   // Array of pointers for MHD variables.
   val[0]=ro;
   val[1]=mx;
@@ -225,4 +263,5 @@ MHD3D::~MHD3D()
   delete[] cx;
   delete[] cy;
   delete[] cz;
+  delete[] phi_g;
 }
