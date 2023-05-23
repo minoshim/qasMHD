@@ -10,18 +10,18 @@ void MHD2D::init_()
   // RT instability
   int i,j;
   // Initial condition parameters
-  const double beta=1e3;	// Ambient plasma beta
+  const double beta=1e2;	// Ambient plasma beta
   const double angle_u=90;	// B field angle in upper domain. 90deg: B=Bz, 0deg: B=Bx
   const double angle_l=angle_u;	// B field angle in lower domain.
   const double vamp=0.0;	// Shear velocity amplitude
-  const int nmode=2;		// Number of mode for perturbation
+  const int nmode=1;		// Number of mode for perturbation
   const double wlen=getlx()/nmode;
   const double lambda=1.0;	// Shear layer width
   const double s0=0.35*getly(); // Shear position (@ +s0 and -s0)
   const double ro_u=1.0;	// Density in upper domain
   const double ro_l=0.2;	// Density in lower domain
-  const double b0=1.0;		// B field strength
-  const double pr0=0.5*beta*b0*b0; // Base pressure
+  const double pr0=50.0;		// Base pressure
+  const double b0=sqrt(2.0*pr0/beta); // B field strength
   const double prmin=1e-4;	// Minimum pressure threshold
   const double dv=0.01;		// Perturbation amplitude
   // Parameters associated with gravity
