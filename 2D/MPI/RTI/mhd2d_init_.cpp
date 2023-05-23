@@ -20,7 +20,7 @@ void MHD2D::init_()
   const double s0=0.35*getly(); // Shear position (@ +s0 and -s0)
   const double ro_u=1.0;	// Density in upper domain
   const double ro_l=0.2;	// Density in lower domain
-  const double pr0=50.0;		// Base pressure
+  const double pr0=50.0;	// Base pressure
   const double b0=sqrt(2.0*pr0/beta); // B field strength
   const double prmin=1e-4;	// Minimum pressure threshold
   const double dv=0.01;		// Perturbation amplitude
