@@ -1,7 +1,7 @@
 #include "mhd1d_class.hpp"
 
 // Select initial condition.
-#define NUM (3)                 
+#define NUM (1)                 
 // NUM = 1: Dai & Woodward 1994 (Miyoshi & Kusano 2005, Fig. 5)
 // NUM = 2: Brio & Wu 1988 (Miyoshi & Kusano 2005, Fig. 8)
 // NUM = 3: Slow switch-off shock (Miyoshi & Kusano 2005, Fig. 9)
