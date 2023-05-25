@@ -1,7 +1,7 @@
 #include "mhd1d_class.hpp"
 
 // Select initial condition.
-#define NUM (1)                 
+#define NUM (3)                 
 // NUM = 1: Dai & Woodward 1994 (Miyoshi & Kusano 2005, Fig. 5)
 // NUM = 2: Brio & Wu 1988 (Miyoshi & Kusano 2005, Fig. 8)
 // NUM = 3: Slow switch-off shock (Miyoshi & Kusano 2005, Fig. 9)
@@ -34,7 +34,7 @@ void MHD1D::init_()
     vx[i]=(flag)?(0.269):(0.0);
     vy[i]=(flag)?(1.0):(0.0);
     vz[i]=(flag)?(0.0):(0.0);
-    bx[i]=1.0
+    bx[i]=1.0;
     by[i]=(flag)?(0.0):(1.0);
     bz[i]=0.0;
     pr[i]=(flag)?(1.769):(1.0);
@@ -44,7 +44,7 @@ void MHD1D::init_()
     vx[i]=(flag)?(0.0):(1.186);
     vy[i]=(flag)?(0.0):(2.967);
     vz[i]=(flag)?(0.0):(0.0);
-    bx[i]=1.0
+    bx[i]=1.0;
     by[i]=(flag)?(0.0):(1.6405);
     bz[i]=0.0;
     pr[i]=(flag)?(2.0):(0.1368);
@@ -54,7 +54,7 @@ void MHD1D::init_()
     vx[i]=(flag)?(-3.1):(3.1);
     vy[i]=0.0;
     vz[i]=0.0;
-    bx[i]=0.0
+    bx[i]=0.0;
     by[i]=0.5;
     bz[i]=0.0;
     pr[i]=0.45;
