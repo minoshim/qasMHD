@@ -45,7 +45,8 @@ public:
   }
   
 protected:
-  int mpi_num=1,mpi_rank=0;
+  int mpi_num=1;
+  int mpi_rank=0;
 };
 
 #endif

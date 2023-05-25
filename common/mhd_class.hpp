@@ -27,6 +27,20 @@ public:
     // Get gamma value
     return gam;
   }
+  
+protected:
+  double gam=5.0/3.0;		// Specific heat ratio
+  double *x,*y,*z;		// Spatial coordinate
+  double *ro,*mx,*my,*mz,*en;	// Density, momentum, and total energy
+  double *bx,*by,*bz;		// Magnetic field @ cell edge
+  double *vx,*vy,*vz,*pr;	// Velocity and pressure
+  double *cx,*cy,*cz;		// Magnetic field @ cell center
+  double *nu,*eta;		// Kinematic viscosity and resistivity
+  double *phi_g;		// Gravitational potential
+  double *val[nm];		// Pointer for MHD variables
+  int dnxs[nm]={0},dnys[nm]={0},dnzs[nm]={0}; // Boundary flag
+  int stxs[nm]={0},stys[nm]={0},stzs[nm]={0}; // Staggered grid flag
+
   double v_snd(int i)
   {
     // Get sound velocity
@@ -42,20 +56,6 @@ public:
     // Get fast magnetosonic velocity
     return sqrt((gam*pr[i]+(cx[i]*cx[i]+cy[i]*cy[i]+cz[i]*cz[i]))/ro[i]);
   }
-  
-protected:
-  double gam=5.0/3.0;		// Specific heat ratio
-  double *x,*y,*z;		// Spatial coordinate
-  double *ro,*mx,*my,*mz,*en;	// Density, momentum, and total energy
-  double *bx,*by,*bz;		// Magnetic field @ cell edge
-  double *vx,*vy,*vz,*pr;	// Velocity and pressure
-  double *cx,*cy,*cz;		// Magnetic field @ cell center
-  double *nu,*eta;		// Kinematic viscosity and resistivity
-  double *phi_g;		// Gravitational potential
-  double *val[nm];		// Pointer for MHD variables
-  int dnxs[nm]={0},dnys[nm]={0},dnzs[nm]={0}; // Boundary flag
-  int stxs[nm]={0},stys[nm]={0},stzs[nm]={0}; // Staggered grid flag
-
   void vlcty(int i)
   {
     // Momentum => velocity
