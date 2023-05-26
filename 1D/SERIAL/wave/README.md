@@ -3,7 +3,7 @@ This problem demonstrates the propagation of MHD waves in homogeneous plasma to 
 Random white noise is added to the magnetic field and pressure, and their perturabations propagate as the Alfven and magnetosonic waves.
 
 Example results for high and low beta cases are shown below:<br>
-(Top...spatial profiles, bottom left...spectrum of the magnetic field, bottom right...spectrum of the pressure. Users can create the spectrum plot with the script `wk_plt.py`)
+(Top...spatial profiles, bottom left...spectrum of the magnetic field, bottom right...spectrum of the pressure. Users can create the spectrum plot with the scripts `batch_a.py` and `wk_plt.py`)
 
 1. `beta=10` in `mhd1d_init_.cpp`. The pressure perturbation propagates as the fast magnetosonic wave.
 ![Wave profile for beta=10](../../imgs/wave/wave_b1e+1.png)
