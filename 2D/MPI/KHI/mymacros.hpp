@@ -6,7 +6,7 @@
 #define MNP_X (2)		// Number of MPI processes in X
 #define MNP_Y (2)		// Number of MPI processes in Y
 #define N_OUT (50)		// Number of output
-#define DTREC (2.0)		// Time step for output
+#define DTREC (3.0)		// Time step for output
 #define CFL (0.4)		// CFL value
 
 // Select solvers.
