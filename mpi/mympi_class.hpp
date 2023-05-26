@@ -45,8 +45,8 @@ public:
   }
   
 protected:
-  int mpi_num=1;
-  int mpi_rank=0;
+  int mpi_num=1;		// Number of MPI processes
+  int mpi_rank=0;		// MPI rank
 };
 
 #endif
