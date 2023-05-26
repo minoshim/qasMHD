@@ -27,6 +27,8 @@ Users can abort the run by Ctrl+C, and restart it by the same `a.out` and comman
 
 The result is stored in `dat/`.
 
+Users may run `>make clean` to delete object files, and `>make cdata` to delete the result stored in `dat/`.
+
 ### How to check the result
 Since the raw simulation data stored in `dat/` are MPI-decomposed, users firstly merge them by
 ```
