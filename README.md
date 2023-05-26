@@ -53,6 +53,10 @@ Member variables defined in `common/mhd_class.hpp` are:
   double *phi_g;                // Gravitational potential
 ```
 and defined in `mpi/mympi_class.hpp` are:
+``
+  int mpi_num=1;                // Number of MPI processes
+  int mpi_rank=0;               // MPI rank
+```
 
 For information about `1D/`, `2D/`, and `3D/` problems, see `README` in each directory.
 
