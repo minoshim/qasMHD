@@ -5,7 +5,7 @@
 #define YMESH (128)		// Number of cells in Y domain
 #define N_OUT (50)		// Number of output
 #define DTREC (5.0)		// Time step for output
-#define CFL (0.4)	   // CFL value
+#define CFL (0.4)		// CFL value
 
 // Select solvers.
 #define RMN (2)		 /* Riemann solver (0=Roe, 1=HLLD, 2=LHLLD, 3=MLAU) */
