@@ -99,17 +99,4 @@ void mhd_updt3d_ctb(double *bx, double bx0, const double *ey, const double *ez,
 		    int yoffset, int zoffset,
 		    double (*func_df)(const double*));
 
-
-
-/* Below is obsolete and will be deleted */
-
-/* Update 3D MHD variables @ cell center */
-/* Flag = 1 or 0. Update ith-variable if flag[i]=1 */
-/* xoffset,yoffset,zoffset are 1,nx,nx*ny */
-void mhd_updt3d(double *val[], const double *val0,
-		const double *fx, const double *fy, const double *fz,
-		double dtdx, double dtdy, double dtdz, const double rk_fac[2], const double flag[],
-		int xoffset, int yoffset, int zoffset,
-		double (*func_df)(const double*));
-
 #endif
