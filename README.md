@@ -13,7 +13,8 @@ Following packages are required to be installed on the system:
 - Git to install and update the qasMHD code;
 - C++ compiler (GNU, Intel);
 - MPI library (MPICH, OpenMPI) to use the MPI parallel code;
-- Python 3.X with NumPy and matplotlib for data read and visualization (can be downloaded from [Anaconda](https://www.anaconda.com/products/distribution)).
+- Python 3.X with NumPy and matplotlib for data read and visualization (can be downloaded from [Anaconda](https://www.anaconda.com/products/distribution));
+- (Optional) Mayavi module in Python for 3D data visualization (can be installed via `>pip install mayavi`).
 
 The code is tested on Linux OSs (Ubuntu, Linux Mint, CentOS, including Windows Subsystem for Linux).<br>
 Above packages (excluding Intel compiler) can be installed by `apt-get` or `yum` commands.
