@@ -52,6 +52,7 @@ Member variables defined in `common/mhd_class.hpp` are:
   double *nu,*eta;              // Kinematic viscosity and resistivity
   double *phi_g;                // Gravitational potential
 ```
+and defined in `mpi/mympi_class.hpp` are:
 
 For information about `1D/`, `2D/`, and `3D/` problems, see `README` in each directory.
 
