@@ -22,6 +22,8 @@ Users may edit the following files contained in each directory:
 
 The result is stored in `dat/`.
 
+Users may run `>make clean` to delete object files, and `>make cdata` to delete the result stored in `dat/`.
+
 ### How to check the result
 Execute the python script `batch.py`.
 ```
