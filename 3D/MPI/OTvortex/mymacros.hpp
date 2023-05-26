@@ -9,7 +9,7 @@
 #define MNP_Z (1)		// Number of MPI processes in Z
 #define N_OUT (6)		// Number of output
 #define DTREC (0.2*3.1416)	// Time step for output
-#define CFL (0.4)	   // CFL value
+#define CFL (0.4)		// CFL value
 
 // Select solvers.
 #define RMN (2)		 /* Riemann solver (0=Roe, 1=HLLD, 2=LHLLD, 3=MLAU) */
