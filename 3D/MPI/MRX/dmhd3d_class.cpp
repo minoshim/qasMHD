@@ -13,7 +13,7 @@ double DMHD3D::setdc()
 	eta[ss]=eta0;
 
 	// Localized dissipation
-	// double r=sqrt(x[i]*x[i]+y[j]*y[j]+z[k]*z[k]);
+	// double r=sqrt(x[i]*x[i]+y[j]*y[j]);
 	// nu[ss]=nu0*exp(-r/1.0);
 	// eta[ss]=eta0*exp(-r/1.0);
       
@@ -45,14 +45,14 @@ void DMHD3D::exec_(int flg)
   while(n++ < nmax && tim < tmax){
     tim+=dt;
 
-    bound(val,nm,stxs,dnxs,stys,dnys);
+    bound(val,nm,stxs,dnxs,stys,dnys,stzs,dnzs);
     ideal(dt);
 
     double dcmax=setdc();
     if (dcmax > 1e-15){
       int nc,ncmax=1+(int)(2*(dcmax*dt)/(dr*dr));
       for (nc=0;nc<ncmax;nc++){	// sub-cycling
-	bound(val,nm,stxs,dnxs,stys,dnys);
+	bound(val,nm,stxs,dnxs,stys,dnys,stzs,dnzs);
 	dsptv(dt/ncmax);
       }
     }

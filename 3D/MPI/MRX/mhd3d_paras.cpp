@@ -3,11 +3,10 @@
 void MHD3D::paras()
 {
   // Simulation parameters
-  setgam(2.0);
-  xmin=0.0;
-  xmax=20.0;
-  ymin=0.0;
-  ymax=ymin+(xmax-xmin)*(double)YMESH/XMESH;
+  xmin=-32.0;
+  xmax=+32.0;
+  ymin=-0.5*(xmax-xmin)*(double)YMESH/XMESH;
+  ymax=+0.5*(xmax-xmin)*(double)YMESH/XMESH;
   zmin=0.0;
   zmax=zmin+(xmax-xmin)*(double)ZMESH/XMESH;
   sprintf(fildir,"./dat/");

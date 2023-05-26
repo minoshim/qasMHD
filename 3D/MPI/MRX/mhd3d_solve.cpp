@@ -713,7 +713,7 @@ void MHD3D::ideal(double dt)
     /* Boundary condition */
     bound(val,nm,stxs,dnxs,stys,dnys,stzs,dnzs);
   }
-      
+
   delete[] ut;
   delete[] fx;
   delete[] fy;

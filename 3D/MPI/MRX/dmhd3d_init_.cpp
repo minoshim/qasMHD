@@ -1,25 +1,24 @@
 #include "dmhd3d_class.hpp"
 
+inline double harris_field(double x, const double *params);
+inline double harris_density(double x, const double *params);
+
 void DMHD3D::init_()
 {
-  // KH instability
+  // Magnetic reconnection
   int i,j,k;
   // Initial condition parameters
-  const double beta=1e2;	// Ambient plasma beta
-  const double angle_u=90.0;	// B field angle in upper domain. 90deg: B=Bz, 0deg: B=Bx
-  const double angle_l=angle_u;	// B field angle in lower domain.
-  const double vamp=0.5;	// Shear velocity amplitude
-  const int nmode=1;		// Number of mode for perturbation
-  const double wlen=getlx()/nmode;
-  const double lambda=1.0;	// Shear layer width
-  const double s0=ymin+0.5*getly(); // Shear position
-  const double ro_u=1.0;	// Density in upper domain
-  const double ro_l=1.0;	// Density in lower domain
-  const double b0=1.0;		// B field strength
-  const double pr0=0.5*beta*b0*b0; // Pressure
-  const double dv=0.01;		// Perturbation amplitude
-  const double dvparax[2]={0,dv};	// Perturbation parameter for vx
-  const double dvparay[2]={0,dv};	// Perturbation paeameter for vy
+  const double lambda=1.0;	// Current sheet thickness
+  const double beta=0.2;	// Plasma beta @ lobe
+  const double ro0=1.0;		// Density @ CS
+  const double ro1=0.2;		// Density @ lobe
+  const double b0=1.0;		// Mag field @ lobe
+  const double b1=0.05;		// Mag field perturbation by Zenitani
+  const double bg=0.0;		// Guide mag field along Z
+  const double dv=0.01;		// Random noize perturbation to Vy (avaiable when RANDOM=1)
+  const double para[2]={0,lambda};
+  const double dvpara[2]={0,dv};
+  const double dbpara[2]={b1,b1};
 
   double dvy[nz][nx];
   unsigned seed;
@@ -33,42 +32,47 @@ void DMHD3D::init_()
     for (i=0;i<nx;i++){
       dvy[k][i]=0.0;
 #if (RANDOM)
-      dvy[k][i]+=rand_noise(dvparay,seed); // Multiple mode perturbation
-#else
-      dvy[k][i]+=dv*sin(2*M_PI*x[i]/wlen); // Single mode perturbation
-#endif    
+      dvy[k][i]+=rand_noise(dvpara,seed); // Multiple mode perturbation
+#endif
     }
   }
 
-  //Reset random seed depending on z, used for vx perturbation
+  //Reset random seed depending on z, used for b1 perturbation
   seed=(unsigned)(stim*(1+mpi_ranz));
   srandom(seed);
   
   for (k=0;k<nz;k++){
-    double vampx=vamp+rand_noise(dvparax,seed); // Perturbation to vx is independent of x and y    
+    double b1amp=rand_noise(dbpara,seed); // Perturbation to b1 is independent of x nd y
+    double zm=z[k]-0.5*dz;
     for (j=0;j<ny;j++){
-      double angle=0.5*((angle_u+angle_l)+(angle_u-angle_l)*tanh((y[j]-s0)/lambda));
+      double ym=y[j]-0.5*dy;
       for (i=0;i<nx;i++){
 	int ss=nx*(ny*k+j)+i;
-
-	ro[ss]=0.5*((ro_u+ro_l)+(ro_u-ro_l)*tanh((y[j]-s0)/lambda));
-	vx[ss]=+vampx*tanh((y[j]-s0)/lambda);
-	vy[ss]=dvy[k][i]*exp(-((y[j]-s0)*(y[j]-s0))/(4*lambda*lambda));
-	vz[ss]=0.0;
-	pr[ss]=pr0;
+	double xm=x[i]-0.5*dx;
 	
-	if (angle == 90){
-	  bx[ss]=0.0;
-	  by[ss]=0.0;
-	  bz[ss]=b0;
-	} else{
-	  bx[ss]=b0*cos(angle*dtor);
-	  by[ss]=0.0;
-	  bz[ss]=b0*sin(angle*dtor);
-	}
+	// ro[ss]=(ro0-ro1)*harris_density(y[j],para)+ro1;
+	ro[ss]=ro0*harris_density(y[j],para)+ro1;
+
+	vx[ss]=0.0;
+	vy[ss]=0.0;
+	vz[ss]=0.0;
+	// Perturbation to vy
+	vy[ss]+=dvy[k][i]*exp(-(y[j]*y[j])/(4*lambda*lambda));
+
+	bx[ss]=b0*harris_field(y[j],para);
+	by[ss]=0.0;
+	bz[ss]=bg;
 	cx[ss]=bx[ss];
 	cy[ss]=by[ss];
 	cz[ss]=bz[ss];
+	
+	pr[ss]=0.5*((1.0+beta)*(b0*b0+bg*bg)-(cx[ss]*cx[ss]+cy[ss]*cy[ss]+cz[ss]*cz[ss]));
+	
+	// Mag field perturbation by Zenitani
+	bx[ss]-=b1amp*(y[j]/lambda)*exp(-(xm*xm+y[j]*y[j])/(4*lambda*lambda));
+	by[ss]+=b1amp*(x[i]/lambda)*exp(-(x[i]*x[i]+ym*ym)/(4*lambda*lambda));
+	cx[ss]-=b1amp*(y[j]/lambda)*exp(-(x[i]*x[i]+y[j]*y[j])/(4*lambda*lambda));
+	cy[ss]+=b1amp*(x[i]/lambda)*exp(-(x[i]*x[i]+y[j]*y[j])/(4*lambda*lambda));
 	
 	cnsvt(ss);
       }
@@ -77,4 +81,28 @@ void DMHD3D::init_()
 
   // Boundary condition
   bound(val,nm,stxs,dnxs,stys,dnys,stzs,dnzs);
+
+  // Set kinematic viscosity and resistivity coefficients
+  double al=sqrt((b0*b0+bg*bg)/ro0);
+  nu0=al*lambda/REV;
+  eta0=al*lambda/REM;
+  // Message
+  if (mpi_rank == 0){
+    printf("Kinematic viscosity coef. = %f\n",nu0);
+    printf("Resistivity coef. = %f\n",eta0);
+  }
+}
+
+inline double harris_field(double x, const double *params)
+{
+  /* Harris magnetic field */
+  double x0=params[0],width=params[1]+1e-15;
+  return( tanh((x-x0)/width) );
+}
+inline double harris_density(double x, const double *params)
+{
+  /* Harris distribution of the density */
+  double x0=params[0],width=params[1]+1e-15;
+  double cosh1=cosh((x-x0)/width);
+  return( 1.0/(cosh1*cosh1) );
 }
