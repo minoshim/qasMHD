@@ -29,10 +29,10 @@ void DMHD2D::init_()
   }
   
   for (j=0;j<ny;j++){
+    double ym=y[j]-0.5*dy;
     for (i=0;i<nx;i++){
       int ss=nx*j+i;
       double xm=x[i]-0.5*dx;
-      double ym=y[j]-0.5*dy;
       
       // ro[ss]=(ro0-ro1)*harris_density(y[j],para)+ro1;
       ro[ss]=ro0*harris_density(y[j],para)+ro1;
