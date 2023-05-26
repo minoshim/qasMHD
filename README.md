@@ -41,7 +41,17 @@ Since the code is updated without notice, users may need to update the code by `
 - `libqasmhd.a` is the library generated from `common/`.
 
 `common/mhd_class.hpp` and `mpi/mympi_class.hpp` define the base class of the MHD simulation and MPI parallelization.<br>
-Users are recommended to read them (without editting) to know member variables used for.
+Member variables defined in `common/mhd_class.hpp` are:
+```
+  double gam=5.0/3.0;           // Specific heat ratio
+  double *x,*y,*z;              // Spatial coordinate
+  double *ro,*mx,*my,*mz,*en;   // Density, momentum, and total energy
+  double *bx,*by,*bz;           // Magnetic field @ cell edge
+  double *vx,*vy,*vz,*pr;       // Velocity and pressure
+  double *cx,*cy,*cz;           // Magnetic field @ cell center
+  double *nu,*eta;              // Kinematic viscosity and resistivity
+  double *phi_g;                // Gravitational potential
+```
 
 For information about `1D/`, `2D/`, and `3D/` problems, see `README` in each directory.
 
