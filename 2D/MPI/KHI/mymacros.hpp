@@ -1,12 +1,12 @@
 #ifndef _MYMACROS_
 #define _MYMACROS_
 
-#define XMESH (128)		// Number of cells in X domain
-#define YMESH (128)		// Number of cells in Y domain
+#define XMESH (256)		// Number of cells in X domain
+#define YMESH (256)		// Number of cells in Y domain
 #define MNP_X (2)		// Number of MPI processes in X
 #define MNP_Y (2)		// Number of MPI processes in Y
 #define N_OUT (50)		// Number of output
-#define DTREC (3.0)		// Time step for output
+#define DTREC (4.0)		// Time step for output
 #define CFL (0.4)		// CFL value
 
 // Select solvers.
