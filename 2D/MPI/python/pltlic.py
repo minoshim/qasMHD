@@ -19,6 +19,7 @@ def lic_image(x,y,vx,vy,
               equal=0,
               show=0,
               save=0,
+              colorbar=0,
               filename="result.eps"):
 
     lic_result=lic.lic(vx.transpose(),vy.transpose(),length=length)
@@ -38,6 +39,7 @@ def lic_image(x,y,vx,vy,
                 equal=equal,
                 show=show,
                 save=save,
+                colorbar=colorbar,
                 filename=filename)
 
     return lic_result
