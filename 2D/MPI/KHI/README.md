@@ -11,6 +11,6 @@ The following movies show the streamline for two example runs with *&theta; = 90
 The ambient pressure *P<sub>0</sub>=500* so that the Mach number of the initial flow is 0.0158.<br>
 Images are produced with the [Line Integral Convolution](https://lic.readthedocs.io/en/latest/).
 
-The vortex structure becomes complicated by the in-plane magnetic field and eventually collapses (right), while the large-scale vortex is stable in the out-of-plane case (left).
+The vortex structure becomes complicated and eventually collapses due to the in-plane magnetic field (right), while the large-scale vortex is stable in the out-of-plane field case (left).
 
 <img src="../../imgs/KHI/khi_movie_perp.gif" alt="KH instability (out-of-plane B)" width="480px"> <img src="../../imgs/KHI/khi_movie_oblique.gif" alt="KH instability (in-plane B)" width="480px">
