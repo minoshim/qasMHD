@@ -36,12 +36,26 @@ def volume(x0,y0,z0,val,
     if (figure == None):
         figure=mlab.figure(size=size)
 
-    dx=x0[1]-x0[0]
-    dy=y0[1]-y0[0]
-    dz=z0[1]-z0[0]
-    X, Y, Z=np.mgrid[np.min(x0):np.max(x0)+dx:dx,
-                     np.min(y0):np.max(y0)+dy:dy,
-                     np.min(z0):np.max(z0)+dz:dz]
+    # dx=x0[1]-x0[0]
+    # dy=y0[1]-y0[0]
+    # dz=z0[1]-z0[0]
+    # X, Y, Z=np.mgrid[np.min(x0):np.max(x0)+dx:dx,
+    #                  np.min(y0):np.max(y0)+dy:dy,
+    #                  np.min(z0):np.max(z0)+dz:dz]
+
+    # Make meshgrid manually
+    nx=len(x0)
+    ny=len(y0)
+    nz=len(z0)
+    X=np.zeros((nx,ny,nz))
+    Y=np.zeros((nx,ny,nz))
+    Z=np.zeros((nx,ny,nz))
+    for i in range(nx):
+        for j in range(ny):
+            for k in range(nz):
+                X[i,j,k]=x0[i]
+                Y[i,j,k]=y0[j]
+                Z[i,j,k]=z0[k]
     
     if (xmin == None):
         xmin=np.min(x0)
@@ -99,12 +113,26 @@ def slice(x0,y0,z0,val,
     if (figure == None):
         figure=mlab.figure(size=size)
 
-    dx=x0[1]-x0[0]
-    dy=y0[1]-y0[0]
-    dz=z0[1]-z0[0]
-    X, Y, Z=np.mgrid[np.min(x0):np.max(x0)+dx:dx,
-                     np.min(y0):np.max(y0)+dy:dy,
-                     np.min(z0):np.max(z0)+dz:dz]
+    # dx=x0[1]-x0[0]
+    # dy=y0[1]-y0[0]
+    # dz=z0[1]-z0[0]
+    # X, Y, Z=np.mgrid[np.min(x0):np.max(x0)+dx:dx,
+    #                  np.min(y0):np.max(y0)+dy:dy,
+    #                  np.min(z0):np.max(z0)+dz:dz]
+
+    # Make meshgrid manually
+    nx=len(x0)
+    ny=len(y0)
+    nz=len(z0)
+    X=np.zeros((nx,ny,nz))
+    Y=np.zeros((nx,ny,nz))
+    Z=np.zeros((nx,ny,nz))
+    for i in range(nx):
+        for j in range(ny):
+            for k in range(nz):
+                X[i,j,k]=x0[i]
+                Y[i,j,k]=y0[j]
+                Z[i,j,k]=z0[k]
 
     if (xmin == None):
         xmin=np.min(x0)
