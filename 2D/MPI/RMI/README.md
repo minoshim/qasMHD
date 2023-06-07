@@ -2,7 +2,7 @@
 
 When a shock collides with a corrugated contact discontinuity, the interface develops nonlinearly via the Richtmyer-Meshkov instability (RMI).<br>
 The shock is initially located at *y=0* and the upstream variables at *y<0* are set to be *(&rho;,v<sub>x</sub>,v<sub>y</sub>,v<sub>z</sub>,B<sub>x</sub>,B<sub>y</sub>,B<sub>z</sub>,P)*=*(1,0,-1,0,0.0000346,0,0,0.00006)* so that the Mach number and the plasma beta are 100 and 10<sup>5</sup>.<br>
-The downstream variables are set to satisfy the Rankine-Hugoniot condition.
+The downstream variables are set to satisfy the Rankine-Hugoniot condition.<br>
 A corrugated contact discontinuity is imposed in the upstream region, and the density behind the discontinuity is 10.<br>
 
 Density profiles at three periods are shown below.<br>
