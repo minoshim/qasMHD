@@ -12,9 +12,9 @@ void MHD2D::init_()
   static double vx_1=0.0;	// Velocity in X
   static double vy_1=-1.0;	// Velocity in Y
   static double vz_1=0.0;	// Velocity in Z
-  double ma_u=10.0;	// Sound Mach number
+  double ma_u=100.0;	// Sound Mach number
   static double pr_1=(ro_1*vy_1*vy_1)/(gam*ma_u*ma_u); // Pressure
-  double beta=1e8;				// Beta
+  double beta=1e5;				// Beta
   double b0_1=(MAGNET)*sqrt(2.0*pr_1/beta);	// Magnetic field
   static double bx_1=b0_1;
   static double by_1=0.0;

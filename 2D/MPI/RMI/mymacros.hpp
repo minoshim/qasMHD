@@ -1,7 +1,7 @@
 #ifndef _MYMACROS_
 #define _MYMACROS_
 
-#define XMESH (64)		// Number of cells in X domain
+#define XMESH (128)		// Number of cells in X domain
 #define YMESH (1024)		// Number of cells in Y domain
 #define MNP_X (1)		// Number of MPI processes in X
 #define MNP_Y (8)		// Number of MPI processes in Y

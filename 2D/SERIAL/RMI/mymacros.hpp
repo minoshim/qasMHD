@@ -1,7 +1,7 @@
 #ifndef _MYMACROS_
 #define _MYMACROS_
 
-#define XMESH (64)		// Number of cells in X domain
+#define XMESH (128)		// Number of cells in X domain
 #define YMESH (1024)		// Number of cells in Y domain
 #define N_OUT (50)		// Number of output
 #define DTREC (1.0)		// Time step for output
