@@ -6,7 +6,7 @@ The density interface is set at *y=y<sub>0</sub>=&pm;56* and *&rho;=0.1* (for *y
 The gravitational potential is set as *&Phi;=g<sub>0</sub> &lambda;<sub>g</sub>log(cosh(y/&lambda;<sub>g</sub>))* where *g<sub>0</sub>=1.0* and *&lambda;<sub>g</sub>=8dy*.<br>
 The pressure is determined to satisfy the hydrostatic equilibrium.<br>
 
-Density profiles at t=15.0,20.0 are shown below.
+Example density profiles at t=15.0,20.0 are shown below.
 
-![RTI1](../../imgs/RTI/Figure_2.png)
+![RTI1](../../imgs/RTI/Figure_1.png)
 ![RTI2](../../imgs/RTI/Figure_2.png)
