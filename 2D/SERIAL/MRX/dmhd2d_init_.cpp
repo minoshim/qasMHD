@@ -3,12 +3,13 @@
 inline double harris_field(double x, const double *params);
 inline double harris_density(double x, const double *params);
 
+const double lambda=1.0;	// Current sheet thickness
+
 void DMHD2D::init_()
 {
   // Magnetic reconnection
   int i,j;
   // Initial condition parameters
-  const double lambda=1.0;	// Current sheet thickness
   const double beta=0.2;	// Plasma beta @ lobe
   const double ro0=1.0;		// Density @ CS
   const double ro1=0.2;		// Density @ lobe
@@ -73,11 +74,35 @@ void DMHD2D::init_()
   double al=sqrt((b0*b0+bg*bg)/ro0);
   nu0=al*lambda/REV;
   eta0=al*lambda/REM;
+  setdc();
   // Message
   {
     printf("Kinematic viscosity coef. = %f\n",nu0);
     printf("Resistivity coef. = %f\n",eta0);
   }
+}
+
+double DMHD2D::setdc()
+{
+  // Set dissipation coefficients and return their maximum.
+  double dcmax=0.0,dtmp;
+  for (int j=0;j<ny;j++){
+    for (int i=0;i<nx;i++){
+      int ss=nx*j+i;
+      
+      // nu[ss]=nu0;
+      // eta[ss]=eta0;
+
+      // Localized dissipation
+      double r=sqrt(x[i]*x[i]+y[j]*y[j]);
+      nu[ss]=nu0*exp(-r/lambda);
+      eta[ss]=eta0*exp(-r/lambda);
+      
+      dtmp=max(2*nu[ss],eta[ss]); // Factor 2 is multiplied in viscous coef. for robust estimation
+      if (dtmp > dcmax) dcmax=dtmp;
+    }
+  }
+  return dcmax;
 }
 
 inline double harris_field(double x, const double *params)

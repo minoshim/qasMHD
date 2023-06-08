@@ -1,36 +1,5 @@
 #include "dmhd3d_class.hpp"
 
-double DMHD3D::setdc()
-{
-  // Set dissipation coefficients and return their maximum.
-  double dcmax=0.0,dtmp;
-  for (int k=0;k<nz;k++){
-    for (int j=0;j<ny;j++){
-      for (int i=0;i<nx;i++){
-	int ss=nx*(ny*k+j)+i;
-	
-	nu[ss]=nu0;
-	eta[ss]=eta0;
-
-	// Localized dissipation
-	// double r=sqrt(x[i]*x[i]+y[j]*y[j]);
-	// nu[ss]=nu0*exp(-r/1.0);
-	// eta[ss]=eta0*exp(-r/1.0);
-      
-	dtmp=max(2*nu[ss],eta[ss]); // Factor 2 is multiplied in viscous coef. for robust estimation
-	if (dtmp > dcmax) dcmax=dtmp;
-      }
-    }
-  }
-
-  // MPI Allreduce
-  double dcmax_a;
-  MPI_Allreduce(&dcmax,&dcmax_a,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
-  dcmax=dcmax_a;
-  
-  return dcmax;
-}
-
 void DMHD3D::exec_(int flg)
 {
   // Run simulation.

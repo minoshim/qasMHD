@@ -17,7 +17,7 @@
 #define RANDOM (0)
 
 // Reynolds numbers
-#define REV (1e99)			// Reynolds number with respect to Alfven velocity
+#define REV (2e2)			// Reynolds number with respect to Alfven velocity
 #define REM (2e2)			// Mag. Reynolds num. with respect to Alfven vel.
 
 #endif
