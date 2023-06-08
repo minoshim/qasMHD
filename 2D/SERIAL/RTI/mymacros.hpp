@@ -2,7 +2,7 @@
 #define _MYMACROS_
 
 #define XMESH (128)		// Number of cells in X domain
-#define YMESH (512)		// Number of cells in Y domain
+#define YMESH (1024)		// Number of cells in Y domain
 #define N_OUT (50)		// Number of output
 #define DTREC (0.5)		// Time step for output
 #define CFL (0.4)		// CFL value
