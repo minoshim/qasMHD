@@ -1,11 +1,11 @@
 ## Field Loop Advection Problem
 
-This is the three-dimensional extension of the field loop advection problem conducted by Gardiner & Stone[^1], and further by Lee[^2] for the stringent small-angle advection problem.<br>
-A week magnetic loop is tilted around the *y* axis and flows almost in the *x-z* plane.<br>
+This is the three-dimensional extension of the field loop advection problem conducted by Gardiner & Stone[^1], and further by Lee[^2] for the small-angle advection.<br>
+The periodic computational domain is *-0.5<x<0.5,-0.5<y<0.5,-1<z<1*.<br>
+A weak magnetic loop is tilted around the *y* axis by an angle of *tan<sup>-1</sup>(1/2)* and flows almost in the *x-z* plane.<br>
 (For details of the initial condition, see our paper[^3])
 
 An example result of the magnetic pressure at one period is shown below.<br>
-(The image was produced by the [Mayavi.mlab.contour3d](https://mayavi.readthedocs.io/ja/latest/auto/mlab_helper_functions.html#contour3d) module).
 
 ![loop3d](../../imgs/loop/snapshot.png)
 
