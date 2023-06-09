@@ -40,4 +40,16 @@ Subsequently, execute the python script `batch.py`.
 >>>exec(open("batch.py").read())
 ```
 
+### How to visualize in 3D
+`python/plt3d.py` module is available, which requires [Mayavi](https://mayavi.readthedocs.io/ja/latest/index.html) (installed through `>pip install mayavi`)
+```
+>>>from python import plt3d
+>>>
+>>>plt3d.volume(x,y,z,ro) # Plots iso-surfaces for a 3D volume of data
+>>>
+>>>fig,obj=plt3d.slice(x,y,z,ro,plane_orientation='x_axes') #Plots 2D image in y-z plane from a 3D volume of data
+>>>plt3d.slice(x,y,z,ro,plane_orientation='y_axes',figure=figure) #Overplot in x-z plane
+>>>plt3d.slice(x,y,z,ro,plane_orientation='z_axes',figure=figure) #Overplot in x-y plane
+```
+
 [^1]: [Minoshima T., Miyoshi T., and Matsumoto Y. 2019, ApJS](https://iopscience.iop.org/article/10.3847/1538-4365/ab1a36/meta)
