@@ -47,7 +47,7 @@ Subsequently, execute the python script `batch.py`.
 >>>
 >>>plt3d.volume(x,y,z,ro) # Plots iso-surfaces for a 3D volume of data
 >>>
->>>fig,obj=plt3d.slice(x,y,z,ro,plane_orientation='x_axes') #Plots 2D image in y-z plane from a 3D volume of data
+>>>fig,obj=plt3d.slice(x,y,z,ro,plane_orientation='x_axes') #Plots 2D image in y-z plane sliced through a 3D volume of data
 >>>plt3d.slice(x,y,z,ro,plane_orientation='y_axes',figure=figure) #Overplot in x-z plane
 >>>plt3d.slice(x,y,z,ro,plane_orientation='z_axes',figure=figure) #Overplot in x-y plane
 ```
