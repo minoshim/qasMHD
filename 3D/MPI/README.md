@@ -41,7 +41,7 @@ Subsequently, execute the python script `batch.py`.
 ```
 
 ### How to visualize in 3D
-`python/plt3d.py` module is available, which requires [Mayavi](https://mayavi.readthedocs.io/ja/latest/index.html) (installed through `>pip install mayavi`)
+`python/plt3d.py` module is available, which requires [Mayavi](https://mayavi.readthedocs.io/ja/latest/index.html) (installed by `>pip install mayavi`)
 ```
 >>>from python import plt3d
 >>>
