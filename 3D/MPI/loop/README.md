@@ -3,7 +3,7 @@
 This is the three-dimensional extension of the field loop advection problem conducted by Gardiner & Stone[^1], and further by Lee[^2] for the small-angle advection.<br>
 The periodic computational domain is *-0.5<x<0.5,-0.5<y<0.5,-1<z<1*.<br>
 A weak magnetic loop is tilted around the *y* axis by an angle of *tan<sup>-1</sup>(1/2)* and flows almost in the *x-z* plane.<br>
-(For details of the initial condition, see our paper[^3])
+(For details of the initial condition, see the literture[^3])
 
 An example result of the magnetic pressure at one period is shown below.<br>
 
