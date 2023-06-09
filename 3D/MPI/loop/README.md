@@ -7,7 +7,7 @@ A weak magnetic loop is tilted around the *y* axis by an angle of *tan<sup>-1</s
 
 An example result of the magnetic pressure at one period is shown below.<br>
 
-![loop3d](../../imgs/loop/snapshot.png)
+![loop3d](../../imgs/loop/snapshot4.png)
 
 [^1]: [Gardiner T. A., and Stone J. M. 2008, JCP](https://www.sciencedirect.com/science/article/pii/S0021999107005669?via%3Dihub) 
 [^2]: [Lee, D. 2013, JCP](https://www.sciencedirect.com/science/article/pii/S0021999113001836?via%3Dihub)
