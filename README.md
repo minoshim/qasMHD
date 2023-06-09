@@ -15,7 +15,7 @@ Following packages are required to be installed on the system:
 - MPI library (MPICH, OpenMPI) to use the MPI parallel code;
 - Make
 - Python 3.X with NumPy and matplotlib for data read and visualization (can be downloaded from [Anaconda](https://www.anaconda.com/products/distribution));
-- (Optional) Mayavi module in Python for 3D data visualization (can be installed by `>pip install mayavi`).
+- (Optional) [Mayavi](https://mayavi.readthedocs.io/ja/latest/index.html) module in Python for 3D data visualization (can be installed by `>pip install mayavi`).
 
 The code is tested on Linux OSs (Ubuntu, Linux Mint, CentOS, including Windows Subsystem for Linux).<br>
 Above packages (excluding Intel compiler) can be installed by `apt-get` or `yum` commands.
