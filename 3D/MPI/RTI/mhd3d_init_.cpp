@@ -1,7 +1,7 @@
 #include "mhd3d_class.hpp"
 
-double sqrwave2(double val_u, double val_l, double dx_u, double dx_l);
-double g_potential(double z, double g0, double lg, int deriv);
+inline double sqrwave2(double val_u, double val_l, double dx_u, double dx_l);
+inline double g_potential(double z, double g0, double lg, int deriv);
 double cal_pressure(double y0, double y1, double pr0, int n,
 		    double val_u, double val_l, double s0, double lambda, double g0, double lg);
 
@@ -93,14 +93,14 @@ void MHD3D::init_()
   bound(val,nm,stxs,dnxs,stys,dnys,stzs,dnzs);
 }
 
-double sqrwave2(double val_u, double val_l, double dx_u, double dx_l)
+inline double sqrwave2(double val_u, double val_l, double dx_u, double dx_l)
 // Calculate double square wave profile
 /* Return val_u (dx_u*dx_l>0) or val_l (dx_u*dx_l<0) */
 {
   return 0.5*(2.0+tanh(dx_u)-tanh(dx_l))*(val_u-val_l)+val_l;
 }
 
-double g_potential(double z, double g0, double lg, int deriv)
+inline double g_potential(double z, double g0, double lg, int deriv)
 // Calculate gravitational potential
 // phi_g = g0*lg*log(cosh(z/lg))
 // d(phi_g)/dz = g0*tanh(z/lg)
