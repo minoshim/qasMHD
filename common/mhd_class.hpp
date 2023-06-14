@@ -75,13 +75,13 @@ protected:
   {
     // Primitive => conservative
     mmntm(i);
-    en[i]=pr[i]/(gam-1)+0.5*(ro[i]*(vx[i]*vx[i]+vy[i]*vy[i]+vz[i]*vz[i])+(cx[i]*cx[i]+cy[i]*cy[i]+cz[i]*cz[i]));
+    en[i]=mhd_energy(ro[i],vx[i],vy[i],vz[i],cx[i],cy[i],cz[i],pr[i],gam);
   }
   void prmtv(int i)
   {
     // Conservative => primitive
     vlcty(i);
-    pr[i]=(gam-1)*(en[i]-0.5*(ro[i]*(vx[i]*vx[i]+vy[i]*vy[i]+vz[i]*vz[i])+(cx[i]*cx[i]+cy[i]*cy[i]+cz[i]*cz[i])));
+    pr[i]=mhd_ieos(ro[i],vx[i],vy[i],vz[i],cx[i],cy[i],cz[i],en[i],gam);
   }
   double bcell(const double* b_ct, int offset, double (*fcen)(const double *f))
   {
