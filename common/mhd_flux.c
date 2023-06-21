@@ -98,10 +98,8 @@ void calc_flux_mlau(double rol, double vnl, double vtl, double vul, double btl, 
   double ptot=bfl*ptl+bfr*ptr;	/* AUSM(raw) */
   double cfmod=sqrt(max(ccl2,ccr2));		 /* Factor for all-speed */
   ptot-=0.25*bfl*bfr*(rol+ror)*cfmod*(vnr-vnl); /* AUSM+-up-like correction */
+  /* ptot-=0.5*(1.0-min(1.0,cfmod*cfni))*(bfl+bfr-1.0)*(ptl+ptr); /\* SLAU-like correction *\/ */
   ptot-=0.5*(1.0-cfmod*cfni)*(bfl+bfr-1.0)*(ptl+ptr); /* SLAU2-like correction */
-
-  /* ptot=0.5*(+(ptl+ptr)-(bfl-bfr)*(ptr-ptl) */
-  /* 	    +0.5*(bfl+bfr-1.0)*(rol+ror)*cfn*cfmod); /\* Simple form, seem to work well *\/ */
 
   /* Normal velocity */
   double slvl=sl-vnl;
