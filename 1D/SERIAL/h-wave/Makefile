@@ -8,7 +8,7 @@ LIBS = -lm -l$(LIBNAME)
 LIBRARY = $(DIRL)/lib$(LIBNAME).a
 BASECLASS = $(DIRI)/mhd_class.hpp
 TARGET = a.out
-OBJS = main.o mhd1d_class.o mhd1d_init_.o mhd1d_paras.o mhd1d_solve.o
+OBJS = main.o hmhd1d_class.o hmhd1d_solve.o mhd1d_class.o mhd1d_init_.o mhd1d_paras.o mhd1d_solve.o
 DATADIR = dat
 
 .PHONY : all
@@ -33,7 +33,9 @@ clean:
 cdata:
 	rm -f $(DATADIR)/*.dat
 
-main.o: $(LIBRARY) $(BASECLASS) mhd1d_class.o mhd1d_init_.o mhd1d_paras.o mhd1d_solve.o mhd1d_class.hpp mymacros.hpp
+main.o: $(LIBRARY) $(BASECLASS) hmhd1d_class.o hmhd1d_solve.o mhd1d_class.o mhd1d_init_.o mhd1d_paras.o mhd1d_solve.o hmhd1d_class.hpp mhd1d_class.hpp mymacros.hpp
+hmhd1d_class.o: $(LIBRARY) $(BASECLASS) mhd1d_class.o hmhd1d_class.hpp mhd1d_class.hpp mymacros.hpp
+hmhd1d_solve.o: $(LIBRARY) $(BASECLASS) hmhd1d_class.o mhd1d_class.o hmhd1d_class.hpp mhd1d_class.hpp mymacros.hpp
 mhd1d_class.o: $(LIBRARY) $(BASECLASS) mhd1d_class.hpp mymacros.hpp
 mhd1d_init_.o: $(LIBRARY) $(BASECLASS) mhd1d_class.o mhd1d_class.hpp mymacros.hpp
 mhd1d_paras.o: $(BASECLASS) mhd1d_class.o mhd1d_class.hpp mymacros.hpp
