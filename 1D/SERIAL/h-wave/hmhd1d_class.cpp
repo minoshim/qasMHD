@@ -4,10 +4,9 @@ double HMHD1D::haldt()
 {
   // Get time step for Hall term satisfying CFL condition
   double vtmp=0.0,vmax=1.0;
-  double factor=1.0;
   for (int i=xoff;i<nx-xoff;i++){
     hallv(i);
-    vtmp=fabs(hx[i])+factor*vphix*fabs(cx[i]/ro[i]);
+    vtmp=fabs(hx[i])+vphix*fabs(cx[i]/ro[i]);
     if (vtmp > vmax) vmax=vtmp;
   }
   return cfl*dx/vmax;

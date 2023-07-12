@@ -92,7 +92,7 @@ void HMHD1D::hall_(double dt)
       for (i=3;i<nx-2;i++){
 	ss=i;	
 	double flux[8]={0},bn=0.5*(ul[nm*ss+4]+ur[nm*ss+4]);
-	double rn=0.5*(ul[nm*ss+0]+ur[nm*ss+0]);
+	double rn=min(ul[nm*ss+0],ur[nm*ss+0]);
 	double smax=0.0;
 	smax+=max(fabs(ul[nm*ss+1]),fabs(ur[nm*ss+1])); // Hall velocity
 	smax+=vphix*fabs(bn/rn); // Whistler velocity
@@ -118,10 +118,10 @@ void HMHD1D::hall_(double dt)
 	ss=i;
 	double *val1[]={val[0]+ss,val[1]+ss,val[2]+ss,val[3]+ss,val[4]+ss,val[5]+ss,val[6]+ss,val[7]+ss};
 	double val0[]={ut[0*nx+ss],ut[1*nx+ss],ut[2*nx+ss],ut[3*nx+ss],ut[4*nx+ss],ut[5*nx+ss],ut[6*nx+ss],ut[7*nx+ss]};
-	mhd_updt1d(val1[0],val0[0],&fx[nm*ss+0],dtdx,rk_fac[rk],nm,func_df); // ro
-	mhd_updt1d(val1[1],val0[1],&fx[nm*ss+1],dtdx,rk_fac[rk],nm,func_df); // mx
-	mhd_updt1d(val1[2],val0[2],&fx[nm*ss+2],dtdx,rk_fac[rk],nm,func_df); // my
-	mhd_updt1d(val1[3],val0[3],&fx[nm*ss+3],dtdx,rk_fac[rk],nm,func_df); // mz
+	// mhd_updt1d(val1[0],val0[0],&fx[nm*ss+0],dtdx,rk_fac[rk],nm,func_df); // ro
+	// mhd_updt1d(val1[1],val0[1],&fx[nm*ss+1],dtdx,rk_fac[rk],nm,func_df); // mx
+	// mhd_updt1d(val1[2],val0[2],&fx[nm*ss+2],dtdx,rk_fac[rk],nm,func_df); // my
+	// mhd_updt1d(val1[3],val0[3],&fx[nm*ss+3],dtdx,rk_fac[rk],nm,func_df); // mz
 	mhd_updt1d(val1[5],val0[5],&fx[nm*ss+5],dtdx,rk_fac[rk],nm,func_df); // by
 	mhd_updt1d(val1[6],val0[6],&fx[nm*ss+6],dtdx,rk_fac[rk],nm,func_df); // bz
 	mhd_updt1d(val1[7],val0[7],&fx[nm*ss+7],dtdx,rk_fac[rk],nm,func_df); // en
