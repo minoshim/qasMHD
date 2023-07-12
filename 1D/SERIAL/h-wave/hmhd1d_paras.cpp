@@ -1,6 +1,6 @@
-#include "mhd1d_class.hpp"
+#include "hmhd1d_class.hpp"
 
-void MHD1D::paras()
+void HMHD1D::paras()
 {
   // Simulation parameters
   xmin=+0.0;
@@ -23,5 +23,10 @@ void MHD1D::paras()
   for (int i=0;i<nx;i++){
     x[i]=(i-xoff+0.5)*dx+xmin;
   }
-  
+
+  // Hall parameters
+  di=dx*D_ION;
+  de=dx*D_ELE;
+  idx=1.0/dx;
+  vphix=di*2.0*M_PI*idx;
 }

@@ -9,16 +9,17 @@ class HMHD1D: public MHD1D{
 
 public:
   double haldt();
+  void paras();			// Set parameters
   void exec_(int);		// Run simulation
   HMHD1D();			// Constructor
   virtual ~HMHD1D();		// Destructor
 
 protected:
   double *hx,*hy,*hz;	       // Hall velocity
-  const double di=dx*D_ION;	       // Ion inertia length
-  const double de=dx*D_ELE;	       // "Artificial" electron inertia length
-  const double idx=1.0/dx;
-  const double vphix=di*2.0*M_PI*idx; // Maximum whistler phase velocity
+  double di;		       // Ion inertia length
+  double de;		       // "Artificial" electron inertia length
+  double idx;
+  double vphix;			// Maximum whistler phase velocity
   void hall_(double);	       // Hall term solver
   
   double rotc(const double *cx, const double *cy, double idx, double idy, int xoffset, int yoffset)
