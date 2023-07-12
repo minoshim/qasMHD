@@ -8,8 +8,8 @@
 class HMHD1D: public MHD1D{
 
 public:
-  double haldt();
   void paras();			// Set parameters
+  double haldt();
   void exec_(int);		// Run simulation
   HMHD1D();			// Constructor
   virtual ~HMHD1D();		// Destructor
