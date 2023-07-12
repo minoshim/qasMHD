@@ -34,6 +34,14 @@ inline double cal_d2f_4th(const double *f) /* 4th order */
   return ( (-(f[2]+f[-2])+16.0*(f[1]+f[-1])-30.0*f[0])/12.0 );
 }
 
+/* Rotation of cell-center variables with 2nd order accuracy */
+/* cx,cy @ i,j. Return = (dcy/dx-dcx/dy) @ i,j  */
+inline double rotc(const double *cx, const double *cy, double idx, double idy, int xoffset, int yoffset)
+{
+  // rotC, where C is cell-center quantity
+  return 0.5*((cy[+xoffset]-cy[-xoffset])*idx-(cx[+yoffset]-cx[-yoffset])*idy);
+}
+
 /* Linear interpolation */
 /* f = address @ i, *fl = left state @ i+1/2, *fr = Right state @i-1/2 */
 void cal_flr_1st(const double *f, double *fl, double *fr); /* 1st order */

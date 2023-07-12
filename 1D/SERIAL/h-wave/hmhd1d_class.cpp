@@ -2,7 +2,7 @@
 
 double HMHD1D::haldt()
 {
-  // Get time step for Hall term satisfying CFL condition
+  // Return time step for Hall term to satisfy CFL condition
   double vtmp=0.0,vmax=1.0;
   for (int i=xoff;i<nx-xoff;i++){
     hallv(i);
