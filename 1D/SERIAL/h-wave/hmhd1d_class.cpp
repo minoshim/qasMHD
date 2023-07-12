@@ -1,5 +1,18 @@
 #include "hmhd1d_class.hpp"
 
+double HMHD1D::haldt()
+{
+  // Get time step for Hall term satisfying CFL condition
+  double vtmp=0.0,vmax=1.0;
+  double factor=1.0;
+  for (int i=xoff;i<nx-xoff;i++){
+    hallv(i);
+    vtmp=fabs(hx[i])+factor*vphix*fabs(cx[i]/ro[i]);
+    if (vtmp > vmax) vmax=vtmp;
+  }
+  return cfl*dx/vmax;
+}
+
 void HMHD1D::exec_(int flg)
 {
   // Run simulation.
@@ -14,7 +27,11 @@ void HMHD1D::exec_(int flg)
     bound(val,nm,dnxs);
 
     // Syb-cycling of Hall term
-    hall_(dt);
+    int hmax=1+(int)(dt/haldt());
+    for (int h=0;h<hmax;h++){
+      hall_(dt/hmax);
+      bound(val,nm,dnxs);
+    }
     
     ideal(dt);
     setdt(flg*(n % 2 == 0));

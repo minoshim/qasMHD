@@ -6,7 +6,10 @@ void HMHD1D::hall_(double dt)
   int i,ss,rk;
   static const double rk_fac[3][2]={{0.0,1.0},{0.5+(R_K-2)*0.25,0.5-(R_K-2)*0.25},{1./3.,2./3.}};
   const double dtdx=dt/dx;
-  const double vphix=di*2.0*M_PI*idx; /* Maximum whistler phase vel. */
+  void (*func_flux)(double, double, double, double, double, double, double, 
+		    double, double, double, double, double, double, double, 
+		    double, double,
+		    double*, double*, double*)=&calc_flux_hall_lf;
   void (*func_lr)(const double *f, double *fl, double *fr)=interpol[ODR-1];
   double (*func_df)(const double *f)=df1[ODR-1];
   double *ut,*ul,*ur,*fx;
@@ -93,10 +96,10 @@ void HMHD1D::hall_(double dt)
 	double smax=0.0;
 	smax+=max(fabs(ul[nm*ss+1]),fabs(ur[nm*ss+1])); // Hall velocity
 	smax+=vphix*fabs(bn/rn); // Whistler velocity
-	calc_flux_hall_lf(ul[nm*ss+0],ul[nm*ss+1],ul[nm*ss+2],ul[nm*ss+3],ul[nm*ss+5],ul[nm*ss+6],ul[nm*ss+7],
-			  ur[nm*ss+0],ur[nm*ss+1],ur[nm*ss+2],ur[nm*ss+3],ur[nm*ss+5],ur[nm*ss+6],ur[nm*ss+7],
-			  bn,smax,
-			  &flux[5],&flux[6],&flux[7]);
+	func_flux(ul[nm*ss+0],ul[nm*ss+1],ul[nm*ss+2],ul[nm*ss+3],ul[nm*ss+5],ul[nm*ss+6],ul[nm*ss+7],
+		  ur[nm*ss+0],ur[nm*ss+1],ur[nm*ss+2],ur[nm*ss+3],ur[nm*ss+5],ur[nm*ss+6],ur[nm*ss+7],
+		  bn,smax,
+		  &flux[5],&flux[6],&flux[7]);
 	fx[nm*ss+0]=flux[0];	/* ro */
 	fx[nm*ss+1]=flux[1];	/* mx */
 	fx[nm*ss+2]=flux[2];	/* my */
