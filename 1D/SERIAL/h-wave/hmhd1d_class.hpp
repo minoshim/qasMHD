@@ -19,6 +19,7 @@ protected:
   double di,de; 		// Ion and "artificial" electron inertia lengths
   double idx;
   double vphix;			// Maximum whistler phase velocity
+  void ideal(double);		// ideal MHD solver
   void hall_(double);		// Hall term solver
   void enew2eorg(double*, double*, const double*, int); // Enew => Eorg, where (ro-de^2 \nabla^2) Enew = ro*Eorg
   void eorg2enew(double*, double*, const double*, int); // Eorg is original E-field, Enew is the field modified by electron inertia

@@ -32,7 +32,7 @@ void HMHD1D::exec_(int flg)
       bound(val,nm,dnxs);
     }
     
-    ideal(dt);
+    HMHD1D::ideal(dt);
     setdt(flg*(n % 2 == 0));
     
     if ( (flg)?(tim >= trec):((n % nrec) == 0) ){

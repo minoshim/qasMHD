@@ -28,5 +28,5 @@ void HMHD1D::paras()
   di=dx*D_ION;
   de=dx*D_ELE;
   idx=1.0/dx;
-  vphix=di*2.0*M_PI*idx;
+  vphix=di*M_PI/max(dx,de);
 }
