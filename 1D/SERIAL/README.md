@@ -1,8 +1,9 @@
 ## qasMHD/1D/SERIAL
 Serial codes for the following one-dimensional problems are available:
 - `shock`... standard shock tube problems[^1];
-- `wave`... MHD wave propagation problems[^2].
-
+- `wave`... MHD wave propagation problems[^2];
+- `h-wave` ... Hall MHD wave propagation problems.
+ 
 Users may edit the following files contained in each directory:
 - `mhd1d_init_.cpp` defines the initial condition;
 - `mhd1d_paras.cpp` defines the simulation parameters (spatial domain and boundary condition);
