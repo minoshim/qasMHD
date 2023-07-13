@@ -99,7 +99,7 @@ void HMHD1D::ideal(double dt)
       // E-field correction by "artificial" electron inertia
       if (de != 0){
 #ifdef _OPENMP
-#pragma omp for
+#pragma omp single
 #endif
 	for (int m=5;m<7;m++){
 	  double *etmp=new double[2*nx];
@@ -113,7 +113,7 @@ void HMHD1D::ideal(double dt)
 	    double de=etmp[1*nx+ss]-etmp[0*nx+ss];   // -ez,+ey
 	    double bb=0.5*(val[m][ss-1]+val[m][ss]); // +by,+bz
 	    fx[nm*ss+m]=etmp[1*nx+ss];
-	    fx[nm*ss+7]+=de*bb;
+	    fx[nm*ss+7]+=de*bb;	// This is NOT parallelized
 	  }
 	  delete[] etmp;
 	}
@@ -262,7 +262,7 @@ void HMHD1D::hall_(double dt)
       // E-field correction by "artificial" electron inertia
       if (de != 0){
 #ifdef _OPENMP
-#pragma omp for
+#pragma omp single
 #endif
 	for (int m=5;m<7;m++){
 	  double *etmp=new double[2*nx];
@@ -276,7 +276,7 @@ void HMHD1D::hall_(double dt)
 	    double de=etmp[1*nx+ss]-etmp[0*nx+ss];   // -ez,+ey
 	    double bb=0.5*(val[m][ss-1]+val[m][ss]); // +by,+bz
 	    fx[nm*ss+m]=etmp[1*nx+ss];
-	    fx[nm*ss+7]+=de*bb;
+	    fx[nm*ss+7]+=de*bb;	// This is NOT parallelized
 	  }
 	  delete[] etmp;
 	}
