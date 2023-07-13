@@ -28,5 +28,7 @@ void HMHD1D::paras()
   di=dx*D_ION;
   de=dx*D_ELE;
   idx=1.0/dx;
-  vphix=di*M_PI/max(dx,de);
+  double kpeak=2.0*M_PI*idx;
+  if (de != 0) kpeak=min(kpeak,1.0/de);
+  vphix=di*kpeak;
 }
