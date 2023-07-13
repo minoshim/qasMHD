@@ -26,10 +26,12 @@ void HMHD1D::exec_(int flg)
     bound(val,nm,dnxs);
 
     // Syb-cycling of Hall term
-    int hmax=1+(int)(dt/haldt());
-    for (int h=0;h<hmax;h++){
-      hall_(dt/hmax);
-      bound(val,nm,dnxs);
+    if (di != 0){
+      int hmax=1+(int)(dt/haldt());
+      for (int h=0;h<hmax;h++){
+	hall_(dt/hmax);
+	bound(val,nm,dnxs);
+      }
     }
     
     HMHD1D::ideal(dt);
