@@ -109,6 +109,30 @@ void HMHD1D::hall_(double dt)
 	fx[nm*ss+6]=flux[6];	/* bz */
 	fx[nm*ss+7]=flux[7];	/* en */
       }
+
+      // E-field correction by "artificial" electron inertia
+      if (de != 0){
+#ifdef _OPENMP
+#pragma omp for
+#endif
+	for (int m=5;m<7;m++){
+	  double *etmp=new double[2*nx];
+	  for (i=3;i<nx-2;i++){
+	    ss=i;
+	    etmp[0*nx+ss]=etmp[1*nx+ss]=fx[nm*ss+m]; // -ez,+ey
+	  }
+	  eorg2enew(&etmp[0*nx],&etmp[1*nx],ro,-dnxs[m]);
+	  for (i=3;i<nx-2;i++){
+	    ss=i;
+	    double de=etmp[1*nx+ss]-etmp[0*nx+ss];   // -ez,+ey
+	    double bb=0.5*(val[m][ss-1]+val[m][ss]); // +by,+bz
+	    fx[nm*ss+m]=etmp[1*nx+ss];
+	    fx[nm*ss+7]+=de*bb;
+	  }
+	  delete[] etmp;
+	}
+      }
+      
       /* Update */
 #ifdef _OPENMP
 #pragma omp for
@@ -136,4 +160,117 @@ void HMHD1D::hall_(double dt)
   delete[] ul;
   delete[] ur;
   delete[] fx;
+}
+
+// [IMPORTANT] Following functions relate electric field Enew and its base value Eorg
+// Their relation is (ro-de^2 \nabla^2) Enew = ro*Eorg
+// ro: number density (normalized by ro0)
+// de: electron inertia length in density of ro0
+// Eorg: electric field WITHOUT the electron inertia effect
+// Enew: electric field WITH the electron inertia effect
+// Reference: Amano, 2015, JCP
+
+void HMHD1D::enew2eorg(double *enew, double *eorg, const double *ro, int dnx)
+/* Convert Enew => Eorg */
+/* ro is number density and de is electron inertia length (both are normalized) */
+/* Boundary condition included */
+{
+  const double fac=(de*de)/(dx*dx);
+  double (*func_d2f)(const double *f)=df2[ODR-1];
+  double *p[]={eorg,enew};
+  int dnxs[]={dnx};
+
+  /* Boundary condition for Enew */
+  bound(&p[1],1,dnxs);
+
+  for (int i=xoff;i<nx-xoff;i++){
+    int ss=i;
+    eorg[ss]=enew[ss]-fac*func_d2f(&enew[ss])/ro[ss];
+  }
+  
+  /* Boundary condition for Eorg (output) */
+  bound(&p[0],1,dnxs);
+}
+
+void HMHD1D::eorg2enew(double *eorg, double *enew, const double *ro, int dnx)
+/* Wrapper of emhd_eorg2enew functions */
+{
+  int cnt;
+  cnt=eorg2enew_cg(eorg,enew,ro,dnx);
+  if (!cnt) puts("emhd_eorg2enew: Not converged!!");
+}
+
+int HMHD1D::eorg2enew_cg(double *eorg, double *enew, const double *ro, int dnx)
+/* Convert Eorg => Enew with Conjugate Gradient method */
+/* ro is number density and de is electron inertia length (both are normalized) */
+/* Boundary condition included */
+{
+  int i,ss;
+  int cnt=0;
+  const int cmax=nx;
+  const double eps=1e-8;
+  const double fac=(de*de)/(dx*dx);
+  double numer,denom,coef,anorm,anormf=0.0;
+  double *rk,*pk,*ap;
+  rk=new double[nx];
+  pk=new double[nx];
+  ap=new double[nx];
+  double (*func_d2f)(const double *f)=df2[ODR-1];
+  double *p[]={eorg,enew,pk};
+  int dnxs[]={dnx};
+
+  /* Initialize */
+  bound(&p[1],1,dnxs); /* Boundary condition for Enew */
+  numer=0.0;
+  for (i=xoff;i<nx-xoff;i++){
+    ss=i;
+    rk[ss]=ro[ss]*eorg[ss]-(ro[ss]*enew[ss]-fac*func_d2f(&enew[ss]));
+    pk[ss]=rk[ss];
+    numer+=rk[ss]*rk[ss];
+    anormf+=fabs(rk[ss]);
+  }
+
+  /* Iteration */
+  do{
+
+    bound(&p[2],1,dnxs); /* Boundary condition for Pk */
+    denom=0.0;
+    for (i=xoff;i<nx-xoff;i++){
+      ss=i;
+      ap[ss]=(ro[ss]*pk[ss]-fac*func_d2f(&pk[ss]));
+      denom+=pk[ss]*ap[ss];
+    }
+    coef=(denom == 0)?0:numer/denom;
+
+    anorm=0.0;
+    for (i=xoff;i<nx-xoff;i++){
+      ss=i;
+      enew[ss]+=coef*pk[ss];
+      rk[ss]-=coef*ap[ss];
+      anorm+=fabs(rk[ss]);
+    }
+    
+    denom=numer;
+    numer=0.0;
+    for (i=xoff;i<nx-xoff;i++){
+      ss=i;
+      numer+=rk[ss]*rk[ss];
+    }
+    coef=(denom == 0)?0:numer/denom;
+
+    for (i=xoff;i<nx-xoff;i++){
+      ss=i;
+      pk[ss]=rk[ss]+coef*pk[ss];
+    }
+    
+  } while( (anorm > eps*anormf) && (++cnt < cmax) );
+
+  /* Boundary condition for Enew (output) */
+  bound(&p[1],1,dnxs);
+
+  delete[] rk;
+  delete[] pk;
+  delete[] ap;
+
+  return cmax-cnt;		/* If zero, iteration does NOT converge */
 }

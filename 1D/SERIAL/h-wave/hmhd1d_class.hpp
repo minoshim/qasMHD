@@ -20,7 +20,10 @@ protected:
   double idx;
   double vphix;			// Maximum whistler phase velocity
   void hall_(double);		// Hall term solver
-  
+  void enew2eorg(double*, double*, const double*, int); // Enew => Eorg, where (ro-de^2 \nabla^2) Enew = ro*Eorg
+  void eorg2enew(double*, double*, const double*, int); // Eorg is original E-field, Enew is the field modified by electron inertia
+  int eorg2enew_cg(double*, double*, const double*, int dnx); // Eorg => Enew by CG method
+
   void hallv(int i)
   {
     // Get Hall velocity -(di/n)*rotB
