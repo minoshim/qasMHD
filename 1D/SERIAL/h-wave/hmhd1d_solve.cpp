@@ -97,17 +97,19 @@ void HMHD1D::ideal(double dt)
       }
 
       // E-field correction by "artificial" electron inertia
-      if (de != 0){
 #ifdef _OPENMP
 #pragma omp single
 #endif
+      if (de != 0){
+	double dummy[nx];
+	for (i=0;i<nx;i++) dummy[i]=1.0;
 	for (int m=5;m<7;m++){
 	  double *etmp=new double[2*nx];
 	  for (i=3;i<nx-2;i++){
 	    ss=i;
 	    etmp[0*nx+ss]=etmp[1*nx+ss]=fx[nm*ss+m]; // -ez,+ey
 	  }
-	  eorg2enew(&etmp[0*nx],&etmp[1*nx],ro,-dnxs[m]);
+	  eorg2enew(&etmp[0*nx],&etmp[1*nx],dummy,-dnxs[m]);
 	  for (i=3;i<nx-2;i++){
 	    ss=i;
 	    double de=etmp[1*nx+ss]-etmp[0*nx+ss];   // -ez,+ey
@@ -260,17 +262,19 @@ void HMHD1D::hall_(double dt)
       }
 
       // E-field correction by "artificial" electron inertia
-      if (de != 0){
 #ifdef _OPENMP
 #pragma omp single
 #endif
+      if (de != 0){
+	double dummy[nx];
+	for (i=0;i<nx;i++) dummy[i]=1.0;
 	for (int m=5;m<7;m++){
 	  double *etmp=new double[2*nx];
 	  for (i=3;i<nx-2;i++){
 	    ss=i;
 	    etmp[0*nx+ss]=etmp[1*nx+ss]=fx[nm*ss+m]; // -ez,+ey
 	  }
-	  eorg2enew(&etmp[0*nx],&etmp[1*nx],ro,-dnxs[m]);
+	  eorg2enew(&etmp[0*nx],&etmp[1*nx],dummy,-dnxs[m]);
 	  for (i=3;i<nx-2;i++){
 	    ss=i;
 	    double de=etmp[1*nx+ss]-etmp[0*nx+ss];   // -ez,+ey
