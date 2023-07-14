@@ -101,6 +101,7 @@ void HMHD1D::ideal(double dt)
 #pragma omp single
 #endif
       if (de != 0){
+	// Following routine called from single thread, NOT parallelized
 	crcte(&fx[5],&fx[7],nm,cy,ro,-dnxs[5]);
 	crcte(&fx[6],&fx[7],nm,cz,ro,-dnxs[6]);
       }
@@ -250,6 +251,7 @@ void HMHD1D::hall_(double dt)
 #pragma omp single
 #endif
       if (de != 0){
+	// Following routine called from single thread, NOT parallelized
 	crcte(&fx[5],&fx[7],nm,cy,ro,-dnxs[5]);
 	crcte(&fx[6],&fx[7],nm,cz,ro,-dnxs[6]);
       }
