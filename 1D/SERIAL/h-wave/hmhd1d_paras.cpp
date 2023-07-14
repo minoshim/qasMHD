@@ -31,4 +31,9 @@ void HMHD1D::paras()
   double kpeak=2.0*M_PI*idx;
   if (de != 0) kpeak=min(kpeak,1.0/de);
   vphix=di*kpeak;
+  
+  // Caution:
+  // The phase velocity of whistler waves peaks @ kpeak=1.0/de when electron inertia effect is included.
+  // Use of vphix=di/de reduces computational cost for Hall solver.
+  // However, it also reduces the amount of numerical dissipation for high freq. waves.
 }
