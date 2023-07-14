@@ -101,24 +101,8 @@ void HMHD1D::ideal(double dt)
 #pragma omp single
 #endif
       if (de != 0){
-	double dummy[nx];
-	for (i=0;i<nx;i++) dummy[i]=1.0;
-	for (int m=5;m<7;m++){
-	  double *etmp=new double[2*nx];
-	  for (i=3;i<nx-2;i++){
-	    ss=i;
-	    etmp[0*nx+ss]=etmp[1*nx+ss]=fx[nm*ss+m]; // -ez,+ey
-	  }
-	  eorg2enew(&etmp[0*nx],&etmp[1*nx],dummy,-dnxs[m]);
-	  for (i=3;i<nx-2;i++){
-	    ss=i;
-	    double de=etmp[1*nx+ss]-etmp[0*nx+ss];   // -ez,+ey
-	    double bb=0.5*(val[m][ss-1]+val[m][ss]); // +by,+bz
-	    fx[nm*ss+m]=etmp[1*nx+ss];
-	    fx[nm*ss+7]+=de*bb;	// This is NOT parallelized
-	  }
-	  delete[] etmp;
-	}
+	crcte(&fx[5],&fx[7],nm,cy,ro,-dnxs[5]);
+	crcte(&fx[6],&fx[7],nm,cz,ro,-dnxs[6]);
       }
 
       /* Update */
@@ -266,24 +250,8 @@ void HMHD1D::hall_(double dt)
 #pragma omp single
 #endif
       if (de != 0){
-	double dummy[nx];
-	for (i=0;i<nx;i++) dummy[i]=1.0;
-	for (int m=5;m<7;m++){
-	  double *etmp=new double[2*nx];
-	  for (i=3;i<nx-2;i++){
-	    ss=i;
-	    etmp[0*nx+ss]=etmp[1*nx+ss]=fx[nm*ss+m]; // -ez,+ey
-	  }
-	  eorg2enew(&etmp[0*nx],&etmp[1*nx],dummy,-dnxs[m]);
-	  for (i=3;i<nx-2;i++){
-	    ss=i;
-	    double de=etmp[1*nx+ss]-etmp[0*nx+ss];   // -ez,+ey
-	    double bb=0.5*(val[m][ss-1]+val[m][ss]); // +by,+bz
-	    fx[nm*ss+m]=etmp[1*nx+ss];
-	    fx[nm*ss+7]+=de*bb;	// This is NOT parallelized
-	  }
-	  delete[] etmp;
-	}
+	crcte(&fx[5],&fx[7],nm,cy,ro,-dnxs[5]);
+	crcte(&fx[6],&fx[7],nm,cz,ro,-dnxs[6]);
       }
       
       /* Update */
@@ -322,6 +290,33 @@ void HMHD1D::hall_(double dt)
 // Eorg: electric field WITHOUT the electron inertia effect
 // Enew: electric field WITH the electron inertia effect
 // Reference: Amano, 2015, JCP
+
+void HMHD1D::crcte(double *fbt, double *fen, int nm, const double *bt, const double *ro, int dnx)
+// Correct electric field by electron inertia
+// fbt = Flux for B(y,z) (= -ez or +ey)
+// fen = Flux for energy
+// bt  = +by or +bz
+{
+  int i,ss;
+  double *etmp=new double[2*nx];
+  double *dummy=new double[nx];
+  for (i=0;i<nx;i++){
+    ss=i;
+    etmp[0*nx+ss]=etmp[1*nx+ss]=fbt[nm*ss];
+    dummy[ss]=1.0;
+  }
+  // eorg2enew(&etmp[0*nx],&etmp[1*nx],ro,dnx);
+  eorg2enew(&etmp[0*nx],&etmp[1*nx],dummy,dnx);
+  for (i=1;i<nx;i++){
+    ss=i;
+    double de=etmp[1*nx+ss]-etmp[0*nx+ss];
+    double bb=0.5*(bt[ss-1]+bt[ss]);
+    fbt[nm*ss]=etmp[1*nx+ss];
+    fen[nm*ss]+=de*bb;		// This is NOT parallelized
+  }
+  delete[] etmp;
+  delete[] dummy;
+}
 
 void HMHD1D::enew2eorg(double *enew, double *eorg, const double *ro, int dnx)
 /* Convert Enew => Eorg */
