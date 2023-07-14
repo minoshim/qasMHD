@@ -3,7 +3,7 @@
 
 #define XMESH (256)	   // Number of cells in computational domain
 #define N_OUT (4095)	   // Number of output
-#define DTREC (0.01)	   // Time step for output
+#define DTREC (0.005)	   // Time step for output
 #define CFL (0.4)	   // CFL value
 
 // Select solvers.
