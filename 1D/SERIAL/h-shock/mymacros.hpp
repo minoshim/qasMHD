@@ -1,7 +1,7 @@
 #ifndef _MYMACROS_
 #define _MYMACROS_
 
-#define XMESH (1600)	   // Number of cells in computational domain
+#define XMESH (400)	   // Number of cells in computational domain
 #define N_OUT (100)	   // Number of output
 #define DTREC (0.01)	   // Time step for output
 #define CFL (0.4)	   // CFL value
