@@ -25,7 +25,7 @@ void HMHD1D::paras()
   }
 
   // Hall parameters
-  di=dx*D_ION;
+  di=D_ION;
   de=dx*D_ELE;
   idx=1.0/dx;
   double kpeak=M_PI*idx;
