@@ -314,7 +314,7 @@ void HMHD1D::crcte(double *fbt, double *fen, int nm, const double *bt, const dou
     double de=etmp[1*nx+ss]-etmp[0*nx+ss];
     double bb=0.5*(bt[ss-1]+bt[ss]);
     fbt[nm*ss]=etmp[1*nx+ss];
-    fen[nm*ss]+=de*bb;		// This is NOT parallelized
+    fen[nm*ss]+=de*bb;
   }
   delete[] etmp;
   delete[] dummy;
