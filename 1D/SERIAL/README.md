@@ -2,7 +2,8 @@
 Serial codes for the following one-dimensional problems are available:
 - `shock`... standard shock tube problems[^1];
 - `wave`... MHD wave propagation problems[^2];
-- `h-wave` ... Hall MHD wave propagation problems.
+- `h-shock` ... Hall-MHD shock tube problems;
+- `h-wave` ... Hall-MHD wave propagation problems.
  
 Users may edit the following files contained in each directory:
 - `mhd1d_init_.cpp` defines the initial condition;
