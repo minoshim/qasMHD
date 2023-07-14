@@ -102,8 +102,8 @@ void HMHD1D::ideal(double dt)
 #endif
       if (de != 0){
 	// Following routine called from single thread, NOT parallelized
-	crcte(&fx[5],&fx[7],nm,cy,ro,-dnxs[5]);
-	crcte(&fx[6],&fx[7],nm,cz,ro,-dnxs[6]);
+	crcte(&fx[5],&fx[7],nm,cy,ro,dnxs[1]*dnxs[5]);
+	crcte(&fx[6],&fx[7],nm,cz,ro,dnxs[1]*dnxs[6]);
       }
 
       /* Update */
@@ -252,8 +252,8 @@ void HMHD1D::hall_(double dt)
 #endif
       if (de != 0){
 	// Following routine called from single thread, NOT parallelized
-	crcte(&fx[5],&fx[7],nm,cy,ro,-dnxs[5]);
-	crcte(&fx[6],&fx[7],nm,cz,ro,-dnxs[6]);
+	crcte(&fx[5],&fx[7],nm,cy,ro,dnxs[1]*dnxs[5]);
+	crcte(&fx[6],&fx[7],nm,cz,ro,dnxs[1]*dnxs[6]);
       }
       
       /* Update */

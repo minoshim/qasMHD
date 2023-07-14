@@ -8,7 +8,7 @@ void HMHD1D::paras()
   sprintf(fildir,"./dat/");
   
   // Boundary condition flag for ro,mx,my,mz,bx,by,bz,en
-  // 0: periodic, +1: Neumann, -1: Dirichlet, +2: Open, -2: Zero fixed
+  // 0: periodic, +1: Neumann, -1: Dirichlet
   dnxs[0]=+0;			// ro
   dnxs[1]=+0;			// mx
   dnxs[2]=+0;			// my
@@ -28,7 +28,7 @@ void HMHD1D::paras()
   di=dx*D_ION;
   de=dx*D_ELE;
   idx=1.0/dx;
-  double kpeak=2.0*M_PI*idx;
+  double kpeak=M_PI*idx;
   if (de != 0) kpeak=min(kpeak,1.0/de);
   vphix=di*kpeak;
   

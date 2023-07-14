@@ -12,7 +12,7 @@
 #define R_K (3)		 /* Temporal order (1,2,3). Never set >3 */
 
 // Inertia length for Hall MHD
-#define D_ION (4.0)		// Ion inertia relative to grid width
+#define D_ION (4.0)		// Ion inertia length relative to grid width
 #define D_ELE (0.0)		// "Artificial" electron inertia length relative to grid width
 
 #endif
