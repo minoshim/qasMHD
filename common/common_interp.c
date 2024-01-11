@@ -42,6 +42,14 @@ void muscl_mc_cal_flr(const double *f, double *fl, double *fr) /* MC */
   (*fl)=f[0]+df;
   (*fr)=f[0]-df;
 }
+void muscl_vl_cal_flr(const double *f, double *fl, double *fr) /* van Leer */
+{
+  double d[3]={f[0]-f[-1],f[+1]-f[0]};
+  d[2]=d[0]*d[1];
+  double df=(d[2]>0)?(d[2]/(d[0]+d[1])):0;
+  (*fl)=f[0]+df;
+  (*fr)=f[0]-df;
+}
 void muscl_kr_cal_flr(const double *f, double *fl, double *fr) /* Koren */
 {
   double df1=2.0*(f[0]-f[-1]);
