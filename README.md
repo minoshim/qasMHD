@@ -2,8 +2,8 @@
 Quasi all-speed magnetohydrodynamic (qasMHD) simulation code is a C++ package for solving compressible MHD equations with a finite-difference method.<br>
 The qasMHD code has the characteristics of:
 - up to 4th order accuracy in space and 3rd order accuracy in time;
-- shock capturing by approximate Riemann solvers, including state-of-the-art low-dissipation all-speed solvers[^1][^2];
-- preservation of the solenoidal condition of the magnetic field by a well-designed Contrained Transport method[^3].
+- shock capturing by approximate Riemann solvers, including state-of-the-art low-dissipation all-speed solvers[^1][^2][^3];
+- preservation of the solenoidal condition of the magnetic field by a well-designed Contrained Transport method[^4].
 
 The qasMHD code is unique in that it can accurately solve MHD flows in wide-ranging Mach numbers, even when the flow is almost incompressible!<br>
 The current version supports 1D-3D space in Cartesian coordinates and hybrid MPI/OpenMP parallel computation.
@@ -63,4 +63,5 @@ For information about `1D/`, `2D/`, and `3D/` problems, see `README` in each dir
 
 [^1]: [Minoshima T., Kitamura K., and Miyoshi T. 2020, ApJS](https://iopscience.iop.org/article/10.3847/1538-4365/ab8aee/meta)
 [^2]: [Minoshima T. and Miyoshi T. 2021, JCP](https://www.sciencedirect.com/science/article/pii/S0021999121005349)
-[^3]: [Minoshima T., Miyoshi T., and Matsumoto Y. 2019, ApJS](https://iopscience.iop.org/article/10.3847/1538-4365/ab1a36/meta)
+[^3]: [Minoshima, T. 2023, JPCS](https://iopscience.iop.org/article/10.1088/1742-6596/2742/1/012026)
+[^4]: [Minoshima T., Miyoshi T., and Matsumoto Y. 2019, ApJS](https://iopscience.iop.org/article/10.3847/1538-4365/ab1a36/meta)
