@@ -10,6 +10,10 @@ The top was obtained with the 2nd-order scheme, and the bottom with the 4th-orde
 <img src="../../imgs/loop/Figure_1_2nd.png" alt="Loop advection t=1" width="500px"> <img src="../../imgs/loop/Figure_2_2nd.png" alt="Loop advection t=2" width="500px">
 <img src="../../imgs/loop/Figure_1_4th.png" alt="Loop advection t=1" width="500px"> <img src="../../imgs/loop/Figure_2_4th.png" alt="Loop advection t=2" width="500px">
 
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [license](../../../license/COPYING) file for details.
+
 [^1]: [Gardiner T. A., and Stone J. M. 2005, JCP](https://www.sciencedirect.com/science/article/pii/S0021999104004784)
 [^2]: [Lee, D. 2013, JCP](https://www.sciencedirect.com/science/article/pii/S0021999113001836?via%3Dihub)
 [^3]: [Minoshima T., Miyoshi T., and Matsumoto Y. 2019, ApJS](https://iopscience.iop.org/article/10.3847/1538-4365/ab1a36/meta)

@@ -6,3 +6,7 @@ The initial condition is *(&rho;,v<sub>x</sub>,v<sub>y</sub>,v<sub>z</sub>,B<sub
 An example of the temperature *(=P/&rho;)* profile at *t=&pi;* is shown below.
 
 ![OT vortex](../../imgs/OTvortex/Figure_1.png)
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [license](../../../license/COPYING) file for details.

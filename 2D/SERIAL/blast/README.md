@@ -7,4 +7,8 @@ The example result of the gas and magnetic pressures for *&theta;=30&deg;* is sh
 
 <img src="../../imgs/blast/Figure_1.png" alt="Gas pressure in blast wave" width="500px"> <img src="../../imgs/blast/Figure_2.png" alt="Magnetic pressure in blast wave" width="500px">
 
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [license](../../../license/COPYING) file for details.
+
 [^1]: [Balsara, D. S., and Spicer, D. S. 1999, JCP](https://www.sciencedirect.com/science/article/abs/pii/S0021999198961538?via%3Dihub)
