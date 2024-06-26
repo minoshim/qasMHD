@@ -9,4 +9,8 @@ In contrast, the dispersive wave train appears behind discontinuities in the rig
 
 <img src="../../imgs/h-shock/bw_den_n0400.png" alt="BrioWu density at dx=0.0025" width="400px"><img src="../../imgs/h-shock/bw_den_n1600.png" alt="BrioWu density at dx=0.000625" width="400px">
 
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [license](../../../license/COPYING) file for details.
+
 [^1]: [Amano, T. 2015, JCP](https://www.sciencedirect.com/science/article/abs/pii/S0021999115004805?via%3Dihub)
