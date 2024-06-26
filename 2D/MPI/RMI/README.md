@@ -11,5 +11,9 @@ This simulation was performed in a frame moving with *v<sub>y</sub>=-0.6* so tha
 ![RMI1](../../imgs/RMI/Figure_1.png)
 ![RMI3](../../imgs/RMI/Figure_3.png)
 
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [license](../../../license/COPYING) file for details.
+
 [^1]: [Minoshima T., Kitamura K., and Miyoshi T. 2020, ApJS](https://iopscience.iop.org/article/10.3847/1538-4365/ab8aee/meta)
 [^2]: [Minoshima T. and Miyoshi T. 2021, JCP](https://www.sciencedirect.com/science/article/pii/S0021999121005349)

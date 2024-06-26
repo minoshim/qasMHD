@@ -10,3 +10,7 @@ Uniform resistivity leads to elongated current sheet and slow reconnection (Swee
 Following example is the out-of-plane current with localized resistivity (*&propto;exp(-(x<sup>2</sup>+y<sup>2</sup>)/&lambda;)*, defined in `dmhd2d_init_.cpp`), showing Petscheck-like bifurcated structure.
 
 ![MRX](../../imgs/MRX/Figure_1.png)
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [license](../../../license/COPYING) file for details.

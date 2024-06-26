@@ -10,3 +10,7 @@ Example density profiles at t=15.0,20.0 are shown below.
 
 ![RTI1](../../imgs/RTI/Figure_1.png)
 ![RTI2](../../imgs/RTI/Figure_2.png)
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [license](../../../license/COPYING) file for details.
