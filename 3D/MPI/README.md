@@ -52,4 +52,8 @@ Subsequently, execute the python script `batch.py`.
 >>>plt3d.slice(x,y,z,ro,plane_orientation='z_axes',figure=fig) #Overplot in x-y plane
 ```
 
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [license](../../license/COPYING) file for details.
+
 [^1]: [Minoshima T., Miyoshi T., and Matsumoto Y. 2019, ApJS](https://iopscience.iop.org/article/10.3847/1538-4365/ab1a36/meta)
