@@ -15,4 +15,8 @@ The dispersion relation of the whistler wave *&omega; = V<sub>a</sub>d<sub>i</su
 ![Wave profile for beta=10](../../imgs/h-wave/wave_b1e+1_e.png)
 ![Spectrum of by for beta=10](../../imgs/h-wave/wk_by_b1e+1_e.png)
 
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [license](../../../license/COPYING) file for details.
+
 [^1]: [Amano, T. 2015, JCP](https://www.sciencedirect.com/science/article/abs/pii/S0021999115004805?via%3Dihub)

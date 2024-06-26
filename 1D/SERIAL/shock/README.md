@@ -22,4 +22,8 @@ Example results for each problem are shown below:
 5. Super-fast expansion
 ![Super-fast expansion](../../imgs/shock/Figure_5.png)
 
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [license](../../../license/COPYING) file for details.
+
 [^1]:  [Miyoshi T. and Kusano K. 2005, JCP](https://www.sciencedirect.com/science/article/pii/S0021999105001142?via%3Dihub)
