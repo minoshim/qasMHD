@@ -9,7 +9,9 @@ ssx=2**(int(np.log(nx)/np.log(2)))
 sst=2**(int(np.log(nt)/np.log(2)))
 
 val=by
-val=pr
+# val=by+bz*1j
+# val=by-bz*1j
+# val=pr
 val=val-np.mean(val)
 
 val=val[nt-sst:nt,nx-ssx:nx]
