@@ -1,13 +1,22 @@
 include Makefile.inc
 
-all:
-	cd common; make
-	cd mpi; make
+.PHONY: all common mpi clean
+
+all: common mpi
+
+common:
+	$(MAKE) -C common
+
+mpi:
+	$(MAKE) -C mpi
+
 lib$(LIBNAME).a:
-	cd common; make
+	$(MAKE) -C common
+
 lib$(LIBMPI).a:
-	cd mpi; make
+	$(MAKE) -C mpi
+
 clean:
-	rm -f *.a
-	cd common; make clean
-	cd mpi; make clean
+	$(RM) *.a
+	$(MAKE) -C common clean
+	$(MAKE) -C mpi clean

@@ -435,19 +435,19 @@ void mhd_eigen_ae(double ro, double vx, double vy, double vz, double bx, double 
 
 void mhd_c_reconst(const double *ro, const double *vx, const double *vy, const double *vz,
 		   const double *by, const double *bz, const double *pr,
-		   double bx, double gamma, const int s,
+		   double bx, double gamma,
 		   double *ul, double *ur,
 		   void (*func_lr)(const double*, double*, double*))
 /* Reconstruction of MHD variables with characteristic decompisition (based on ATHENA) */
 /* ro ~ pr: primitive variables in the stencil */
 /* bx, gamma: normal magnetic field and specific heat ratio */
-/* s: number of grids in the stencil */
+/* The stencil width is MHD_RECON_STENCIL */
 /* ul: primitive variables at the left-face of right boundary */
 /* ur: primitive variables at the right-face of left boundary */
-/* func_lr: reconstruction function with degree of freedom = s */
+/* func_lr: reconstruction function with degree of freedom = MHD_RECON_STENCIL */
 {
   int m,n;
-  double w[7][s],wl[7],wr[7];
+  double w[7][MHD_RECON_STENCIL],wl[7],wr[7];
   double al0,al1,al2,al3,al4,al5,al6; /* Not used */
   double l0[7]={1.0,0,0,0,0,0,0};
   double l1[7]={0,1.0,0,0,0,0,0};
@@ -465,14 +465,15 @@ void mhd_c_reconst(const double *ro, const double *vx, const double *vy, const d
   double r6[7]={0,0,0,0,0,0,1.0};
 
   /* Calculate eigenvalues and eigenvectors based on ATHENA */
-  mhd_eigen_st(ro[s/2],vx[s/2],vy[s/2],vz[s/2],bx,by[s/2],bz[s/2],pr[s/2],gamma,
+  mhd_eigen_st(ro[MHD_RECON_STENCIL/2],vx[MHD_RECON_STENCIL/2],vy[MHD_RECON_STENCIL/2],vz[MHD_RECON_STENCIL/2],
+	       bx,by[MHD_RECON_STENCIL/2],bz[MHD_RECON_STENCIL/2],pr[MHD_RECON_STENCIL/2],gamma,
 	       &al0,&al1,&al2,&al3,&al4,&al5,&al6,
 	       &l0[0],&l1[0],&l2[0],&l3[0],&l4[0],&l5[0],&l6[0],
 	       &r0[0],&r1[0],&r2[0],&r3[0],&r4[0],&r5[0],&r6[0]);
 
   /* Characteristic variables in stencil */
-#pragma simd
-  for (m=0;m<s;m++){
+#pragma omp simd
+  for (m=0;m<MHD_RECON_STENCIL;m++){
     w[0][m]=(+l0[0]*ro[m]+l0[1]*vx[m]+l0[2]*vy[m]+l0[3]*vz[m]+l0[4]*by[m]+l0[5]*bz[m]+l0[6]*pr[m]);
     w[1][m]=(+l1[0]*ro[m]+l1[1]*vx[m]+l1[2]*vy[m]+l1[3]*vz[m]+l1[4]*by[m]+l1[5]*bz[m]+l1[6]*pr[m]);
     w[2][m]=(+l2[0]*ro[m]+l2[1]*vx[m]+l2[2]*vy[m]+l2[3]*vz[m]+l2[4]*by[m]+l2[5]*bz[m]+l2[6]*pr[m]);
@@ -483,20 +484,19 @@ void mhd_c_reconst(const double *ro, const double *vx, const double *vy, const d
   }
 
   /* Reconstruction */
-#pragma simd
-  for (n=0;n<7;n++) func_lr(&w[n][s/2],&wl[n],&wr[n]);
+  for (n=0;n<7;n++) func_lr(&w[n][MHD_RECON_STENCIL/2],&wl[n],&wr[n]);
   
   /* Primitive variables (ro,vx,vy,vz,by,bz,pr) at cell faces */
-#pragma simd
+#pragma omp simd
   for (n=0;n<7;n++)  /* Left-face at i+1/2 */
     ul[n]=r0[n]*wl[0]+r1[n]*wl[1]+r2[n]*wl[2]+r3[n]*wl[3]+r4[n]*wl[4]+r5[n]*wl[5]+r6[n]*wl[6];
-#pragma simd
+#pragma omp simd
   for (n=0;n<7;n++)  /* Right-face at i-1/2 */
     ur[n]=r0[n]*wr[0]+r1[n]*wr[1]+r2[n]*wr[2]+r3[n]*wr[3]+r4[n]*wr[4]+r5[n]*wr[5]+r6[n]*wr[6];
 
   /* To exactly keep v=0 and B=0 */
   int flg[5]={1,1,1,1,1};
-  for (m=0;m<s;m++){
+  for (m=0;m<MHD_RECON_STENCIL;m++){
     if (vx[m] != 0.0) flg[0]=0;
     if (vy[m] != 0.0) flg[1]=0;
     if (vz[m] != 0.0) flg[2]=0;
@@ -512,19 +512,19 @@ void mhd_c_reconst(const double *ro, const double *vx, const double *vy, const d
 
 void mhd_m_reconst(const double *ro, const double *vx, const double *vy, const double *vz,
 		   const double *by, const double *bz, const double *pr,
-		   double bx, double gamma, const int s,
+		   double bx, double gamma,
 		   double *ul, double *ur,
 		   void (*func_lr)(const double*, double*, double*))
 /* Reconstruction of MHD variables with Miyoshi+20 characteristic decompisition */
 /* ro ~ pr: primitive variables in the stencil */
 /* bx, gamma: normal magnetic field and specific heat ratio */
-/* s: number of grids in the stencil */
+/* The stencil width is MHD_RECON_STENCIL */
 /* ul: primitive variables at the left-face of right boundary */
 /* ur: primitive variables at the right-face of left boundary */
-/* func_lr: reconstruction function with degree of freedom = s */
+/* func_lr: reconstruction function with degree of freedom = MHD_RECON_STENCIL */
 {
   int m,n;
-  double w[7][s],wl[7],wr[7];
+  double w[7][MHD_RECON_STENCIL],wl[7],wr[7];
   double al0,al1,al2,al3,al4,al5,al6; /* Not used */
   double l0[7]={1.0,0,0,0,0,0,0};
   double l1[7]={0,1.0,0,0,0,0,0};
@@ -542,14 +542,15 @@ void mhd_m_reconst(const double *ro, const double *vx, const double *vy, const d
   double r6[7]={0,0,0,0,0,0,1.0};
 
   /* Calculate fast and alfven eigenvalues and eigenvectors */
-  mhd_eigen_mi(ro[s/2],vx[s/2],vy[s/2],vz[s/2],bx,by[s/2],bz[s/2],pr[s/2],gamma,
+  mhd_eigen_mi(ro[MHD_RECON_STENCIL/2],vx[MHD_RECON_STENCIL/2],vy[MHD_RECON_STENCIL/2],vz[MHD_RECON_STENCIL/2],
+	       bx,by[MHD_RECON_STENCIL/2],bz[MHD_RECON_STENCIL/2],pr[MHD_RECON_STENCIL/2],gamma,
 	       &al0,&al1,&al2,&al3,&al4,&al5,&al6,
 	       &l0[0],&l1[0],&l2[0],&l3[0],&l4[0],&l5[0],&l6[0],
 	       &r0[0],&r1[0],&r2[0],&r3[0],&r4[0],&r5[0],&r6[0]);
 
   /* Characteristic variables in stencil */
-#pragma simd
-  for (m=0;m<s;m++){
+#pragma omp simd
+  for (m=0;m<MHD_RECON_STENCIL;m++){
     w[0][m]=(+l0[0]*ro[m]+l0[1]*vx[m]+l0[2]*vy[m]+l0[3]*vz[m]+l0[4]*by[m]+l0[5]*bz[m]+l0[6]*pr[m]);
     w[1][m]=(+l1[0]*ro[m]+l1[1]*vx[m]+l1[2]*vy[m]+l1[3]*vz[m]+l1[4]*by[m]+l1[5]*bz[m]+l1[6]*pr[m]);
     w[2][m]=(+l2[0]*ro[m]+l2[1]*vx[m]+l2[2]*vy[m]+l2[3]*vz[m]+l2[4]*by[m]+l2[5]*bz[m]+l2[6]*pr[m]);
@@ -560,20 +561,19 @@ void mhd_m_reconst(const double *ro, const double *vx, const double *vy, const d
   }
 
   /* Reconstruction */
-#pragma simd
-  for (n=0;n<7;n++) func_lr(&w[n][s/2],&wl[n],&wr[n]);
+  for (n=0;n<7;n++) func_lr(&w[n][MHD_RECON_STENCIL/2],&wl[n],&wr[n]);
   
   /* Primitive variables (ro,vx,vy,vz,by,bz,pr) at cell faces */
-#pragma simd
+#pragma omp simd
   for (n=0;n<7;n++)  /* Left-face at i+1/2 */
     ul[n]=r0[n]*wl[0]+r1[n]*wl[1]+r2[n]*wl[2]+r3[n]*wl[3]+r4[n]*wl[4]+r5[n]*wl[5]+r6[n]*wl[6];
-#pragma simd
+#pragma omp simd
   for (n=0;n<7;n++)  /* Right-face at i-1/2 */
     ur[n]=r0[n]*wr[0]+r1[n]*wr[1]+r2[n]*wr[2]+r3[n]*wr[3]+r4[n]*wr[4]+r5[n]*wr[5]+r6[n]*wr[6];
 
   /* To exactly keep v=0 and B=0 */
   int flg[5]={1,1,1,1,1};
-  for (m=0;m<s;m++){
+  for (m=0;m<MHD_RECON_STENCIL;m++){
     if (vx[m] != 0.0) flg[0]=0;
     if (vy[m] != 0.0) flg[1]=0;
     if (vz[m] != 0.0) flg[2]=0;
@@ -589,19 +589,19 @@ void mhd_m_reconst(const double *ro, const double *vx, const double *vy, const d
 
 void mhd_a_reconst(const double *ro, const double *vx, const double *vy, const double *vz,
 		   const double *by, const double *bz, const double *pr,
-		   double bx, double gamma, const int s,
+		   double bx, double gamma,
 		   double *ul, double *ur,
 		   void (*func_lr)(const double*, double*, double*))
 /* Reconstruction of MHD variables with alfven characteristic decompisition */
 /* ro ~ pr: primitive variables in the stencil */
 /* bx, gamma: normal magnetic field and specific heat ratio */
-/* s: number of grids in the stencil */
+/* The stencil width is MHD_RECON_STENCIL */
 /* ul: primitive variables at the left-face of right boundary */
 /* ur: primitive variables at the right-face of left boundary */
-/* func_lr: reconstruction function with degree of freedom = s */
+/* func_lr: reconstruction function with degree of freedom = MHD_RECON_STENCIL */
 {
   int m,n;
-  double w[7][s],wl[7],wr[7];
+  double w[7][MHD_RECON_STENCIL],wl[7],wr[7];
   double al0,al1,al2,al3,al4,al5,al6; /* Not used */
   double l0[7]={1.0,0,0,0,0,0,0};
   double l1[7]={0,1.0,0,0,0,0,0};
@@ -619,14 +619,15 @@ void mhd_a_reconst(const double *ro, const double *vx, const double *vy, const d
   double r6[7]={0,0,0,0,0,0,1.0};
 
   /* Calculate alfven eigenvalues and eigenvectors */
-  mhd_eigen_ae(ro[s/2],vx[s/2],vy[s/2],vz[s/2],bx,by[s/2],bz[s/2],pr[s/2],gamma,
+  mhd_eigen_ae(ro[MHD_RECON_STENCIL/2],vx[MHD_RECON_STENCIL/2],vy[MHD_RECON_STENCIL/2],vz[MHD_RECON_STENCIL/2],
+	       bx,by[MHD_RECON_STENCIL/2],bz[MHD_RECON_STENCIL/2],pr[MHD_RECON_STENCIL/2],gamma,
 	       &al0,&al1,&al2,&al3,&al4,&al5,&al6,
 	       &l0[0],&l1[0],&l2[0],&l3[0],&l4[0],&l5[0],&l6[0],
 	       &r0[0],&r1[0],&r2[0],&r3[0],&r4[0],&r5[0],&r6[0]);
 
   /* Characteristic variables in stencil */
-#pragma simd
-  for (m=0;m<s;m++){
+#pragma omp simd
+  for (m=0;m<MHD_RECON_STENCIL;m++){
     w[0][m]=(+l0[0]*ro[m]+l0[1]*vx[m]+l0[2]*vy[m]+l0[3]*vz[m]+l0[4]*by[m]+l0[5]*bz[m]+l0[6]*pr[m]);
     w[1][m]=(+l1[0]*ro[m]+l1[1]*vx[m]+l1[2]*vy[m]+l1[3]*vz[m]+l1[4]*by[m]+l1[5]*bz[m]+l1[6]*pr[m]);
     w[2][m]=(+l2[0]*ro[m]+l2[1]*vx[m]+l2[2]*vy[m]+l2[3]*vz[m]+l2[4]*by[m]+l2[5]*bz[m]+l2[6]*pr[m]);
@@ -637,20 +638,19 @@ void mhd_a_reconst(const double *ro, const double *vx, const double *vy, const d
   }
 
   /* Reconstruction */
-#pragma simd
-  for (n=0;n<7;n++) func_lr(&w[n][s/2],&wl[n],&wr[n]);
+  for (n=0;n<7;n++) func_lr(&w[n][MHD_RECON_STENCIL/2],&wl[n],&wr[n]);
   
   /* Primitive variables (ro,vx,vy,vz,by,bz,pr) at cell faces */
-#pragma simd
+#pragma omp simd
   for (n=0;n<7;n++)  /* Left-face at i+1/2 */
     ul[n]=r0[n]*wl[0]+r1[n]*wl[1]+r2[n]*wl[2]+r3[n]*wl[3]+r4[n]*wl[4]+r5[n]*wl[5]+r6[n]*wl[6];
-#pragma simd
+#pragma omp simd
   for (n=0;n<7;n++)  /* Right-face at i-1/2 */
     ur[n]=r0[n]*wr[0]+r1[n]*wr[1]+r2[n]*wr[2]+r3[n]*wr[3]+r4[n]*wr[4]+r5[n]*wr[5]+r6[n]*wr[6];
 
   /* To exactly keep v=0 and B=0 */
   int flg[5]={1,1,1,1,1};
-  for (m=0;m<s;m++){
+  for (m=0;m<MHD_RECON_STENCIL;m++){
     if (vx[m] != 0.0) flg[0]=0;
     if (vy[m] != 0.0) flg[1]=0;
     if (vz[m] != 0.0) flg[2]=0;
@@ -666,24 +666,24 @@ void mhd_a_reconst(const double *ro, const double *vx, const double *vy, const d
 
 void mhd_reconst(const double *ro, const double *vx, const double *vy, const double *vz,
 		 const double *by, const double *bz, const double *pr,
-		 double bx, double gamma, const int s,
+		 double bx, double gamma,
 		 double *ul, double *ur,
 		 void (*func_lr)(const double*, double*, double*))
 /* Reconstruction of MHD variables  */
 /* Caracteristic decomposition NOT used. Mainly used for debug */
 /* ro ~ pr: primitive variables in the stencil */
 /* bx, gamma: normal magnetic field and specific heat ratio */
-/* s: number of grids in the stencil */
+/* The stencil width is MHD_RECON_STENCIL */
 /* ul: primitive variables at the left-face of right boundary */
 /* ur: primitive variables at the right-face of left boundary */
-/* func_lr: reconstruction function with degree of freedom = s */
+/* func_lr: reconstruction function with degree of freedom = MHD_RECON_STENCIL */
 {
   int m,n;
-  double w[7][s],wl[7],wr[7];
+  double w[7][MHD_RECON_STENCIL],wl[7],wr[7];
 
   /* Characteristic variables in stencil */
-#pragma simd
-  for (m=0;m<s;m++){
+#pragma omp simd
+  for (m=0;m<MHD_RECON_STENCIL;m++){
     w[0][m]=ro[m];
     w[1][m]=vx[m];
     w[2][m]=vy[m];
@@ -694,11 +694,10 @@ void mhd_reconst(const double *ro, const double *vx, const double *vy, const dou
   }
 
   /* Reconstruction */
-#pragma simd
-  for (n=0;n<7;n++) func_lr(&w[n][s/2],&wl[n],&wr[n]);
+  for (n=0;n<7;n++) func_lr(&w[n][MHD_RECON_STENCIL/2],&wl[n],&wr[n]);
   
   /* Primitive variables (ro,vx,vy,vz,by,bz,pr) at cell faces */
-#pragma simd
+#pragma omp simd
   for (n=0;n<7;n++){
     ul[n]=wl[n];		/* Left-face at i+1/2 */
     ur[n]=wr[n];		/* Right-face at i-1/2 */

@@ -1,6 +1,85 @@
 #include "common_mpi.h"
-#include <stdlib.h>
+#include <cstdlib>
+#include <initializer_list>
+#include <limits>
+#include <vector>
 #include "mpi.h"
+
+namespace {
+
+[[noreturn]] void mpi_abort_all(int error_code)
+{
+  MPI_Abort(MPI_COMM_WORLD,error_code);
+  std::abort();
+}
+
+std::size_t checked_mpi_count(std::initializer_list<int> factors)
+{
+  const std::size_t max_count=static_cast<std::size_t>(std::numeric_limits<int>::max());
+  std::size_t count=1;
+
+  for (int factor : factors){
+    if ((factor <= 0) || (count > max_count/static_cast<std::size_t>(factor))){
+      mpi_abort_all(MPI_ERR_COUNT);
+    }
+    count*=static_cast<std::size_t>(factor);
+  }
+  return(count);
+}
+
+std::size_t buffer_index_2d(int n, int nn, int outer, int inner, int inner_size)
+{
+  return(static_cast<std::size_t>(nn)*
+	 (static_cast<std::size_t>(inner_size)*static_cast<std::size_t>(outer)+
+	  static_cast<std::size_t>(inner))+static_cast<std::size_t>(n));
+}
+
+std::size_t buffer_index_3d(int n, int nn, int outer, int middle, int inner,
+			    int middle_size, int inner_size)
+{
+  return(static_cast<std::size_t>(nn)*
+	 (static_cast<std::size_t>(inner_size)*
+	  (static_cast<std::size_t>(middle_size)*static_cast<std::size_t>(outer)+
+	   static_cast<std::size_t>(middle))+static_cast<std::size_t>(inner))+
+	 static_cast<std::size_t>(n));
+}
+
+void resize_buffers(std::vector<double>& fold, std::vector<double>& fcpy, std::size_t count)
+{
+  if ((count > fold.max_size()/2) || (count > fcpy.max_size()/2)){
+    mpi_abort_all(MPI_ERR_NO_MEM);
+  }
+  try{
+    fold.resize(2*count);
+    fcpy.resize(2*count);
+  } catch (...){
+    mpi_abort_all(MPI_ERR_NO_MEM);
+  }
+}
+
+void check_mpi_error(int error_code)
+{
+  if (error_code != MPI_SUCCESS) mpi_abort_all(error_code);
+}
+
+}
+
+int mpi_sync_status(int local_status, int *global_status)
+{
+  int status_min,status_max;
+  int mpi_error;
+
+  if (global_status == NULL) return(MPI_ERR_ARG);
+
+  mpi_error=MPI_Allreduce(&local_status,&status_min,1,MPI_INT,MPI_MIN,MPI_COMM_WORLD);
+  if (mpi_error != MPI_SUCCESS) return(mpi_error);
+  mpi_error=MPI_Allreduce(&local_status,&status_max,1,MPI_INT,MPI_MAX,MPI_COMM_WORLD);
+  if (mpi_error != MPI_SUCCESS) return(mpi_error);
+
+  *global_status=status_min;
+  if (status_min != status_max) return(MPI_ERR_OTHER);
+  return(MPI_SUCCESS);
+}
 
 void mpi_sdrv2d(double *f[], int nn, int nx, int ny, int xoff, int yoff,
 		int dnx, int dny,
@@ -12,9 +91,10 @@ void mpi_sdrv2d(double *f[], int nn, int nx, int ny, int xoff, int yoff,
   int i,j,n;
   int mpi_tag=0;
   int rankl,rankh;
-  int ntot,ntot2;
+  std::size_t ntot;
+  int mpi_count;
   MPI_Status r_stat;
-  double *fold,*fcpy;
+  std::vector<double> fold,fcpy;
 
   /* XBC */
   if (dnx == 0){
@@ -25,36 +105,33 @@ void mpi_sdrv2d(double *f[], int nn, int nx, int ny, int xoff, int yoff,
     rankh=((mpi_rank % mpi_numx) == (mpi_numx-1))?(MPI_PROC_NULL):(mpi_rank+1);
   }
   if (mpi_numx != 1){
-    ntot=nn*ny*xoff;
-    ntot2=ntot*2;
-    fold=(double*)malloc(sizeof(double)*ntot2);
-    fcpy=(double*)malloc(sizeof(double)*ntot2);
+    ntot=checked_mpi_count({nn,ny,xoff});
+    mpi_count=static_cast<int>(ntot);
+    resize_buffers(fold,fcpy,ntot);
     for (i=0;i<xoff;i++){
       for (j=0;j<ny;j++){	/* Transpose */
 	for (n=0;n<nn;n++){
-	  fold[nn*(ny*i+j)+n]=f[n][nx*j+(xoff+i)];
-	  fold[nn*(ny*(2*xoff-1-i)+j)+n]=f[n][nx*j+(nx-xoff-1-i)];
-	  fcpy[nn*(ny*i+j)+n]=f[n][nx*j+i];
-	  fcpy[nn*(ny*(2*xoff-1-i)+j)+n]=f[n][nx*j+(nx-1-i)];
+	  fold[buffer_index_2d(n,nn,i,j,ny)]=f[n][nx*j+(xoff+i)];
+	  fold[buffer_index_2d(n,nn,2*xoff-1-i,j,ny)]=f[n][nx*j+(nx-xoff-1-i)];
+	  fcpy[buffer_index_2d(n,nn,i,j,ny)]=f[n][nx*j+i];
+	  fcpy[buffer_index_2d(n,nn,2*xoff-1-i,j,ny)]=f[n][nx*j+(nx-1-i)];
 	}
       }
     }
-    MPI_Sendrecv(&fold[0],ntot,MPI_DOUBLE,rankl,mpi_tag,
-		 &fcpy[ntot],ntot,MPI_DOUBLE,rankh,mpi_tag,
-		 MPI_COMM_WORLD,&r_stat);
-    MPI_Sendrecv(&fold[ntot],ntot,MPI_DOUBLE,rankh,mpi_tag,
-		 &fcpy[0],ntot,MPI_DOUBLE,rankl,mpi_tag,
-		 MPI_COMM_WORLD,&r_stat);
+    check_mpi_error(MPI_Sendrecv(fold.data(),mpi_count,MPI_DOUBLE,rankl,mpi_tag,
+				 fcpy.data()+ntot,mpi_count,MPI_DOUBLE,rankh,mpi_tag,
+				 MPI_COMM_WORLD,&r_stat));
+    check_mpi_error(MPI_Sendrecv(fold.data()+ntot,mpi_count,MPI_DOUBLE,rankh,mpi_tag,
+				 fcpy.data(),mpi_count,MPI_DOUBLE,rankl,mpi_tag,
+				 MPI_COMM_WORLD,&r_stat));
     for (j=0;j<ny;j++){
       for (i=0;i<xoff;i++){
 	for (n=0;n<nn;n++){
-	  f[n][nx*j+i]=fcpy[nn*(ny*i+j)+n];
-	  f[n][nx*j+(nx-1-i)]=fcpy[nn*(ny*(2*xoff-1-i)+j)+n];
+	  f[n][nx*j+i]=fcpy[buffer_index_2d(n,nn,i,j,ny)];
+	  f[n][nx*j+(nx-1-i)]=fcpy[buffer_index_2d(n,nn,2*xoff-1-i,j,ny)];
 	}
       }
     }
-    free(fold);
-    free(fcpy);
   } else{
     if (dnx == 0){
       /* Periodic. avoid communication to myself */
@@ -78,36 +155,33 @@ void mpi_sdrv2d(double *f[], int nn, int nx, int ny, int xoff, int yoff,
     rankh=((mpi_rank / mpi_numx) == (mpi_numy-1))?(MPI_PROC_NULL):(mpi_rank+mpi_numx);
   }
   if (mpi_numy != 1){
-    ntot=nn*nx*yoff;
-    ntot2=ntot*2;
-    fold=(double*)malloc(sizeof(double)*ntot2);
-    fcpy=(double*)malloc(sizeof(double)*ntot2);
+    ntot=checked_mpi_count({nn,nx,yoff});
+    mpi_count=static_cast<int>(ntot);
+    resize_buffers(fold,fcpy,ntot);
     for (j=0;j<yoff;j++){
       for (i=0;i<nx;i++){
 	for (n=0;n<nn;n++){
-	  fold[nn*(nx*j+i)+n]=f[n][nx*(yoff+j)+i];
-	  fold[nn*(nx*(2*yoff-1-j)+i)+n]=f[n][nx*(ny-yoff-1-j)+i];
-	  fcpy[nn*(nx*j+i)+n]=f[n][nx*j+i];
-	  fcpy[nn*(nx*(2*yoff-1-j)+i)+n]=f[n][nx*(ny-1-j)+i];
+	  fold[buffer_index_2d(n,nn,j,i,nx)]=f[n][nx*(yoff+j)+i];
+	  fold[buffer_index_2d(n,nn,2*yoff-1-j,i,nx)]=f[n][nx*(ny-yoff-1-j)+i];
+	  fcpy[buffer_index_2d(n,nn,j,i,nx)]=f[n][nx*j+i];
+	  fcpy[buffer_index_2d(n,nn,2*yoff-1-j,i,nx)]=f[n][nx*(ny-1-j)+i];
 	}
       }
     }
-    MPI_Sendrecv(&fold[0],ntot,MPI_DOUBLE,rankl,mpi_tag,
-		 &fcpy[ntot],ntot,MPI_DOUBLE,rankh,mpi_tag,
-		 MPI_COMM_WORLD,&r_stat);
-    MPI_Sendrecv(&fold[ntot],ntot,MPI_DOUBLE,rankh,mpi_tag,
-		 &fcpy[0],ntot,MPI_DOUBLE,rankl,mpi_tag,
-		 MPI_COMM_WORLD,&r_stat);
+    check_mpi_error(MPI_Sendrecv(fold.data(),mpi_count,MPI_DOUBLE,rankl,mpi_tag,
+				 fcpy.data()+ntot,mpi_count,MPI_DOUBLE,rankh,mpi_tag,
+				 MPI_COMM_WORLD,&r_stat));
+    check_mpi_error(MPI_Sendrecv(fold.data()+ntot,mpi_count,MPI_DOUBLE,rankh,mpi_tag,
+				 fcpy.data(),mpi_count,MPI_DOUBLE,rankl,mpi_tag,
+				 MPI_COMM_WORLD,&r_stat));
     for (j=0;j<yoff;j++){
       for (i=0;i<nx;i++){
 	for (n=0;n<nn;n++){
-	  f[n][nx*j+i]=fcpy[nn*(nx*j+i)+n];
-	  f[n][nx*(ny-1-j)+i]=fcpy[nn*(nx*(2*yoff-1-j)+i)+n];
+	  f[n][nx*j+i]=fcpy[buffer_index_2d(n,nn,j,i,nx)];
+	  f[n][nx*(ny-1-j)+i]=fcpy[buffer_index_2d(n,nn,2*yoff-1-j,i,nx)];
 	}
       }
     }
-    free(fold);
-    free(fcpy);
   } else{
     if (dny == 0){
       /* Periodic. avoid communication to myself */
@@ -130,7 +204,7 @@ void mpi_xbc2d(double *f, int nx, int ny, int xoff, int yoff, int st, int dn,
 /* dn: Factor of Dirichlet (-1), Neumann (+1), Zero-fix (-2), Open (+2). if dn==0, nothing to do */
 {
   int i,j;
-  if (abs(dn) == 1){
+  if (std::abs(dn) == 1){
     /* Left */
     if ((mpi_rank % mpi_numx) == 0){
       for (j=0;j<ny;j++){
@@ -143,7 +217,7 @@ void mpi_xbc2d(double *f, int nx, int ny, int xoff, int yoff, int st, int dn,
 	for (i=0;i<xoff-st;i++) f[nx*j+(nx-1-i)]=dn*f[nx*j+(nx-2*xoff+st)+i];
       }
     }
-  } else if (abs(dn) == 2){
+  } else if (std::abs(dn) == 2){
     /* Left */
     if ((mpi_rank % mpi_numx) == 0){
       for (j=0;j<ny;j++){
@@ -166,7 +240,7 @@ void mpi_ybc2d(double *f, int nx, int ny, int xoff, int yoff, int st, int dn,
 /* dn: Factor of Dirichlet (-1), Neumann (+1), Zero-fix (-2), Open (+2). if dn==0, nothing to do */
 {
   int i,j;
-  if (abs(dn) == 1){
+  if (std::abs(dn) == 1){
     /* Left */
     if (mpi_rank/mpi_numx == 0){
       for (j=0;j<yoff;j++){
@@ -179,7 +253,7 @@ void mpi_ybc2d(double *f, int nx, int ny, int xoff, int yoff, int st, int dn,
 	for (i=0;i<nx;i++) f[nx*(ny-1-j)+i]=dn*f[nx*((ny-2*yoff+st)+j)+i];
       }
     }
-  } else if (abs(dn) == 2){
+  } else if (std::abs(dn) == 2){
     /* Left */
     if (mpi_rank/mpi_numx == 0){
       for (j=0;j<yoff;j++){
@@ -206,9 +280,10 @@ void mpi_sdrv3d(double *f[], int nn, int nx, int ny, int nz, int xoff, int yoff,
   int m_xy=mpi_numx*mpi_numy;
   int mpi_tag=0;
   int rankl,rankh;
-  int ntot,ntot2;
+  std::size_t ntot;
+  int mpi_count;
   MPI_Status r_stat;
-  double *fold,*fcpy;
+  std::vector<double> fold,fcpy;
 
   /* XBC */
   if (dnx == 0){
@@ -219,40 +294,37 @@ void mpi_sdrv3d(double *f[], int nn, int nx, int ny, int nz, int xoff, int yoff,
     rankh=(((mpi_rank%m_xy)%mpi_numx) == (mpi_numx-1))?(MPI_PROC_NULL):(mpi_rank+1);
   }
   if (mpi_numx != 1){
-    ntot=nn*ny*nz*xoff;
-    ntot2=ntot*2;
-    fold=(double*)malloc(sizeof(double)*ntot2);
-    fcpy=(double*)malloc(sizeof(double)*ntot2);
+    ntot=checked_mpi_count({nn,ny,nz,xoff});
+    mpi_count=static_cast<int>(ntot);
+    resize_buffers(fold,fcpy,ntot);
     for (i=0;i<xoff;i++){
       for (k=0;k<nz;k++){
 	for (j=0;j<ny;j++){	/* Transpose */
 	  for (n=0;n<nn;n++){
-	    fold[nn*(ny*(nz*i+k)+j)+n]=f[n][nx*(ny*k+j)+(xoff+i)];
-	    fold[nn*(ny*(nz*(2*xoff-1-i)+k)+j)+n]=f[n][nx*(ny*k+j)+(nx-xoff-1-i)];
-	    fcpy[nn*(ny*(nz*i+k)+j)+n]=f[n][nx*(ny*k+j)+i];
-	    fcpy[nn*(ny*(nz*(2*xoff-1-i)+k)+j)+n]=f[n][nx*(ny*k+j)+(nx-1-i)];
+	    fold[buffer_index_3d(n,nn,i,k,j,nz,ny)]=f[n][nx*(ny*k+j)+(xoff+i)];
+	    fold[buffer_index_3d(n,nn,2*xoff-1-i,k,j,nz,ny)]=f[n][nx*(ny*k+j)+(nx-xoff-1-i)];
+	    fcpy[buffer_index_3d(n,nn,i,k,j,nz,ny)]=f[n][nx*(ny*k+j)+i];
+	    fcpy[buffer_index_3d(n,nn,2*xoff-1-i,k,j,nz,ny)]=f[n][nx*(ny*k+j)+(nx-1-i)];
 	  }
 	}
       }
     }
-    MPI_Sendrecv(&fold[0],ntot,MPI_DOUBLE,rankl,mpi_tag,
-		 &fcpy[ntot],ntot,MPI_DOUBLE,rankh,mpi_tag,
-		 MPI_COMM_WORLD,&r_stat);
-    MPI_Sendrecv(&fold[ntot],ntot,MPI_DOUBLE,rankh,mpi_tag,
-		 &fcpy[0],ntot,MPI_DOUBLE,rankl,mpi_tag,
-		 MPI_COMM_WORLD,&r_stat);
+    check_mpi_error(MPI_Sendrecv(fold.data(),mpi_count,MPI_DOUBLE,rankl,mpi_tag,
+				 fcpy.data()+ntot,mpi_count,MPI_DOUBLE,rankh,mpi_tag,
+				 MPI_COMM_WORLD,&r_stat));
+    check_mpi_error(MPI_Sendrecv(fold.data()+ntot,mpi_count,MPI_DOUBLE,rankh,mpi_tag,
+				 fcpy.data(),mpi_count,MPI_DOUBLE,rankl,mpi_tag,
+				 MPI_COMM_WORLD,&r_stat));
     for (k=0;k<nz;k++){
       for (j=0;j<ny;j++){
 	for (i=0;i<xoff;i++){
 	  for (n=0;n<nn;n++){
-	    f[n][nx*(ny*k+j)+i]=fcpy[nn*(ny*(nz*i+k)+j)+n];
-	    f[n][nx*(ny*k+j)+(nx-1-i)]=fcpy[nn*(ny*(nz*(2*xoff-1-i)+k)+j)+n];
+	    f[n][nx*(ny*k+j)+i]=fcpy[buffer_index_3d(n,nn,i,k,j,nz,ny)];
+	    f[n][nx*(ny*k+j)+(nx-1-i)]=fcpy[buffer_index_3d(n,nn,2*xoff-1-i,k,j,nz,ny)];
 	  }
 	}
       }
     }
-    free(fold);
-    free(fcpy);
   } else{
     if (dnx == 0){
       /* Periodic. avoid communication to myself */
@@ -268,7 +340,7 @@ void mpi_sdrv3d(double *f[], int nn, int nx, int ny, int nz, int xoff, int yoff,
       }
     }
   }
-  
+
   /* YBC */
   if (dny == 0){
     rankl=(((mpi_rank%m_xy)/mpi_numx) == 0)?(mpi_rank+mpi_numx*(mpi_numy-1)):(mpi_rank-mpi_numx);
@@ -278,40 +350,37 @@ void mpi_sdrv3d(double *f[], int nn, int nx, int ny, int nz, int xoff, int yoff,
     rankh=(((mpi_rank%m_xy)/mpi_numx) == (mpi_numy-1))?(MPI_PROC_NULL):(mpi_rank+mpi_numx);
   }
   if (mpi_numy != 1){
-    ntot=nn*nz*nx*yoff;
-    ntot2=ntot*2;
-    fold=(double*)malloc(sizeof(double)*ntot2);
-    fcpy=(double*)malloc(sizeof(double)*ntot2);
+    ntot=checked_mpi_count({nn,nz,nx,yoff});
+    mpi_count=static_cast<int>(ntot);
+    resize_buffers(fold,fcpy,ntot);
     for (j=0;j<yoff;j++){
       for (i=0;i<nx;i++){
 	for (k=0;k<nz;k++){	/* Transpose */
 	  for (n=0;n<nn;n++){
-	    fold[nn*(nz*(nx*j+i)+k)+n]=f[n][nx*(ny*k+(yoff+j))+i];
-	    fold[nn*(nz*(nx*(2*yoff-1-j)+i)+k)+n]=f[n][nx*(ny*k+(ny-yoff-1-j))+i];
-	    fcpy[nn*(nz*(nx*j+i)+k)+n]=f[n][nx*(ny*k+j)+i];
-	    fcpy[nn*(nz*(nx*(2*yoff-1-j)+i)+k)+n]=f[n][nx*(ny*k+(ny-1-j))+i];
+	    fold[buffer_index_3d(n,nn,j,i,k,nx,nz)]=f[n][nx*(ny*k+(yoff+j))+i];
+	    fold[buffer_index_3d(n,nn,2*yoff-1-j,i,k,nx,nz)]=f[n][nx*(ny*k+(ny-yoff-1-j))+i];
+	    fcpy[buffer_index_3d(n,nn,j,i,k,nx,nz)]=f[n][nx*(ny*k+j)+i];
+	    fcpy[buffer_index_3d(n,nn,2*yoff-1-j,i,k,nx,nz)]=f[n][nx*(ny*k+(ny-1-j))+i];
 	  }
 	}
       }
     }
-    MPI_Sendrecv(&fold[0],ntot,MPI_DOUBLE,rankl,mpi_tag,
-		 &fcpy[ntot],ntot,MPI_DOUBLE,rankh,mpi_tag,
-		 MPI_COMM_WORLD,&r_stat);
-    MPI_Sendrecv(&fold[ntot],ntot,MPI_DOUBLE,rankh,mpi_tag,
-		 &fcpy[0],ntot,MPI_DOUBLE,rankl,mpi_tag,
-		 MPI_COMM_WORLD,&r_stat);
+    check_mpi_error(MPI_Sendrecv(fold.data(),mpi_count,MPI_DOUBLE,rankl,mpi_tag,
+				 fcpy.data()+ntot,mpi_count,MPI_DOUBLE,rankh,mpi_tag,
+				 MPI_COMM_WORLD,&r_stat));
+    check_mpi_error(MPI_Sendrecv(fold.data()+ntot,mpi_count,MPI_DOUBLE,rankh,mpi_tag,
+				 fcpy.data(),mpi_count,MPI_DOUBLE,rankl,mpi_tag,
+				 MPI_COMM_WORLD,&r_stat));
     for (k=0;k<nz;k++){
       for (j=0;j<yoff;j++){
 	for (i=0;i<nx;i++){
 	  for (n=0;n<nn;n++){
-	    f[n][nx*(ny*k+j)+i]=fcpy[nn*(nz*(nx*j+i)+k)+n];
-	    f[n][nx*(ny*k+(ny-1-j))+i]=fcpy[nn*(nz*(nx*(2*yoff-1-j)+i)+k)+n];
+	    f[n][nx*(ny*k+j)+i]=fcpy[buffer_index_3d(n,nn,j,i,k,nx,nz)];
+	    f[n][nx*(ny*k+(ny-1-j))+i]=fcpy[buffer_index_3d(n,nn,2*yoff-1-j,i,k,nx,nz)];
 	  }
 	}
       }
     }
-    free(fold);
-    free(fcpy);
   } else{
     if (dny == 0){
       /* Periodic. avoid communication to myself */
@@ -337,40 +406,37 @@ void mpi_sdrv3d(double *f[], int nn, int nx, int ny, int nz, int xoff, int yoff,
     rankh=((mpi_rank/m_xy) == (mpi_numz-1))?(MPI_PROC_NULL):(mpi_rank+m_xy);
   }
   if (mpi_numz != 1){
-    ntot=nn*nx*ny*zoff;
-    ntot2=ntot*2;
-    fold=(double*)malloc(sizeof(double)*ntot2);
-    fcpy=(double*)malloc(sizeof(double)*ntot2);
+    ntot=checked_mpi_count({nn,nx,ny,zoff});
+    mpi_count=static_cast<int>(ntot);
+    resize_buffers(fold,fcpy,ntot);
     for (k=0;k<zoff;k++){
       for (j=0;j<ny;j++){
 	for (i=0;i<nx;i++){
 	  for (n=0;n<nn;n++){
-	    fold[nn*(nx*(ny*k+j)+i)+n]=f[n][nx*(ny*(zoff+k)+j)+i];
-	    fold[nn*(nx*(ny*(2*zoff-1-k)+j)+i)+n]=f[n][nx*(ny*(nz-zoff-1-k)+j)+i];
-	    fcpy[nn*(nx*(ny*k+j)+i)+n]=f[n][nx*(ny*k+j)+i];
-	    fcpy[nn*(nx*(ny*(2*zoff-1-k)+j)+i)+n]=f[n][nx*(ny*(nz-1-k)+j)+i];
+	    fold[buffer_index_3d(n,nn,k,j,i,ny,nx)]=f[n][nx*(ny*(zoff+k)+j)+i];
+	    fold[buffer_index_3d(n,nn,2*zoff-1-k,j,i,ny,nx)]=f[n][nx*(ny*(nz-zoff-1-k)+j)+i];
+	    fcpy[buffer_index_3d(n,nn,k,j,i,ny,nx)]=f[n][nx*(ny*k+j)+i];
+	    fcpy[buffer_index_3d(n,nn,2*zoff-1-k,j,i,ny,nx)]=f[n][nx*(ny*(nz-1-k)+j)+i];
 	  }
 	}
       }
     }
-    MPI_Sendrecv(&fold[0],ntot,MPI_DOUBLE,rankl,mpi_tag,
-		 &fcpy[ntot],ntot,MPI_DOUBLE,rankh,mpi_tag,
-		 MPI_COMM_WORLD,&r_stat);
-    MPI_Sendrecv(&fold[ntot],ntot,MPI_DOUBLE,rankh,mpi_tag,
-		 &fcpy[0],ntot,MPI_DOUBLE,rankl,mpi_tag,
-		 MPI_COMM_WORLD,&r_stat);
+    check_mpi_error(MPI_Sendrecv(fold.data(),mpi_count,MPI_DOUBLE,rankl,mpi_tag,
+				 fcpy.data()+ntot,mpi_count,MPI_DOUBLE,rankh,mpi_tag,
+				 MPI_COMM_WORLD,&r_stat));
+    check_mpi_error(MPI_Sendrecv(fold.data()+ntot,mpi_count,MPI_DOUBLE,rankh,mpi_tag,
+				 fcpy.data(),mpi_count,MPI_DOUBLE,rankl,mpi_tag,
+				 MPI_COMM_WORLD,&r_stat));
     for (k=0;k<zoff;k++){
       for (j=0;j<ny;j++){
 	for (i=0;i<nx;i++){
 	  for (n=0;n<nn;n++){
-	    f[n][nx*(ny*k+j)+i]=fcpy[nn*(nx*(ny*k+j)+i)+n];
-	    f[n][nx*(ny*(nz-1-k)+j)+i]=fcpy[nn*(nx*(ny*(2*zoff-1-k)+j)+i)+n];
+	    f[n][nx*(ny*k+j)+i]=fcpy[buffer_index_3d(n,nn,k,j,i,ny,nx)];
+	    f[n][nx*(ny*(nz-1-k)+j)+i]=fcpy[buffer_index_3d(n,nn,2*zoff-1-k,j,i,ny,nx)];
 	  }
 	}
       }
     }
-    free(fold);
-    free(fcpy);
   } else{
     if (dnz == 0){
       /* Periodic. avoid communication to myself */
@@ -397,7 +463,7 @@ void mpi_xbc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, 
 {
   int i,j,k;
   int m_xy=mpi_numx*mpi_numy;
-  if (abs(dn) == 1){
+  if (std::abs(dn) == 1){
     /* Left */
     if (((mpi_rank%m_xy)%mpi_numx) == 0){
       for (k=0;k<nz;k++){
@@ -414,7 +480,7 @@ void mpi_xbc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, 
         }
       }
     }
-  } else if (abs(dn) == 2){
+  } else if (std::abs(dn) == 2){
     /* Left */
     if (((mpi_rank%m_xy)%mpi_numx) == 0){
       for (k=0;k<nz;k++){
@@ -442,7 +508,7 @@ void mpi_ybc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, 
 {
   int i,j,k;
   int m_xy=mpi_numx*mpi_numy;
-  if (abs(dn) == 1){
+  if (std::abs(dn) == 1){
     /* Left */
     if (((mpi_rank%m_xy)/mpi_numx) == 0){
       for (k=0;k<nz;k++){
@@ -459,7 +525,7 @@ void mpi_ybc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, 
 	}
       }
     }
-  } else if (abs(dn) == 2){
+  } else if (std::abs(dn) == 2){
     /* Left */
     if (((mpi_rank%m_xy)/mpi_numx) == 0){
       for (k=0;k<nz;k++){
@@ -487,7 +553,7 @@ void mpi_zbc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, 
 {
   int i,j,k;
   int m_xy=mpi_numx*mpi_numy;
-  if (abs(dn) == 1){
+  if (std::abs(dn) == 1){
     /* Left */
     if ((mpi_rank/m_xy) == 0){
       for (k=0;k<zoff;k++){
@@ -504,7 +570,7 @@ void mpi_zbc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff, 
 	}
       }
     }
-  } else if (abs(dn) == 2){
+  } else if (std::abs(dn) == 2){
     /* Left */
     if ((mpi_rank/m_xy) == 0){
       for (k=0;k<zoff;k++){

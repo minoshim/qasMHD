@@ -113,7 +113,7 @@ void mhd_lrstate(const double *ro, const double *vx, const double *vy, const dou
 /* Calculate left and right state at the interface  */
 /* offset should be 1 (in x), nx (in y), nx*ny (in z) */
 {
-  const int ns=5;		/* Number of stencil */
+  const int ns=MHD_RECON_STENCIL;	/* Number of stencil */
   const double eps=1e-12;
   int sm2,sm1,ss0,sp1,sp2;
   sm2=-2*offset;
@@ -135,16 +135,16 @@ void mhd_lrstate(const double *ro, const double *vx, const double *vy, const dou
   /* 	      (ros[ns/2+0]*(vxs[ns/2+0]*vxs[ns/2+0]+vys[ns/2+0]*vys[ns/2+0]+vzs[ns/2+0]*vzs[ns/2+0]) > gamma*prs[ns/2+0]), */
   /* 	      (ros[ns/2+1]*(vxs[ns/2+1]*vxs[ns/2+1]+vys[ns/2+1]*vys[ns/2+1]+vzs[ns/2+1]*vzs[ns/2+1]) > gamma*prs[ns/2+1])}; */
   /* if (flg[0]+flg[1]+flg[2] != 0){ */
-  /*   /\* mhd_c_reconst(ros,vxs,vys,vzs,bys,bzs,prs,bx,gamma,ns,vl,vr,func_lr); *\/ */
-  /*   mhd_m_reconst(ros,vxs,vys,vzs,bys,bzs,prs,bx,gamma,ns,vl,vr,func_lr); */
+  /*   /\* mhd_c_reconst(ros,vxs,vys,vzs,bys,bzs,prs,bx,gamma,vl,vr,func_lr); *\/ */
+  /*   mhd_m_reconst(ros,vxs,vys,vzs,bys,bzs,prs,bx,gamma,vl,vr,func_lr); */
   /* } else{ */
-  /*   mhd_a_reconst(ros,vxs,vys,vzs,bys,bzs,prs,bx,gamma,ns,vl,vr,func_lr); */
+  /*   mhd_a_reconst(ros,vxs,vys,vzs,bys,bzs,prs,bx,gamma,vl,vr,func_lr); */
   /* } */
   int flg=(ros[ns/2+0]*(vxs[ns/2+0]*vxs[ns/2+0]+vys[ns/2+0]*vys[ns/2+0]+vzs[ns/2+0]*vzs[ns/2+0]) > gamma*prs[ns/2+0]);
   if (flg){
-    mhd_m_reconst(ros,vxs,vys,vzs,bys,bzs,prs,bx,gamma,ns,vl,vr,func_lr);
+    mhd_m_reconst(ros,vxs,vys,vzs,bys,bzs,prs,bx,gamma,vl,vr,func_lr);
   } else{
-    mhd_a_reconst(ros,vxs,vys,vzs,bys,bzs,prs,bx,gamma,ns,vl,vr,func_lr);
+    mhd_a_reconst(ros,vxs,vys,vzs,bys,bzs,prs,bx,gamma,vl,vr,func_lr);
   }
 
   /* Positivity preservation */
@@ -323,4 +323,3 @@ void mhd_updt3d_ctb(double *bx, double bx0, const double *ey, const double *ez,
   du[1]=-func_df(&eys[1]);
   rk_updt(bx,bx0,-dtdy*du[0]-dtdz*du[1],rk_fac[0],rk_fac[1]);
 }
-
