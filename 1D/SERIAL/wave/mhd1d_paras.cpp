@@ -3,6 +3,7 @@
 void MHD1D::paras()
 {
   // Simulation parameters
+  // Arguments are the left and right boundaries of the physical domain (excluding ghost cells).
   setup_grid(+0.0,+1.0);
   
   // Boundary condition flag for ro,mx,my,mz,bx,by,bz,en

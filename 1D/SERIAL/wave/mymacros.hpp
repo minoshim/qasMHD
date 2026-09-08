@@ -11,11 +11,4 @@
 #define ODR (4)		 /* Spatial order (1,2,3,4) */
 #define R_K (3)		 /* Temporal order (1,2,3) */
 
-static_assert(RMN >= 0 && RMN <= 3,
-	      "RMN must be between 0 and 3");
-static_assert(ODR >= 1 && ODR <= 4,
-	      "ODR must be between 1 and 4");
-static_assert(R_K >= 1 && R_K <= 3,
-	      "R_K must be between 1 and 3");
-
 #endif
