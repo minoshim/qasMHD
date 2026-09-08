@@ -14,6 +14,13 @@
 class MHD{
 
 public:
+  // Copy inhibited
+  MHD()=default;
+  MHD(const MHD&)=delete;
+  MHD& operator=(const MHD&)=delete;
+  MHD(MHD&&)=delete;
+  MHD& operator=(MHD&&)=delete;
+
   static const int nm=8;	// Number of MHD variables
   const double dtor=M_PI/180.;
   

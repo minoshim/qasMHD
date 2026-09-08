@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-`common/` contains the shared MHD numerics and builds `libqasmhd.a`; `mpi/` contains halo exchange and boundary routines and builds `libmympi.a`. Runnable cases live under `1D/SERIAL/`, `2D/SERIAL/`, `2D/MPI/`, and `3D/MPI/`. Each case keeps its initial conditions in `mhd[123]d_init_.cpp`, domain and boundary settings in `mhd[123]d_paras.cpp`, compile-time solver choices in `mymacros.hpp`, and its update loop in `mhd[123]d_solve.cpp`. Python post-processing scripts are in the dimension-specific `python/` directories; example figures are in `1D/imgs/`, `2D/imgs/`, and `3D/imgs/`. `references/` stores the papers behind the numerical methods. Runtime output belongs in each case's `dat/` directory.
+`common/` contains the shared MHD numerics and builds `libqasmhd.a`; `mpi/` contains halo exchange and boundary routines and builds `libmympi.a`. Runnable cases live under `1D/SERIAL/`, `2D/SERIAL/`, `2D/MPI/`, and `3D/MPI/`. `1D/SERIAL/common/` holds the shared 1D MHD/Hall-MHD classes, solvers, and case build rules; each 1D case retains only its driver, initial conditions, parameters, and `mymacros.hpp`. Higher-dimensional cases keep their update loops locally. Python post-processing scripts are in the dimension-specific `python/` directories; example figures are in `1D/imgs/`, `2D/imgs/`, and `3D/imgs/`. `references/` stores the papers behind the numerical methods. Runtime output belongs in each case's `dat/` directory.
 
 ## Build, Test, and Development Commands
 
