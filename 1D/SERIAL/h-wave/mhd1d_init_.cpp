@@ -1,5 +1,7 @@
 #include "mhd1d_class.hpp"
 
+#include <random>
+
 void MHD1D::init_()
 {
   
@@ -13,7 +15,8 @@ void MHD1D::init_()
   
   unsigned seed=10;
   // seed=(unsigned)time(NULL);
-  double para1[]={0,0.01},para2[]={1,0.01};
+  std::mt19937 engine(seed);
+  const double para1[]={0,0.01},para2[]={1,0.01};
 
   for (int i=0;i<nx;i++){
 
@@ -22,9 +25,12 @@ void MHD1D::init_()
     vy[i]=0.0;
     vz[i]=0.0;
     bx[i]=bx0;
-    by[i]=bx0*rand_noise(para1,seed);
-    bz[i]=bx0*rand_noise(para1,seed);
-    pr[i]=pr0*rand_noise(para2,seed);
+    // by[i]=bx0*rand_noise(para1,seed);
+    // bz[i]=bx0*rand_noise(para1,seed);
+    // pr[i]=pr0*rand_noise(para2,seed);
+    by[i]=bx0*rand_noise_mt(para1,engine);
+    bz[i]=bx0*rand_noise_mt(para1,engine);
+    pr[i]=pr0*rand_noise_mt(para2,engine);
     
     // In 1D, cell center B is identical to cell edge B.
     // Thus cx,cy,cz are not explicitly initialized here.
@@ -35,4 +41,3 @@ void MHD1D::init_()
   // Boundary condition
   bound(val,nm,dnxs);
 }
-

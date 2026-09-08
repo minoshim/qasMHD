@@ -3,9 +3,7 @@
 void HMHD1D::paras()
 {
   // Simulation parameters
-  xmin=+0.0;
-  xmax=+1.0;
-  sprintf(fildir,"./dat/");
+  setup_grid(+0.0,+1.0);
   
   // Boundary condition flag for ro,mx,my,mz,bx,by,bz,en
   // 0: periodic, +1: Neumann, -1: Dirichlet
@@ -17,12 +15,6 @@ void HMHD1D::paras()
   dnxs[5]=+0;			// by
   dnxs[6]=+0;			// bz
   dnxs[7]=+0;			// en
-
-  dx=(xmax-xmin)/XMESH;
-  dt=cfl*dx;			// dt will be re-calculated later
-  for (int i=0;i<nx;i++){
-    x[i]=(i-xoff+0.5)*dx+xmin;
-  }
 
   // Hall parameters
   di=D_ION;

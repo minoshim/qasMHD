@@ -1,6 +1,8 @@
 #ifndef _CLASS_MHD1D_
 #define _CLASS_MHD1D_
 
+#include <string>
+
 #include "mhd_class.hpp"
 #include "mymacros.hpp"
 
@@ -26,12 +28,14 @@ public:
   
 protected:
   double xmin,xmax,dx,dt;	// Left/rightmost x values, grid size, time step
-  char fildir[100];		// Directory for output
+  std::string fildir="./dat/";	// Directory for output
   int cnt=0,n=0;		// Counters
+  bool dt_initialized=false;	// Whether output intervals have been initialized
   int nrec=1;			// Step for output (temporary value. This will be initialized in setdt)
   int nmax=nrec*nout; 		// Maximum step (This will be initialized in setdt)
   double tim=0.0;		// Simulation time
   double trec=dtrec;		// Time for next record
+  void setup_grid(double, double); // Set computational domain and grid
   void bound(double *val[], int nm, const int dnxs[]); // Set boundary condition
   void ideal(double);		// ideal MHD solver
   void dout_();			// Output data

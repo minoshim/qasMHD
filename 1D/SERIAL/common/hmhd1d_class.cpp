@@ -1,12 +1,14 @@
 #include "hmhd1d_class.hpp"
 
+#include <cmath>
+
 double HMHD1D::haldt()
 {
   // Return time step for Hall term to satisfy CFL condition
   double vtmp=0.0,vmax=1.0;
   for (int i=xoff;i<nx-xoff;i++){
     hallv(i);
-    vtmp=fabs(hx[i])+vphix*fabs(cx[i]/ro[i]);
+    vtmp=std::fabs(hx[i])+vphix*std::fabs(cx[i]/ro[i]);
     if (vtmp > vmax) vmax=vtmp;
   }
   return cfl*dx/vmax;

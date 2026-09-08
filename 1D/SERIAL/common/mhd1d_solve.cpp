@@ -1,23 +1,25 @@
 #include "mhd1d_class.hpp"
 
+#include <cstddef>
+#include <vector>
+
 void MHD1D::ideal(double dt)
 {
   // 1D ideal MHD simulation
   int i,ss,rk;
   static const double rk_fac[3][2]={{0.0,1.0},{0.5+(R_K-2)*0.25,0.5-(R_K-2)*0.25},{1./3.,2./3.}};
   const double dtdx=dt/dx;
-  void (*func_flux)(double, double, double, double, double, double, double, 
-		    double, double, double, double, double, double, double, 
-		    double, double, const double*,
-		    double*, double*, double*, double*, double*, double*, double*)=riemann[RMN];
-  void (*func_lr)(const double *f, double *fl, double *fr)=interpol[ODR-1];
-  double (*func_df)(const double *f)=df1[ODR-1];
-  double *ut,*ul,*ur,*fx;
-  
-  ut=new double[nm*nx];
-  ul=new double[nm*nx];
-  ur=new double[nm*nx];
-  fx=new double[nm*nx];
+  const auto func_flux=riemann[RMN];
+  const auto func_lr=interpol[ODR-1];
+  const auto func_df=df1[ODR-1];
+  const std::size_t work_size=static_cast<std::size_t>(nm)*static_cast<std::size_t>(nx);
+  const std::size_t required_size=4*work_size;
+  static thread_local std::vector<double> work;
+  if (work.size() != required_size) work.resize(required_size);
+  double *ut=work.data();
+  double *ul=ut+work_size;
+  double *ur=ul+work_size;
+  double *fx=ur+work_size;
 
   // B @ cell center
   cx=bx;
@@ -37,9 +39,8 @@ void MHD1D::ideal(double dt)
     {
       /* Primitive variable at cell center */
 #ifdef _OPENMP
-#pragma omp for
+#pragma omp for simd
 #endif
-#pragma simd
       for (i=0;i<nx;i++){
 	ss=i;
 	prmtv(ss);
@@ -96,9 +97,8 @@ void MHD1D::ideal(double dt)
       }
       /* Update */
 #ifdef _OPENMP
-#pragma omp for
+#pragma omp for simd
 #endif
-#pragma simd
       for (i=xoff;i<nx-xoff;i++){
 	ss=i;
 	double *val1[]={val[0]+ss,val[1]+ss,val[2]+ss,val[3]+ss,val[4]+ss,val[5]+ss,val[6]+ss,val[7]+ss};
@@ -116,9 +116,4 @@ void MHD1D::ideal(double dt)
     // Boundary condition
     bound(val,nm,dnxs);
   }
-
-  delete[] ut;
-  delete[] ul;
-  delete[] ur;
-  delete[] fx;
 }

@@ -1,5 +1,9 @@
 #include "hmhd1d_class.hpp"
 
+#include <cmath>
+#include <cstddef>
+#include <vector>
+
 void HMHD1D::ideal(double dt)
 {
   // 1D ideal MHD simulation
@@ -7,18 +11,17 @@ void HMHD1D::ideal(double dt)
   int i,ss,rk;
   static const double rk_fac[3][2]={{0.0,1.0},{0.5+(R_K-2)*0.25,0.5-(R_K-2)*0.25},{1./3.,2./3.}};
   const double dtdx=dt/dx;
-  void (*func_flux)(double, double, double, double, double, double, double, 
-		    double, double, double, double, double, double, double, 
-		    double, double, const double*,
-		    double*, double*, double*, double*, double*, double*, double*)=riemann[RMN];
-  void (*func_lr)(const double *f, double *fl, double *fr)=interpol[ODR-1];
-  double (*func_df)(const double *f)=df1[ODR-1];
-  double *ut,*ul,*ur,*fx;
-  
-  ut=new double[nm*nx];
-  ul=new double[nm*nx];
-  ur=new double[nm*nx];
-  fx=new double[nm*nx];
+  const auto func_flux=riemann[RMN];
+  const auto func_lr=interpol[ODR-1];
+  const auto func_df=df1[ODR-1];
+  const std::size_t work_size=static_cast<std::size_t>(nm)*static_cast<std::size_t>(nx);
+  const std::size_t required_size=4*work_size;
+  static thread_local std::vector<double> work;
+  if (work.size() != required_size) work.resize(required_size);
+  double *ut=work.data();
+  double *ul=ut+work_size;
+  double *ur=ul+work_size;
+  double *fx=ur+work_size;
 
   // B @ cell center
   cx=bx;
@@ -38,9 +41,8 @@ void HMHD1D::ideal(double dt)
     {
       /* Primitive variable at cell center */
 #ifdef _OPENMP
-#pragma omp for
+#pragma omp for simd
 #endif
-#pragma simd
       for (i=0;i<nx;i++){
 	ss=i;
 	prmtv(ss);
@@ -108,9 +110,8 @@ void HMHD1D::ideal(double dt)
 
       /* Update */
 #ifdef _OPENMP
-#pragma omp for
+#pragma omp for simd
 #endif
-#pragma simd
       for (i=xoff;i<nx-xoff;i++){
 	ss=i;
 	double *val1[]={val[0]+ss,val[1]+ss,val[2]+ss,val[3]+ss,val[4]+ss,val[5]+ss,val[6]+ss,val[7]+ss};
@@ -128,11 +129,6 @@ void HMHD1D::ideal(double dt)
     // Boundary condition
     bound(val,nm,dnxs);
   }
-
-  delete[] ut;
-  delete[] ul;
-  delete[] ur;
-  delete[] fx;
 }
 
 void HMHD1D::hall_(double dt)
@@ -142,18 +138,17 @@ void HMHD1D::hall_(double dt)
   int i,ss,rk;
   static const double rk_fac[3][2]={{0.0,1.0},{0.5+(R_K-2)*0.25,0.5-(R_K-2)*0.25},{1./3.,2./3.}};
   const double dtdx=dt/dx;
-  void (*func_flux)(double, double, double, double, double, double, double, 
-		    double, double, double, double, double, double, double, 
-		    double, double,
-		    double*, double*, double*)=&calc_flux_hall_lf;
-  void (*func_lr)(const double *f, double *fl, double *fr)=interpol[ODR-1];
-  double (*func_df)(const double *f)=df1[ODR-1];
-  double *ut,*ul,*ur,*fx;
-  
-  ut=new double[nm*nx];
-  ul=new double[nm*nx];
-  ur=new double[nm*nx];
-  fx=new double[nm*nx];
+  const auto func_flux=&calc_flux_hall_lf;
+  const auto func_lr=interpol[ODR-1];
+  const auto func_df=df1[ODR-1];
+  const std::size_t work_size=static_cast<std::size_t>(nm)*static_cast<std::size_t>(nx);
+  const std::size_t required_size=4*work_size;
+  static thread_local std::vector<double> work;
+  if (work.size() != required_size) work.resize(required_size);
+  double *ut=work.data();
+  double *ul=ut+work_size;
+  double *ur=ul+work_size;
+  double *fx=ur+work_size;
 
   // B @ cell center
   cx=bx;
@@ -173,9 +168,8 @@ void HMHD1D::hall_(double dt)
     {
       /* Hall velocity at cell center */
 #ifdef _OPENMP
-#pragma omp for
+#pragma omp for simd
 #endif
-#pragma simd
       for (i=1;i<nx-1;i++){
 	ss=i;
 	hallv(ss);
@@ -230,8 +224,8 @@ void HMHD1D::hall_(double dt)
 	double flux[8]={0},bn=0.5*(ul[nm*ss+4]+ur[nm*ss+4]);
 	double rn=min(ul[nm*ss+0],ur[nm*ss+0]);
 	double smax=0.0;
-	smax+=max(fabs(ul[nm*ss+1]),fabs(ur[nm*ss+1])); // Hall velocity
-	smax+=vphix*fabs(bn/rn); // Whistler velocity
+	smax+=max(std::fabs(ul[nm*ss+1]),std::fabs(ur[nm*ss+1])); // Hall velocity
+	smax+=vphix*std::fabs(bn/rn); // Whistler velocity
 	func_flux(ul[nm*ss+0],ul[nm*ss+1],ul[nm*ss+2],ul[nm*ss+3],ul[nm*ss+5],ul[nm*ss+6],ul[nm*ss+7],
 		  ur[nm*ss+0],ur[nm*ss+1],ur[nm*ss+2],ur[nm*ss+3],ur[nm*ss+5],ur[nm*ss+6],ur[nm*ss+7],
 		  bn,smax,
@@ -258,9 +252,8 @@ void HMHD1D::hall_(double dt)
       
       /* Update */
 #ifdef _OPENMP
-#pragma omp for
+#pragma omp for simd
 #endif
-#pragma simd
       for (i=xoff;i<nx-xoff;i++){
 	ss=i;
 	double *val1[]={val[0]+ss,val[1]+ss,val[2]+ss,val[3]+ss,val[4]+ss,val[5]+ss,val[6]+ss,val[7]+ss};
@@ -278,11 +271,6 @@ void HMHD1D::hall_(double dt)
     // Boundary condition
     bound(val,nm,dnxs);
   }
-
-  delete[] ut;
-  delete[] ul;
-  delete[] ur;
-  delete[] fx;
 }
 
 // [IMPORTANT] Following functions relate electric field Enew and its base value Eorg
@@ -300,8 +288,12 @@ void HMHD1D::crcte(double *fbt, double *fen, int nm, const double *bt, const dou
 // bt  = +by or +bz
 {
   int i,ss;
-  double *etmp=new double[2*nx];
-  double *dummy=new double[nx];
+  const std::size_t nx_size=static_cast<std::size_t>(nx);
+  const std::size_t required_size=3*nx_size;
+  static thread_local std::vector<double> work;
+  if (work.size() != required_size) work.resize(required_size);
+  double *etmp=work.data();
+  double *dummy=etmp+2*nx_size;
   for (i=0;i<nx;i++){
     ss=i;
     etmp[0*nx+ss]=etmp[1*nx+ss]=fbt[nm*ss];
@@ -316,8 +308,6 @@ void HMHD1D::crcte(double *fbt, double *fen, int nm, const double *bt, const dou
     fbt[nm*ss]=etmp[1*nx+ss];
     fen[nm*ss]+=de*bb;
   }
-  delete[] etmp;
-  delete[] dummy;
 }
 
 void HMHD1D::enew2eorg(double *enew, double *eorg, const double *ro, int dnx)
@@ -326,7 +316,7 @@ void HMHD1D::enew2eorg(double *enew, double *eorg, const double *ro, int dnx)
 /* Boundary condition included */
 {
   const double fac=(de*de)/(dx*dx);
-  double (*func_d2f)(const double *f)=df2[ODR-1];
+  const auto func_d2f=df2[ODR-1];
   double *p[]={eorg,enew};
   int dnxs[]={dnx};
 
@@ -361,11 +351,14 @@ int HMHD1D::eorg2enew_cg(double *eorg, double *enew, const double *ro, int dnx)
   const double eps=1e-8;
   const double fac=(de*de)/(dx*dx);
   double numer,denom,coef,anorm,anormf=0.0;
-  double *rk,*pk,*ap;
-  rk=new double[nx];
-  pk=new double[nx];
-  ap=new double[nx];
-  double (*func_d2f)(const double *f)=df2[ODR-1];
+  const std::size_t nx_size=static_cast<std::size_t>(nx);
+  const std::size_t required_size=3*nx_size;
+  static thread_local std::vector<double> work;
+  if (work.size() != required_size) work.resize(required_size);
+  double *rk=work.data();
+  double *pk=rk+nx_size;
+  double *ap=pk+nx_size;
+  const auto func_d2f=df2[ODR-1];
   double *p[]={eorg,enew,pk};
   int dnxs[]={dnx};
 
@@ -377,7 +370,7 @@ int HMHD1D::eorg2enew_cg(double *eorg, double *enew, const double *ro, int dnx)
     rk[ss]=ro[ss]*eorg[ss]-(ro[ss]*enew[ss]-fac*func_d2f(&enew[ss]));
     pk[ss]=rk[ss];
     numer+=rk[ss]*rk[ss];
-    anormf+=fabs(rk[ss]);
+    anormf+=std::fabs(rk[ss]);
   }
 
   /* Iteration */
@@ -397,7 +390,7 @@ int HMHD1D::eorg2enew_cg(double *eorg, double *enew, const double *ro, int dnx)
       ss=i;
       enew[ss]+=coef*pk[ss];
       rk[ss]-=coef*ap[ss];
-      anorm+=fabs(rk[ss]);
+      anorm+=std::fabs(rk[ss]);
     }
     
     denom=numer;
@@ -417,10 +410,6 @@ int HMHD1D::eorg2enew_cg(double *eorg, double *enew, const double *ro, int dnx)
 
   /* Boundary condition for Enew (output) */
   bound(&p[1],1,dnxs);
-
-  delete[] rk;
-  delete[] pk;
-  delete[] ap;
 
   return cmax-cnt;		/* If zero, iteration does NOT converge */
 }
