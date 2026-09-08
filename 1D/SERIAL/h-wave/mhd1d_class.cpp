@@ -22,7 +22,10 @@ void MHD1D::setdt(int flg)
     dt=cfl*dx/vmax;
   }
   if (nflg == 0){
-    nrec=(int)(dtrec/dt+0.5);		// Step for output
+    // nrec=(int)(dtrec/dt+0.5);		// Step for output
+    nrec=(int)ceil(dtrec/dt); // Step for output
+    if (nrec < 1) nrec=1;
+    dt=dtrec/nrec;
     nmax=nrec*nout;			// Maximum step
     nflg=1;
     printf("Data output every %d steps (%f duration) \n",nrec,dtrec);
