@@ -1,0 +1,1201 @@
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                            https://doi.org/10.3847/1538-4365/ab8aee
+© 2020. The American Astronomical Society. All rights reserved.
+
+
+
+
+            A Multistate Low-dissipation Advection Upstream Splitting Method for Ideal
+                                      Magnetohydrodynamics
+  1
+                                                   Takashi Minoshima1, Keiichi Kitamura2, and Takahiro Miyoshi3
+      Center for Mathematical Science and Advanced Technology, Japan Agency for Marine-Earth Science and Technology, 3173-25, Syowa-machi, Kanazawaku,
+                                                     Yokohama 236–0001, Japan; minoshim@jamstec.go.jp
+                              2
+                                Yokohama National University, 79-5 Tokiwadai, Hodogaya-ku, Yokohama, Kanagawa 240–8501, Japan
+              3
+                Graduate School of Advanced Science and Engineering, Hiroshima University, 1-3-1, Kagamiyama, Higashi-hiroshima, 739–8526, Japan
+                                  Received 2020 March 13; revised 2020 April 16; accepted 2020 April 16; published 2020 May 5
+
+                                                                            Abstract
+              We develop a new numerical scheme for ideal magnetohydrodynamic (MHD) simulations, which is robust against
+              one- and multidimensional shocks, and is accurate for low Mach number ﬂows and discontinuities. The scheme
+              belongs to a family of the advection upstream splitting method employed in computational aerodynamics, and it
+              splits the inviscid ﬂux in MHD equations into advection, pressure, and magnetic tension parts, and then
+              individually evaluates mass, pressure, and magnetic tension ﬂuxes at the interface of a computational cell. The
+              mass ﬂux is designed to avoid numerical shock instability in multidimensions, while preserving contact
+              discontinuity. The pressure ﬂux possesses a proper scaling for low Mach number ﬂows, allowing reliable
+              simulations of nearly incompressible ﬂows. The magnetic tension ﬂux is built to be consistent with the HLLD
+              approximate Riemann solver to preserve rotational discontinuity. We demonstrate various benchmark tests to
+              verify the novel performance of the scheme. Our results indicate that the scheme must be a promising tool to tackle
+              astrophysical systems that include both low and high Mach number ﬂows, as well as magnetic ﬁeld
+              inhomogeneities.
+              Uniﬁed Astronomy Thesaurus concepts: Magnetohydrodynamical simulations (1966); Magnetic ﬁelds (994);
+              Shocks (2086)
+
+
+                                    1. Introduction                                 resulting solution is catastrophic, such as the odd–even
+                                                                                    decoupling and the Carbuncle phenomena (Quirk 1994). This
+   Magnetohydrodynamic (MHD) simulation is an indispensa-
+                                                                                    may be problematic when one conducts a simulation including
+ble way to study macroscopic dynamics in space and
+                                                                                    steady high Mach number shocks, e.g., a bow shock ahead of
+astrophysical plasmas, which include supersonic ﬂows and
+                                                                                    the planetary magnetosphere. The schemes without preserving
+shocks, turbulence, ampliﬁcation and dissipation of magnetic
+                                                                                    contact discontinuity, such as the ﬂux vector splitting method
+ﬁelds, nonideal effects such as kinetic effects, radiative transfer,
+                                                                                    (FVS; Steger & Warming 1981), are known to be less sensitive
+and relativistic effects, and so on. The rapid increase of                          to the instability, indicating that the dissipation of the density
+computational resources enables further large-scale and long-                       gradient is effective for suppressing the instability (Pandolﬁ &
+term numerical simulations. Numerous studies have been                              D’Ambrosio 2001). Therefore, a straightforward way to cure
+devoted to developing novel numerical techniques to fully                           the instability entails employing a noncontact preserving
+utilize an available resource and then reveal its underlying                        scheme (Quirk 1994; Wada & Liou 1997; Nishikawa &
+physics in highly nonlinear systems as accurately as possible.                      Kitamura 2008) or adding artiﬁcial viscosity (Pandolﬁ &
+In the simulation of compressible ﬂuids, a family of upwind,                        D’Ambrosio 2001; Hanawa et al. 2008; Stone et al. 2008) at
+shock-capturing schemes have succeeded in resolving shocks                          regions dangerous to the instability.
+and discontinuities since the pioneering work by Godunov                               Meanwhile, the shock-capturing scheme is not necessarily
+(1959). Many compressible MHD simulation codes employ                               appropriate for low Mach number ﬂows because it numerically
+shock-capturing schemes, such as the Roe-type ﬂux difference                        dissipates the velocity jump with a scale of sound speed (shown
+splitting (FDS) method (e.g., Roe 1981; Brio & Wu 1988;                             later in Section 3.3). Owing to excessive numerical diffusion,
+Balsara 1998) and the Harten–Lax–van Leer-type (HLL)                                the solution of low Mach number ﬂows obtained with familiar
+method (Harten et al. 1983; Li 2005; Miyoshi & Kusano 2005),                        compressible ﬂuid simulations deviates from a correct solution
+as a building block. Of these, the HLLD approximate Riemann                         with decreasing Mach number. One may encounter this
+solver developed by Miyoshi & Kusano (2005) possesses                               problem in nearly incompressible ﬂow simulations, e.g., the
+shock-capturing capability with satisfactory accuracy and                           dynamo process in stellar convection zones. To obtain a
+stability, and it is implemented in various modern MHD                              reliable solution of low Mach number ﬂows, one may consider
+simulation codes (e.g., Fromang et al. 2006; Mignone et al.                         an inﬁnite speed of sound (incompressible or an elastic
+2007; Stone et al. 2008; Lee & Deane 2009; Kritsuk et al.                           approximation, e.g., Maron & Goldreich 2001; Schekochihin
+2011; Zenitani & Miyoshi 2011; Matsumoto et al. 2019).                              et al. 2004; Lesur & Longaretti 2005), or inversely, artiﬁcially
+   Although the shock-capturing scheme has enhanced striking                        reduce the sound speed to relax the stiffness of the hyperbolic
+progress in compressible ﬂuid simulation, there remain                              system of equations (Weiss & Smith 1995).
+numerical difﬁculties in practical simulation studies. The                             A family of the advection upstream splitting method
+scheme tends to suffer from numerical instability when a                            (AUSM; Liou & Steffen 1993) has been extensively employed
+multidimensional shock is well aligned to the grid spacing. The                     in computational aerodynamics. The AUSM-family scheme is
+
+                                                                                1
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                   Minoshima, Kitamura, & Miyoshi
+
+an alternative to the conventional FVS and FDS methods, for                where γ is the speciﬁc heat ratio. We discretize Equation (1)
+improving the accuracy, stability, and computational efﬁciency.            into a ﬁnite volume form as
+In contrast to the FVS and FDS methods, the AUSM-family
+                                                                                          d  in    ^i + 1 / 2 -   ^i - 1 / 2
+scheme is free from the calculation of the Jacobian matrix,                                      =-                             ,
+which reduces computational cost and makes it easier to extend                             dt                   Dx
+the scheme to other hyperbolic systems of equations. Some of                                       1       x i +Dx / 2
+them are known to be robust against numerical shock                                          in =        ò
+                                                                                                   Dx x i -Dx / 2
+                                                                                                                        (x , tn) dx ,                  (3 )
+instability (Liou 2000). Furthermore, recent AUSM-family
+schemes have been extended to the “all-speed” regime,                      where Fˆi  1 2 is a numerical ﬂux at the interfaces of a cell
+allowing for reliable simulations of nearly incompressible                 Ii=[xi−Δx/2, xi+Δx/2]. The evaluation of the numerical
+ﬂows with a compressible code (Liou 2006; Shima &                          ﬂux largely impacts the quality of the numerical solutions.
+Kitamura 2011; Kitamura & Shima 2013).                                        Liou & Steffen (1993) proposed the advection upstream
+   Although the above-mentioned properties of the AUSM-                    splitting method (AUSM) to calculate a simple, yet accurate
+family scheme must be quite useful for MHD simulations as                  and robust numerical ﬂux. The scheme splits the numerical ﬂux
+well, the extension of the scheme has been limited (Han et al.             into advection and pressure parts, and it determines them
+2009; Shen et al. 2012; Xisto et al. 2014; Kitamura &                      individually such that
+Balsara 2019), and its advantage is not fully utilized in MHD
+simulations thus far. Furthermore, preceding studies do not                     Fˆi + 1 2 = m (dL Fi + 1 2, L + dR Fi + 1 2, R) + Pˆi + 1 2 N ,        (4 )
+particularly focus on resolving the magnetic tension force; and                            1 + sgn (m )         1 - sgn (m )
+thus, the quality of their solution for the Alfvén wave is not                         dL =               , dR =               ,
+                                                                                                  2                     2
+necessarily as high as that obtainable in the standard Roe and
+                                                                                       F = (1, u , h)T , N = (0,1,0)T ,                                 (5 )
+HLLD schemes.
+   Consequently, we propose a new AUSM-family scheme for                   where the subscripts L and R refer to the left and right states at
+ideal MHD simulations to address the above-mentioned                       the interface, respectively, and m = (ru )i + 1 2 and Pˆi + 1 2 are the
+numerical difﬁculties inherent in familiar shock-capturing                 interface mass and pressure ﬂuxes, respectively, evaluated from the
+schemes, and then tackle astrophysical systems, including both             left- and right-side variables Ui + 1 2, L , Ui + 1 2, R. The advection part
+low and high Mach number ﬂows. As opposed to the preceding                 (the ﬁrst term of Equation (4)) is upwinded with respect to the
+AUSM-family schemes, ours is designed to capture MHD                       interface mass ﬂux. Various AUSM-family schemes have been
+tangential and rotational discontinuities as well as contact
+                                                                           proposed to calculate better mass and pressure ﬂuxes. For example,
+discontinuity. Section 2 brieﬂy describes the AUSM-family
+scheme for hydrodynamic simulations. Subsequently, we detail               Liou (1996) proposed the AUSM+ scheme to preserve the contact
+the extension of the scheme to MHD simulations in Section 3.               discontinuity that is smeared by the early AUSM scheme,
+We employ the AUSM+-up scheme (Liou 2006) and the                                                         ⎛ 1 + sgn (Mi + 1 2)
+HLLD scheme as a building block. Section 4 presents                                m = Mi + 1 2 ai + 1 2 ⎜                    ri + 1 2, L
+                                                                                                          ⎝         2
+numerical simulation results of various benchmark tests,
+including shocks, waves, and very low and high Mach number                                 1 - sgn (Mi + 1 2)              ⎞
+                                                                                        +                       ri + 1 2, R⎟ ,                          (6 )
+ﬂows, to assess the performance of the present scheme. Finally,                                       2                    ⎠
+Section 5 summarizes the paper. The source code (written in
+                                                                                    Mi + 1 / 2 = + (Mi + 1 / 2, L ) + -(Mi + 1 / 2, R) ,
+the C programming language) for the numerical tests in this
+paper can be downloaded from the GitHub website.4                                                  ui + 1 / 2, a
+                                                                                   Mi + 1 / 2, a =               , (a = L , R ) ,                       (7 )
+                                                                                                    ai+ 1 / 2
+                                                                                         ⎧ (M  ∣M∣) 2, if ∣M∣ > 1
+         2. AUSM-family Scheme for Hydrodynamics                                (M ) = ⎨                                                              (8 )
+                                                                                         ⎩(1  M ) 2 4  (1 - M 2) 2 8, otherwise
+   We begin with one-dimensional Euler equations written in
+the conservative form as follows:                                            Pˆi + 1 2 = +(Mi + 1 2, L ) Pi + 1 2, L + -(Mi + 1 2, R) Pi + 1 2, R,    (9 )
+                                                                                    ⎧ (1  sgn (M )) /2, if ∣M∣ > 1
+                         ⎡r ⎤         ⎡ ru      ⎤                          (M ) = ⎨
+        ¶U   ¶F                       ⎢         ⎥                                   ⎩ (1  M )2 (2  M ) /4  3M (1 - M 2 )2 /16, otherwise
+           +    = 0, U = ⎢ ru ⎥ , F = ⎢ ru2 + P ⎥ ,            (1 )
+        ¶t   ¶x          ⎢⎣ e ⎥⎦                                                                                                                       (10)
+                                      ⎣ ruh     ⎦
+                                                                           where ai+1/2 and Mi+1/2 are the interface sound speed and
+where ρ, u, e, P, and h=(e+P)/ρ are the ﬂuid mass density,             Mach number, respectively. The interface Mach number and
+velocity, total energy density, gas pressure, and total enthalpy,          pressure ﬂux are weighted averages of the left and right states
+respectively. The gas pressure is determined from the equation             (Equations (7) and (9)) by differentiable high-order polyno-
+of state, i.e.,                                                            mials (Equations (8) and (10), shown in Figure 1), and the
+                                                                           interface mass ﬂux is upwinded with respect to the interface
+                                 ⎛    ru2 ⎞                                Mach number (Equation (6)). Liou (2000) demonstrated that
+                   P = ( g - 1 ) ⎜e -     ⎟,                   (2 )
+                                 ⎝     2 ⎠                                 the AUSM+ scheme suffers less from numerical shock
+                                                                           instability in spite of its contact-preserving nature, while other
+                                                                           contact-preserving schemes, such as Roe and HLLC (Toro
+4
+    https://github.com/minoshim/MLAU                                       et al. 1994), are vulnerable to it.
+
+                                                                       2
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                             Minoshima, Kitamura, & Miyoshi
+
+
+
+
+          Figure 1. Split functions used for, panel (a), the mass ﬂux and, panel (b), the pressure ﬂux of the AUSM+ scheme (Equations (7) and (9)).
+
+
+
+        3. Multistate Low-dissipation AUSM for MHD                                is the total pressure (except for the contribution of Bx).
+  Now, we move on to ideal MHD equations. The state                               Subsequently, we express the numerical ﬂux at the interface in
+variables and the corresponding inviscid ﬂuxes are as follows:                    the same manner as Equation (4),
+
+                  ⎡ ru                            ⎤                                           Fˆi + 1 2 = m (dL Fi + 1 2, L + dR Fi + 1 2, R)
+      ⎡r ⎤        ⎢ 2                             ⎥
+                  ⎢ ru + P + (By + Bz - Bx ) 2 ⎥
+                                2     2     2
+      ⎢ ru ⎥                                                                                              + Pˆt , i + 1 2 N - Tˆi + 1 2,                    (19)
+      ⎢ rv ⎥      ⎢ rvu - Bx By                   ⎥
+      ⎢ ⎥         ⎢                               ⎥                                        1 + sgn (m )        1 - sgn (m )
+  U = ⎢ rw ⎥, F = ⎢ rwu - Bx Bz                   ⎥,
+                                                                                    dL =                 , dR =               , m = (ru)i + 1 2 (20)
+                                                                                                2                    2
+      ⎢ By ⎥      ⎢ By u - Bx v                   ⎥
+      ⎢ Bz ⎥      ⎢B u - B w                      ⎥                               where T̂ is termed the magnetic tension ﬂux. A critical issue
+      ⎢⎣ e ⎥⎦     ⎢ z       x
+                                                  ⎥                               involves the evaluation of the mass, pressure, and magnetic
+                  ⎣(e + P + ∣B∣2 2) u - Bx (u · B)⎦
+                                                                                  tension ﬂuxes (m , Pˆt, i + 1 2, Tˆi + 1 2 ) to get reliable solutions.
+                 ⎛    r∣u∣2   ∣B∣2 ⎞
+   P = ( g - 1 ) ⎜e -       -      ⎟,                                (11)
+                 ⎝      2      2 ⎠                                                                              3.1. Mass Flux
+                                                                                     We build a mass ﬂux based on the AUSM+-up scheme
+where u = (u , v, w ) and B = (Bx , By , Bz ) represent the
+                                                                                  developed by Liou (2006), which adds a pressure difference
+magnetic ﬁeld. The divergence-free condition for the magnetic                     term to the mass ﬂux of the AUSM+ scheme. To extend the
+ﬁeld gives Bx=Constant in one dimension. To numerically                         scheme to MHD, we scale the functions in Equations (6)–(7) by
+solve the MHD equations by the AUSM-family scheme, we                             the fast magnetosonic speed cf rather than the sound speed a.
+propose to split the ﬂux into three parts, namely, advection,                     The interface mass ﬂux m is expressed as
+pressure, and magnetic tension parts, such that
+                                                                                                                    ⎛ 1 + sgn (Mi + 1 2)
+                    F = ruF + Pt N - T ,                             (12)                m = Mi + 1 2 cf , i + 1 2 ⎜                    ri + 1 2, L
+                                                                                                                    ⎝          2
+where                                                                                            1 - sgn (Mi + 1 2)                 ⎞
+                                                                                              +                          ri + 1 2, R⎟ ,                     (21)
+             F = (1, u , v , w , By r , Bz r , h)T ,                 (13)                                     2                     ⎠
+                    N = (0,1, 0,0, 0,0,0)T ,                         (14)
+                                                                                           Mi + 1 2 = Mi*+ 1 2 - max (1 - ∣Mi*+ 1 2∣ , 0)
+          T = Bx (0, Bx 2, By , Bz , v , w , ut · Bt )T ,            (15)                                                DPt , i + 1 2
+                                                                                                        ´                                               ,   (22)
+              ut = (0, v , w ) , Bt = (0, By , Bz ) ,                (16)                                   (ri + 1 2, L + ri + 1 2, R) c2f , i + 1 2
+          h = gP (g - 1) r + ∣u∣2 2 + ∣Bt ∣2 r ,                     (17)
+                                                                                           Mi*+ 1 2 = + (Mi + 1 2, L ) + -(Mi + 1 2, R) ,
+and                                                                                                     ui + 1 2, a
+                                                                                          Mi + 1 2, a =              , (a = L , R ) ,                       (23)
+                       Pt = P + ∣Bt ∣2 2                             (18)                               cf , i + 1 2
+
+                                                                             3
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                                             Minoshima, Kitamura, & Miyoshi
+
+                                                                                          Table 1
+                                                     Dissipation Coefﬁcients in the Mass Flux of Various Schemes at a Subsonic Range
+
+Scheme                               D( ρ)                                      D( u)                         D( P)                    Comment
+AUSM+                         ∣u¯ - DM 4a 8∣                               ¯ ¯ 2 + Dr 2
+                                                                        r¯ MM                                  0
+SHUS                                 ∣u¯∣                                       rM
+                                                                                ¯ ¯                      (1 - ∣M¯ ∣) a
+SLAU                               ∣u1 2∣                                        0                       (1 - ∣M¯ ∣)2 a                Not reduced to a one-side value at ∣M∣ = 1.
+HLL                          (1 + ∣DM∣ 2) a                          r¯ M¯ (1 + ∣DM∣ 2)                        0                       Does not preserve a contact discontinuity.
+HLLC                               ∣u1 2∣                                  rL rR M1 2 r¯              (1 - rup∣M1 2∣ r¯ ) a            Coefﬁcients are derived approximately.
+Present                      ∣u¯ - DM 4a 8∣                                ¯ ¯ 2 + Dr 2
+                                                                        r¯ MM                         (1 - ∣M1 2∣) rup r¯ a
+
+
+Note. X¯ = (XL + XR ) 2 , ΔX=XR−XL, rup = rL (M1 2 > 0) or rR (else).
+
+
+                    1⎡ 2                                             ⎤
+          c2f =      ⎢ (ca + a ) +
+                              2                 (ca2 + a2)2 - 4a2cax
+                                                                  2
+                                                                     ⎥⎦ ,
+                    2⎣
+                    ∣B∣2 2     B2        gP
+          ca2 =         , cax = x , a2 =    ,                                              (24)
+                     r          r         r
+where cf , i + 1 2 = max (cf , i + 1 2, L , cf , i + 1 2, R ), ΔPt=Pt,R−Pt,L,
+and the function  is deﬁned in Equation (8).
+   Liou (2000) suggested that the pressure difference term in
+the mass ﬂux is a possible cause of numerical shock instability
+in multidimensions; although, it is effective for stabilizing one-                                    Figure 2. Schematic picture of the Riemann fan with the four intermediate
+dimensional shocks. Kim et al. (2003) argued that the pressure                                        states considered in the HLLD scheme.
+difference term converts the pressure perturbation into the
+density perturbation, and the latter along the shock surface is                                       among various schemes: AUSM+, AUSM-family schemes with a
+not dissipated with the contact-preserving scheme when the                                            Roe-type mass ﬂux (SHUS and SLAU; Shima & Kitamura 2011),
+shock is rested in the direction parallel to the shock. If the                                        HLL and HLLC approximate Riemann solvers, and the present
+pressure perturbation is continuously injected, it becomes                                            one herein. Although these schemes are built based on different
+unstable. To avoid the instability but maintain the robustness of
+                                                                                                      ideas, they possess similar properties, including (i) the density
+one-dimensional shocks, we eliminate the pressure difference
+term only at regions dangerous to the instability. Following                                          dissipation scales with ∣u∣ to preserve the contact discontinuity
+Shima & Kitamura (2013), the pressure difference term in                                              (except for HLL), (ii) the pressure dissipation works for low Mach
+Equation (22) is multiplied by a shock-detecting factor θ as a                                        number ﬂows (except for AUSM+ and HLL), and (iii) the velocity
+function of the velocity difference,                                                                  dissipation coefﬁcient is set such that the mass ﬂux reduces to a
+                                                                                                      one-side value at ∣M∣ = 1 (except for SLAU). The mass ﬂux of the
+                                    DPt ¬ qDP,t                                            (25)
+                                                                                                      Roe scheme for MHD simulations has dissipation terms of ut and
+                     ⎛   - min (Du , 0) + cf                                  ⎞4                      Bt due to the rotation of the tangential components (e.g., Brio &
+             q = min ⎜1,                        ⎟ ,                                        (26)       Wu 1988). On the other hand, the mass ﬂux of the HLLD scheme
+                     ⎝ - min (Dv , Dw , 0) + cf ⎠
+                                                                                                      omits them and treats the total pressure instead; thus, it is
+                       Dui + 1 2, j, k = ui + 1, j, k - ui, j, k ,                         (27)       essentially the same as that of the HLLC scheme. The mass ﬂux of
+           Dvi + 1 2, j, k = min (vi, j, k - vi, j - 1, k , vi, j + 1, k - vi, j, k ,                 the present scheme follows the strategy of the HLLD scheme.
+              vi + 1, j, k - vi + 1, j - 1, k , vi + 1, j + 1, k - vi + 1, j, k ) ,        (28)                               3.2. Magnetic Tension Flux
+          Dwi + 1 2, j, k = min (wi, j, k - wi, j, k- 1, wi, j, k+ 1 - wi, j, k ,                        The preservation of the rotational discontinuity is of critical
+             wi + 1, j, k - wi + 1, j, k- 1, wi + 1, j, k+ 1 - wi + 1, j, k ).             (29)       importance for practical MHD simulations with an aim to solve
+                                                                                                      the evolution of the magnetic ﬁeld; although, preceding
+The factor θ approaches zero only at a strong shock, whose                                            AUSM-family schemes do not necessarily pay attention to it.
+normal direction is orthogonal to x, and it does not violate the                                      To accurately solve the rotational discontinuity, we build a
+preservation of the contact discontinuity.                                                            magnetic tension ﬂux that is consistent with the HLLD scheme.
+  To compare the present scheme (Equation (21)) with others,                                             The HLLD scheme algebraically solves the MHD Riemann
+we express the mass ﬂux of upwind schemes for hydrodynamic                                            problem at a cell interface for the left- and right-side variables
+simulations in a general form as                                                                      UL, R as an initial state by allowing ﬁve eigenmodes in the
+                                                                                                      Riemann fan (two fast modes, two Alfvén modes, and one
+                             1
+                    m =       [(ru)L + (ru)R - D (r ) Dr                                             entropy mode, shown in Figure 2). The HLLD solution of
+                             2                                                                        the density and tangential components in the outer sides of
+                             - D (u) Du - D (P) DP ] ,                                     (30)       the Riemann fan (bounded by the fast and Alfvén modes) is
+             ( ρ)     ( u)             ( P)
+                                                                                                      written as
+where D , D , and D represent the dissipation coefﬁcients
+associated with the differences in the primitive variables                                                                                 Sa - ua
+                                                                                                                                r*a = ra           ,                         (31)
+(Liou 2000). Table 1 lists the coefﬁcients at a subsonic range                                                                             Sa - SM
+
+                                                                                                  4
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                                   Minoshima, Kitamura, & Miyoshi
+
+                                         SM - ua                                   where dL, R = [1  sgn (m )] 2 (Equation (20)). The four terms
+                ut*, a = ut , a - Bx             Bt , a ,               (32)
+                                            Xa                                     correspond to the advection term, the compression term in the
+                                                                                   presence of Bx, the right- and left-propagating Alfvén wave
+                                         SM - ua
+             Bt*, a = B˜ t , a + Bx2                 Bt , a ,           (33)       term, and the numerical diffusion term with a scale of Alfvén
+                                       Xa (Sa - SM )                               speed. Evidently, the ﬁrst term corresponds to the mass ﬂux
+                                                                                   (ﬁrst term of Equation (19)). Therefore, it is reasonable to
+                                          S - ua                                   deﬁne the magnetic tension ﬂux (Bx Bt )Present that involves the
+                         B˜ t , a = Bt , a a      ,                     (34)
+                                          Sa - SM                                  remaining second to fourth terms of Equation (43). The
+                                                                                   numerical ﬂux of the tangential momentum Fu is
+             Xa = ra (Sa - ua)(Sa - SM ) - Bx2 ,                        (35)
+       SL = min (0, min (uL , uR) - max (cf , L , cf , R)) ,            (36)                F u = m (dL ut , L + dR ut , R ) - (Bx Bt )Present ,               (44)
+
+       SR = max (0, max (uL , uR) + max (cf , L , cf , R)) ,            (37)
+                                                                                     (Bx Bt )Present = - m {dL (ut*, L - ut , L ) + dR (ut*, R - ut , R )}
+where α=L or R, and SL, R are the minimum and maximum                                                   + (uL Bt*, L + uRBt*, R ) + D u (ut*, R - ut*, L ) ,
+signal speeds. The speed of the middle wave SM is calculated
+from the mass ﬂux obtained in Section 3.1 as follows:                                                                                                           (45)
+
+
+                                          ⎧ m˙ / rL = uL , if SL = 0,
+                                          ⎪
+                                      m˙  ⎪ m˙ / r*L = (mS
+                                                         ˙ L ) / [m˙ + rL (SL - uL )] , if SL SR ¹ 0 and m˙ > 0,
+                                 SM =    =⎨       *                                                                                                             (38)
+                                      r   ⎪ m˙ / rR = (mS˙ R ) / [m˙ + rR (SR - uR)] , if SL SR ¹ 0 and m˙  0,
+                                          ⎪
+                                          ⎩ m˙ / r   = u  , if S = 0.
+                                                         R      R   R
+
+
+SM at a subsonic range (SL SR ¹ 0 ) is not necessarily identical to
+the one used in the HLLD scheme, while it reduces to the one-                               uL, R = sgn (Bx ) min
+side value uα at a supersonic range (Sα=0) and is consistent                             ⎡           ⎧                                       ⎤
+with the HLLD scheme. Given the condition of the rotational                                ⎢           ⎪        r*R, L (∣Bx∣  m  r*R, L ) ⎫
+                                                                                                                                            ⎪⎥
+                                                                                                       ⎨
+                                                                                           ⎢∣Bx∣ , max ⎪0,                                  ⎬  ⎥,               (46)
+and contact discontinuities, the HLLD solution of the density                                                            r*L + r*R          ⎪
+and tangential components in the inner sides of the Riemann                                ⎣⎢          ⎩                                    ⎭ ⎥⎦
+fan (bounded by the Alfvén and entropy modes) satisﬁes the
+following equalities:                                                                                ⎡                      r*L r*R
+                                                                                           D u = max ⎢0,
+                               r**   *                                                               ⎢⎣                r*L +          r*R
+                                L = rL ,                                (39)
+                                                                                                                                                                (47)
+                               r**   *                                                                 ⎧         ⎛         ⎞ ⎫⎤
+                                R = rR ,                                (40)                           ⎪           dL  dR ⎟ ⎪ ⎥
+                                                                                                       ⎨         ⎜
+                                                                                                      ´ ∣ Bx ∣ - ⎜ * +       ∣ m˙ ∣⎬ ⎥ ,
+                                                                                                       ⎪                 * ⎟       ⎪
+                                                                                                       ⎩         ⎝  r   r  ⎠       ⎭ ⎥⎦
+                         ut**
+                           , L = ut**
+                                   , R = ut** ,                         (41)                                         L   R
+
+                         Bt**
+                           , L = Bt**
+                                   , R = Bt**.                          (42)       where we utilize the minimum and maximum functions to
+Using above quantities, the HLLD ﬂux of the tangential                             extend the expression to the ﬂux in the outer sides of the
+momentum in the inner sides of the Riemann fan is expressed as                     Riemann fan. As will be shown later, this expression includes
+                                                                                   the ﬂux in all of the states of the HLLD solution.
+                                                                                      Similarly, the HLLD ﬂux of the tangential magnetic ﬁeld in
+     r**    **      **
+      a SM ut - Bx  t = m
+                         ˙ (dL ut , L + dR ut , R )
+                                                                                   the inner sides of the Riemann fan is expressed as
+     + m˙ {dL (ut*, L - ut , L ) + dR (ut*, R - ut , R )}
+                                                                                       Bt**SM - Bx ut** = SM (dL B˜ t , L + dR B˜ t , R )
+                        ⎡        ⎛                  ⎞
+           sgn (Bx ) ⎢ * ⎜                    m˙ ⎟ *                                   + SM {dL (Bt*, L - B˜ t , L ) + dR (Bt*, R - B˜ t , R )}
+     -                        r    ∣
+                                R⎜ xB ∣ +              t,L
+           r*L + r*R ⎢⎣          ⎝             r*R ⎟⎠                                         sgn (Bx )
+                                                                                       -                      [ r*L (∣Bx∣ +            r*R SM ) ut*, L
+                ⎛             ⎞       ⎤                                                      r*L +      r*R
+                        m˙ ⎟ * ⎥
+     +     r*L ⎜⎜∣Bx∣ -         
+                         r*L ⎟⎠       ⎥
+                                  t,R
+                ⎝                     ⎦                                 (43)           +     r*R (∣Bx∣ -        r*L SM ) ut*, R ]
+                           ⎡⎧                                                                     1
+               r*L r*R                ⎛         ⎞ ⎫                                    -                      [{∣Bx∣ - (dL r*L + dR r*R )∣SM∣}
+                           ⎢⎪         ⎜ dL  dR ⎟ ⎪                                           r*L +      r*R
+     -                        ⎨
+                           ⎢ ∣ Bx ∣ - ⎜ * +       ∣ m˙ ∣⎬
+                                              * ⎟       ⎪
+          r*L + r*R ⎣⎢⎪       ⎩       ⎝  r   r  ⎠       ⎭
+                                          L   R                                        ´ (Bt*, R - Bt*, L )].                                                   (48)
+                          ⎤
+                                                                                   Each term has the same meaning as presented in Equation (43);
+     ´ (ut*, R - ut*, L )⎥⎥ ,                                                      using the relation SM B˜t, a = m (Bt, a ra ), the ﬁrst term corre-
+                          ⎦                                                        sponds to the mass ﬂux (ﬁrst term of Equation (19)). Therefore,
+
+                                                                               5
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                                         Minoshima, Kitamura, & Miyoshi
+
+we deﬁne the magnetic tension ﬂux (Bx ut )Present to involve the                                                          3.3. Pressure Flux
+second to fourth terms of Equation (48). The numerical ﬂux of                                   Most of the AUSM-family schemes adopt the pressure ﬂux
+the tangential magnetic ﬁeld FB is given by                                                  in Equation (9), which can be rewritten for low Mach number
+          FB = SM (dL B˜ t , L + dR B˜ t , R ) - (Bx ut )Present ,                (49)       ﬂows as
+              (Bx ut )Present = - SM {dL (Bt*, L - B˜ t , L )
+                                                                                                                                 - -
+                                + dR (Bt*, R - B˜ t , R )}                                               Pˆi + 1 2 = P¯i + 1 2 - +     DPi + 1 2
+                                                                                                                                   2
+                                  + (BL ut*, L + RBut*, R )                                                        + (+ + - - 1) P¯i + 1 2                          (58)
+                                  + D B (Bt*, R - Bt*, L ) ,                  (50)
+                       ⎡           ⎧          r*L, R (∣Bx ∣    r*R, L SM ) ⎫ ⎤                             15 ¯                    15 ¯
+                       ⎢           ⎪                                        ⎪⎥                 P¯i + 1 2 -    Mi + 1 2 DPi + 1 2 -    Pi + 1 2 DMi + 1 2 ,             (59)
+BL, R = sgn (Bx ) min ⎢∣Bx ∣, max ⎨0,                                      ⎬ ,
+                                   ⎪                  r*L   +   r*R         ⎪⎥                              16                      16
+                       ⎣           ⎩                                        ⎭⎦
+                                                                              (51)
+                                                                                             where X¯i + 1 2 = (Xi + 1 2, L + Xi + 1 2, R ) 2. Shima & Kitamura
+                                         Du                                                  (2011) argued that the last term of Equation (59) acts as diffusion
+                             DB =                 .                               (52)
+                                         r*Lr*R                                              with a scale of sound speed, PΔM=ρaΔu/γ, and it is too large
+                                                                                             for low Mach number ﬂows. Then, they proposed simple low-
+Similar to Equations (44)–(47), the expression is applicable to                              dissipation AUSM-family schemes to correct the pressure ﬂux,
+the ﬂux in the outer sides as well as the inner sides of the                                 in which a function f (M ) = min (∣M∣(2 - ∣M∣), 1) (SLAU;
+Riemann fan.                                                                                 Shima & Kitamura 2011) or f (M ) = ∣M∣ (SLAU2; Kitamura &
+   It is straightforward to prove that Equations (45) and (50) are                           Shima 2013) is multiplied to the last term of Equation (58) to
+consistent with the HLLD solution for " SM , considering the                                 scale the diffusion with the advection speed rather than with the
+ﬂux in the outer side of the Riemann fan, i.e., a super-Alfvénic
+                                                                                             sound speed (note that they adopt a multidimensional Mach
+case (SM = m r*L > ∣Bx ∣ r*L ). The numerical ﬂux of the                                    number ∣M∣ = ∣u∣ a rather than a normal Mach number ∣u∣ a
+tangential momentum in Equation (44) becomes
+                                                                                             based on numerical investigations). Liou (2006) extended the
+           m ut , L - (Bx Bt )Present = m ut*, L - Bx Bt*, L ,                  (53)       AUSM+-up scheme to solve low-speed ﬂows by correcting the
+                                                                                             pressure ﬂux in a similar manner based on the asymptotic
+which is identical to the HLLD ﬂux (except for the expression
+                                                                                             analysis for low Mach numbers. Expanding the pressure with
+of m ). Furthermore, it can be rewritten as
+                                                                                             respect to the Mach number and taking its low Mach number
+          m ut , L - (Bx Bt )Present                                                        limit, he argued that the pressure ﬂux in Equation (58),
+                           ⎡        r*SL (SM - uL ) ⎤                                        Pˆ = P¯ + O (M1), should be corrected to match the asymptotic
+          = m ut , L - Bx ⎢1 + L                   ⎥ Bt , L .                (54)           solution P (x, t ) = P (0) (t ) + M 2P (2) (x, t ) + O (M3). This is a
+                           ⎣               XL       ⎦
+                                                                                             strategy to achieve all-speed AUSM-family schemes for
+Since m = rL uL as SL  0 (uL > cf , uR > cf ) (Equations (21)),                            hydrodynamic simulations.
+Equation (54) reduces to the one-side value (rL uL ut, L - Bx Bt, L )                            Kitamura & Balsara (2019) applied the pressure ﬂux of the
+for a super-fast-magnetosonic case. The same holds true for the                              SLAU2 scheme to MHD simulations by replacing the gas
+tangential magnetic ﬁeld.                                                                    pressure with the total pressure Pt = P + ∣Bt ∣2 2 and the Mach
+   Finally, we derive the magnetic tension ﬂux for the total                                 number with the fast magnetosonic Mach number, and setting
+energy from the HLLD solutions as                                                             f (M ) = ∣u∣ cf as follows:
+                                  ⎧ ∣Bx∣                                                                                                  - -
+ (Bx ut · Bt )Present = sgn (Bx ) ⎨                                                                 Pˆt , i + 1 2 = P¯t , i + 1 2 - +
+                                                                                                       SLAU2
+                                                                                                                                                 DPt , i + 1 2
+                                  ⎩ Sa - SM                                                                                                 2
+ ´ [Sa (ut*, a · Bt*, a ) - SM (ut , a · Bt , a )]                                                                  +
+                                                                                                                            ∣ui + 1 2 ∣
+                                                                                                                                         (+ + - - 1) P¯t , i + 1 2.   (60)
+                                                                     ⎫                                                      cf , i + 1 2
+ + max (∣Bx∣ -          r*a ∣SM∣ , 0)(ut** · Bt** - ut*, a · Bt*, a )⎬ , (55)
+                                                                     ⎭
+                                                                                             The factor ∣u∣ cf decreases the interface pressure to improve the
+                  (S F u + Bx FB) · (Bx F u + m FB)                                         resolution of low Mach number ﬂows and increases it to
+     ut** · Bt** = M                                 ,                            (56)
+                             M - Bx2 )2
+                           (mS                                                               stabilize high Mach number ﬂows. This approach is inspired by
+                                                                                             a preconditioning technique, which alters the propagation
+where a = L (if SM > 0) or R (otherwise). Although it is
+                                                                                             speed u  a by u  f (M ) a ~ u  ∣u∣ to relax the stiffness of
+nonidentical to Equation (55), one can alternatively use a
+                                                                                             the hyperbolic system of equations (the Appendix). Although it
+scalar product of Equations (45) and (50) to reduce a
+                                                                                             works well for hydrodynamic simulations (Kitamura &
+calculation cost as
+                                                                                             Shima 2013), its application to MHD simulations is still
+                                  (Bx ut )Present · (Bx Bt )Present                          questionable because of the presence of the Alfvén and slow
+       (Bx ut · Bt )Present =                                       .             (57)
+                                                 Bx                                          modes, which should be slower than the fast mode.
+
+
+                                                                                         6
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                                        Minoshima, Kitamura, & Miyoshi
+
+Consequently, we correct the pressure ﬂux as                                                          second-order MUSCL scheme developed by van Leer (1979)
+                                                                                                      has been widely adopted for practical MHD simulations.
+                                         +(Mi + 1 / 2, L ) - -(Mi + 1 / 2, R)
+P^t , i + 1 / 2 = Pt , i + 1 / 2 -
+   Present                                                                                               There are several candidate variables for interpolation. It is
+                                                                                DPt , i + 1 / 2
+                                                            2                                         more appropriate for upwind schemes (including AUSM-
+         cu, i + 1 / 2                                                                                family schemes) to interpolate characteristic variables rather
+   +                     (+(Mi + 1 / 2, L ) + -(Mi + 1 / 2, R) - 1) Pt , i + 1 / 2
+          cf , i + 1 / 2                                                                              than conservative or primitive variables (Qiu & Shu 2002;
+                                                                                                      Shu 2009; Matsumoto et al. 2019). However, we ﬁnd that the
+         1
+   - +(Mi + 1 / 2, L ) -(Mi + 1 / 2, R) ri + 1 / 2 cu, i + 1 / 2 Dui + 1 / 2 ,                      characteristic decomposition combined with the present scheme
+         2                                                                                            using the pressure ﬂux correction (Equation (61)) causes
+  ⎛                        u               ⎞                                                          unphysical oscillation in very low Mach number ﬂows,
+  ⎜⎜ Mi + 1 / 2, a = i + 1 / 2, a ⎟ ,                                                                 irrespective of the presence of the magnetic ﬁeld. This is
+   ⎝                        cf , i + 1 / 2 ⎠
+                                                                                                      probably due to the inconsistency that the scheme approaches a
+                                                                                           (61)       central scheme in low Mach number limits, while the
+                                                                                                      characteristic decomposition is based on the hyperbolicity of
+where                                                                                                 the system and is appropriate for upwind schemes (note that the
+  cu, i + 1 / 2 = max(cu, i + 1 / 2, L , cu, i + 1 / 2, R ) ,                                         characteristic decomposition works well if the pressure ﬂux is
+                                                                                                      not corrected). Since the characteristic decomposition is quite
+                  1⎡                                          2 ⎤                                     useful for supersonic ﬂows to suppress numerical oscillation,
+           cu2 = ⎢ (ca2 + ∣u∣2 ) + (ca2 + ∣u∣2 )2 - 4∣u∣2 cax   ⎥⎦                         (62)
+                  2 ⎣                                                                                 while the pressure ﬂux is corrected only for low Mach number
+                                                                                                      ﬂows, we use the characteristic decomposition provided that a
+is the modiﬁed fast magnetosonic speed that remains faster than                                       ﬂow speed exceeds the sound speed ∣u∣ a > 1 in a stencil
+the Alfvén and slow magnetosonic speeds. The velocity                                                 (i−1, i, i+1) (see Section 2.3 in Minoshima et al. 2019 for
+difference term (the fourth term of Equation (61)) is taken                                           details of the characteristic decomposition). Otherwise, we use
+from the AUSM+-up scheme to enhance the stability for low                                             the following approximate characteristic variables dW for the
+Mach number ﬂows. The pressure ﬂux can be effectively                                                 interpolation:
+decreased in high-beta and low-speed plasma (cu  cf ) but not                                                     ⎡
+                                                                                                         ⎛ dW1 ⎞ ⎢ 0 1        0     0 0    0    0 ⎤
+in low-beta plasma. The scheme is expected to properly scale                                                                                       ⎥ ⎛ dr ⎞
+                                                                                                         ⎜ dW ⎟ ⎢ c2f 0       0     0 - By - Bz - 1⎥ ⎜    ⎟
+down to ∣u∣ = ca because the third and fourth dissipation terms                                          ⎜ 2⎟ ⎢                                        du ⎟
+                                                                                                                                                   ⎥ ⎜
+are approximated by -max (∣u∣, ca ) rDu . Note that the above-                                           ⎜ dW3 ⎟ ⎢ 0 0        0   0   By   Bz 1
+                                                                                                                                                   ⎥⎜
+                                                                                                                                                       dv ⎟
+stated pressure ﬂux is essentially the correction of the amount                                          ⎜ dW4 ⎟ = ⎢ 0 0        r 0 1      0    0 ⎥ ⎜ dw ⎟ ,         (65)
+                                                                                                         ⎜ dW ⎟ ⎢
+of numerical dissipation, which, as opposed to the precondi-
+                                                                                                         ⎜ 5 ⎟ ⎢0 0             r 0   -1 0      0 ⎥ ⎜ dBy ⎟
+tioning technique, does not alter the basic equations                                                                                              ⎥⎜     ⎟
+                                                                                                         ⎜⎜ dW6 ⎟⎟ ⎢ 0 0      0     r 0    1    0 ⎥ ⎜ dBz ⎟
+                                                                                                                                           - 1 0 ⎥⎦ ⎝ dP ⎠
+themselves.                                                                                               ⎝ dW7 ⎠ ⎢ 0 0
+   For comparison, we describe the pressure ﬂux of the familiar                                                    ⎣          0     r 0
+hydrodynamic shock-capturing schemes. The Roe scheme uses                                                       ⎡                                    ⎤
+                                                                                                                      1 1
+                                                                                                                ⎢0            0         0      0     ⎥ 0
+       2 = (ru + P )1 2 - u1 2 (ru)1 2
+    P1Roe                                                                                                             c2f c2f
+              2
+                                                                                                                ⎢                                    ⎥
+                    ⎛ ∣u + a∣ - ∣u - a∣ ⎞                                                                       ⎢1   0    0       0    0    0    0   ⎥
+             = P¯ - ⎜                   ⎟    DP                                                                 ⎢                                    ⎥⎛      ⎞
+                    ⎝         2a        ⎠1 2                                                           ⎛ dr ⎞ ⎢ 0    0    0
+                                                                                                                                    1    1
+                                                                                                                                            0    0   ⎥ ⎜ dW1 ⎟
+                                                                                                       ⎜     ⎟ ⎢                  2 r 2 r            ⎥ ⎜ dW2 ⎟
+                  ⎛ ∣u + a∣ + ∣u - a∣ ⎞                                                                ⎜ du ⎟ ⎢
+                 -⎜
+                  ⎝
+                                      ⎟   r Du
+                                      ⎠1 2 1 2                                                         ⎜ dv ⎟ ⎢ 0                             1    1 ⎥ ⎜ dW3 ⎟
+                            2                                                                                        0    0       0    0             ⎥
+                                                                                                       ⎜ dw ⎟ = ⎢                           2 r 2 r ⎥ ⎜ dW4 ⎟ ,
+             = P¯ - M1 2 DP - r1 2 a1 2 Du , for M < 1,                                    (63)        ⎜ dBy ⎟ ⎢                                       ⎜     ⎟
+                                                                                                                                                     ⎥ ⎜ dW5 ⎟
+                                                                                                       ⎜     ⎟ ⎢0    0    0
+                                                                                                                                  1
+                                                                                                                                       -
+                                                                                                                                          1
+                                                                                                                                            0    0   ⎥ ⎜ dW6 ⎟
+and the HLLC scheme uses                                                                               ⎜ dBz ⎟ ⎢                  2       2          ⎥⎜      ⎟
+                                                                                                       ⎝ dP ⎠ ⎢
+                                                                                                                                            1      1 ⎥ ⎝ dW7 ⎠
+                 rL PL + rR PR    rL rR                                                                         ⎢0   0    0       0    0         - ⎥
+ P1HLLC
+    2                         -         a1 2 Du , for M < 1.                                                                               2      2 ⎥
+                    rL + rR      rL + rR                                                                        ⎢
+                                                                                                                ⎢0                  By By     Bz Bz ⎥
+                                                             (64)                                               ⎢⎣   0    1       -         -
+                                                                                                                                     2  2      2  2 ⎥⎦
+Both schemes have a velocity difference term with a scale of                                                                                                  (66)
+sound speed similar to Equation (59), which is too large for low
+                                                                                                      where dW3=dPt, dW2, and dW4–7 approximate the entropy
+Mach number ﬂows. The same holds for MHD shock-capturing
+                                                                                                      and Alfvén modes, respectively.
+schemes.
+                                                                                                         The present scheme can be extended to multidimensions
+                                                                                                      through a dimension-by-dimension reconstruction. However, it
+      3.4. Interpolation and Extension to Multidimensions
+                                                                                                      is widely recognized that multidimensional MHD simulations
+  The left and right states at a cell interface are interpolated by                                   should exercise special care with the divergence-free condition
+higher-order polynomials to obtain a better accuracy of the                                           for the magnetic ﬁeld to obtain reliable solutions. To preserve
+solution. In compressible ﬂuid simulations, nonlinear inter-                                          the divergence-free condition within a machine precision, we
+polation methods are usually employed to avoid unphysical                                             adopt the central upwind constrained transport method
+oscillation around discontinuous regions. For example, the                                            proposed by Minoshima et al. (2019), which is built to be
+
+                                                                                                  7
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                   Minoshima, Kitamura, & Miyoshi
+
+consistent with the base one-dimensional scheme and attain a                                            4. Numerical Tests
+designed high order of accuracy in multidimensions.
+                                                                                     This section presents the numerical simulation results of
+                                                                                  MHD test problems to assess the capability of the MLAU
+                                                                                  scheme through comparison with the standard Roe and HLLD
+                  3.5. Summary of Flux Function
+                                                                                  schemes. In the following one-dimensional shock tube tests
+   Here, we summarize the numerical ﬂux function of the present                   (Section 4.1), the order of accuracy of the scheme is ﬁrst in
+AUSM-family scheme. The scheme splits the inviscid ﬂux in the                     space and second in time to focus on the essence of the ﬂux
+MHD equations into the advection, pressure, and magnetic                          function. In the remaining tests (Sections 4.2–4.6), we employ
+tension parts at the cell interface (Equation (19)) and then                      the MUSCL interpolation with a minmod limiter and the third-
+individually evaluates the mass, pressure, and magnetic tension                   order strong stability preserving Runge–Kutta method (Shu &
+ﬂuxes. The mass ﬂux is presented in Equations (21)–(24), and it                   Osher 1988; Gottlieb & Shu 1998). We solve the ideal MHD
+includes the shock detection to deal with the numerical                           equations with a speciﬁc heat ratio γ=5/3 and a CFL number
+instability (Equations (25)–(29)). The magnetic tension ﬂux in                    of 0.4, unless otherwise stated.
+Equations (45)–(47), (50)–(52), and (55)–(56) is built to be
+consistent with the HLLD scheme to preserve the rotational                                 4.1. One-dimensional Shock Tube Problems
+discontinuity. The pressure ﬂux in Equations (61)–(62) scales
+properly for low Mach number ﬂows to improve the resolution.                         The shock tube problem is a standard test for compressible
+Hereafter, this scheme is termed a multistate low-dissipation                     ﬂuid simulations to assess the capability of capturing
+AUSM (MLAU).                                                                      discontinuities and rarefaction waves with satisfactory accuracy
+   The MLAU scheme inherits the property of the exact                             and robustness. We conduct three one-dimensional problems
+preservation of the stationary MHD discontinuities from the                       adopted by Miyoshi & Kusano (2005). The computational
+baseline AUSM+-up and HLLD schemes as follows:                                    domain of −0.5<x<0.5 is resolved by 800 cells, and the
+                                                                                  initial state is separated at x=0. The open boundary condition
+   1. Contact discontinuity. Let, [r, u , v, w, By , Bz , P ] =                   is imposed for characteristic variables.
+       [rL , 0, v0, w0, By0 , Bz0 , P0] (x  0), [rR, 0, v0, w0, By0 ,               The ﬁrst problem is one of the familiar shock tube problem
+      Bz0 , P0] (x > 0), and Bx ¹ 0 . The resultant numerical                     presented by Dai & Woodward (1994). The initial left and right
+      ﬂuxes,            m = 0, Pˆt,1 2 = P0 + (By20 + Bz20 ) 2, Tˆ1 2            states are [r, u , v, w, By , Bz , P ] = [1.08, 1.2, 0.01, 0.5, 3.6
+      = Bx (0, Bx 2, By0 , Bz0 , v0, w0, v0 By0 + w0 Bz0 )T , are exact.            4p , 2 4p , 0.95] and [1, 0, 0, 0, 4 4p , 2 4p , 1] with
+   2. Tangential discontinuity. Let, [r, u , v, w, Pt ] = [rL , 0,                Bx = 2 4p . Figure 3 shows the primitive variables at t=0.2
+      vL , wL , Pt0] (x  0), [rR, 0, vR, wR, Pt0] (x > 0), and Bx=              obtained with the HLLD (red) and MLAU (black) schemes.
+      0. The resultant numerical ﬂuxes, m = 0,Pˆt,1 2 = Pt 0,                    The solution with the Roe scheme is almost identical to the
+      Tˆ1 2 = 0 , are exact.                                                      HLLD scheme, and thus, it is not shown here. The solution to
+   3. Rotational discontinuity. Let, [r, u , ut , Bt , P ] = [r0, -               this problem includes all MHD discontinuities, fast shocks
+      Bx r0 , ut, L , Bt, L , P0] (x  0),            [r0, -Bx r0 , ut, R ,       (x=−0.2, 0.45), rotational discontinuities (x=0, 0.2), slow
+      Bt, R , P0] (x > 0), and Dut = -DBt r0 , ∣Bt, L ∣2 =                        shocks (x=0.05, 0.15), and a contact discontinuity (x=0.1).
+                                                                                  The MLAU scheme captures all discontinuities well, and its
+      ∣Bt, R ∣2 = Bt2 , Bx > 0 . The resultant numerical ﬂuxes                    solution is very similar to the HLLD scheme. A slight
+      are         m = - r0 Bx , Pˆt,1 2 = P0 + Bt2 2,             Tˆ1 2 =        difference is found in the density proﬁle around the fast shock.
+                                                  T
+      Bx (0, Bx 2, Bt, R , ut, R , ut, R · Bt, R ) , and then,                    The solution for the MLAU scheme is more diffusive than that
+
+
+                                         ⎡                          - r 0 Bx                                      ⎤
+                                         ⎢                                                                        ⎥
+                                         ⎢                     P0 + (Bx2 + Bt2) 2                                 ⎥
+                                         ⎢              - r 0 Bx (ut , R + Bt , R r 0 )                           ⎥
+                                 Fˆ1 2 = ⎢                                                                        ⎥
+                                         ⎢                  - Bx (ut , R + Bt , R r 0 )                           ⎥
+                                         ⎢       ⎧ gP                                                          ⎫  ⎥
+                                         ⎢- r B ⎨                  (Bx2 + Bt2)      ∣ ut , R + Bt , R    r0 ∣ ⎥
+                                                                                                             2
+                                                        0
+                                                                +                 +                            ⎬
+                                         ⎢   0 x
+                                                 ⎩ (g - 1 ) r 0                                                ⎭ ⎥⎦
+                                         ⎣                                2                     2
+                                         ⎡                          - r 0 Bx                                      ⎤
+                                         ⎢                                                                        ⎥
+                                         ⎢                     P0 + (Bx2 + Bt2) 2                                 ⎥
+                                         ⎢              - r 0 Bx (ut , L + Bt , L r 0 )                           ⎥
+                                       =⎢                                                                         ⎥                             (67)
+                                         ⎢                  - Bx (ut , L + Bt , L r 0 )                           ⎥
+                                         ⎢       ⎧ gP                                                          ⎫  ⎥
+                                         ⎢- r B ⎨                  (Bx2 + Bt2)      ∣ ut , L + Bt , L    r0 ∣ ⎥
+                                                                                                             2
+                                                        0
+                                                                +                 +                            ⎬
+                                         ⎢   0 x
+                                                 ⎩ (g - 1 ) r 0                                                ⎭ ⎥⎦
+                                         ⎣                                2                     2
+
+                                                                                  for the HLLD scheme at the left-hand fast shock in panel (b),
+are exact.                                                                        while they are comparable at the right-hand fast shock in panel
+
+                                                                              8
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                    Minoshima, Kitamura, & Miyoshi
+
+
+
+
+Figure 3. One-dimensional shock tube problem of Dai & Woodward (1994). The solid red and dashed black lines are obtained with the HLLD and MLAU schemes.
+Panel (a) shows the density proﬁle, and panels (b) and (c) are magniﬁcations of the density proﬁle around fast shocks at x=−0.2 and x=0.45.
+
+
+
+(c). We conﬁrm that the thickness of the shock in the MLAU                        The second problem is a switch-off slow rarefaction wave
+scheme is sensitive to the amount of the pressure difference                   problem. The initial left and right states are [ρ, u, v, w, By, Bz,
+term in the mass ﬂux (Equation (22)) and the velocity                          P]=[1, 0, 0, 0, 0, 0, 2] and [0.2, 1.186, 2.967, 0, 1.6405, 0,
+difference term in the pressure ﬂux (Equation (61)). Addition-                 0.1368] with Bx=1. Miyoshi & Kusano (2005) veriﬁed that
+ally, decreasing their coefﬁcients steepens the shock.                         the HLLD scheme resolves the slow rarefaction wave with
+   One of the main differences among the Roe, HLLD, and                        satisfactory accuracy, while the Roe scheme provides an
+MLAU schemes is the treatment of the slow mode wave. The                       unphysical solution to this problem due to the violation of the
+Roe scheme satisﬁes the jump condition for all eigenmodes,                     entropy condition at x=0 and requires an additional entropy
+while the HLLD scheme appropriately omits information on                       correction to cure the solution. Figure 5 compares the solution
+the slow mode, and the MLAU scheme is neglectful about it.                     at t=0.2 among the three schemes. The MLAU scheme does
+To check their effects on the resolution of the slow mode, we                  not violate the entropy condition, and its solution is close to the
+conduct the same shock tube problem with an extremely strong
+                                                                               HLLD scheme.
+Bx = 200 4p . Figure 4 compares the solutions of the three                        The last problem is a super-fast expansion wave problem.
+schemes. As expected, the HLLD scheme (red) smears the slow
+                                                                               The initial left and right states are [ρ, u, v, w, By, Bz, P]=[1,
+mode shocks at x=−0.05 and 0.18, owing to excessive
+                                                                               −u0, 0, 0, 0.5, 0, 0.45] and [1, u0, 0, 0, 0.5, 0, 0.45] where
+numerical diffusion with a scale of Alfvén speed, while the
+                                                                               Bx=0 and u0=3.1 is equal to the fast magnetosonic Mach
+Roe scheme (blue) correctly resolves them. The MLAU
+scheme (black) also fails to resolve the slow mode shocks,                     number. The HLLD scheme can solve this problem because of
+but the thickness is steeper than that in the HLLD scheme. We                  the positivity preservation, while the Roe scheme fails due to
+conﬁrm that the thickness of these slow mode shocks is                         the violation of positivity. Figure 6 shows the result at t=0.05
+sensitive to the value of the velocity difference term in the                  obtained with the HLLD and MLAU schemes. The MLAU
+pressure ﬂux (Equation (61)), which is approximated as                         scheme also succeeds in this problem, indicating a better
+−ρcfΔu/8 in low plasma beta (2P ∣B∣2  1) and a low Mach                       stability than is obtainable with the Roe scheme. We note that
+number limit. Meanwhile, the HLLD scheme also has a                            the MLAU scheme inherits the positivity preservation of
+velocity difference term in the interface pressure (Equation (41)              density from the baseline AUSM+-up scheme, but it does not
+in Miyoshi & Kusano 2005), and the term is approximately                       guarantee the positivity of pressure. Therefore, the scheme
+four times larger than the MLAU scheme in the low-beta and                     would not necessarily be as robust as the HLLD scheme from
+low Mach number limit.                                                         the viewpoint of the positivity preservation.
+
+
+                                                                           9
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                    Minoshima, Kitamura, & Miyoshi
+
+
+
+
+                          Figure 4. The same as Figure 3, but Bx is increased a hundredfold to focus on the slow mode shock.
+
+                4.2. Linear Wave Propagation                                  interactions of shock waves and vortices (Orszag & Tang
+                                                                              1979). The initial condition is (r, u , v, w, Bx , By , Bz , P ) =
+   We simulate the propagation of linear MHD waves in a one-
+dimensional homologous medium with the MLAU scheme.                           (g 2, -sin ( y), sin (x ), 0, -sin ( y), sin (2x ), 0, g ). The periodic
+The initial condition is uniform, [r, u , v, w, By , Bz , P ]                 computational domain of 0<x<2π and 0<y<2π is
+= [1, u 0 , 0, 0, 0, 0, bBx2 2] with Bx=1. Then, a small (1%)               resolved by N×N cells, where N=200 as a ﬁducial run and
+uniform random perturbation is added to By and P. We use the                  N=1600 as a reference run.
+ambient ﬂow velocity u0=(0,0.1cf, 1.5cf) and the plasma beta                   Figures 9(a)–(b) shows the two-dimensional proﬁle of the
+β=(10, 0.1) (a total of six simulation runs). The periodic                  temperature T=2P/ρ at t=π obtained with the HLLD and
+computational domain of 0<x<Lx=1 is resolved by 256                     MLAU schemes. For comparison, the solution of the MLAU
+cells.                                                                        scheme with the SLAU2-type pressure ﬂux (Equation (60)) is
+   Figures 7 and 8 show the dispersion relation for the high-                 shown in panel (c), and the reference solution with the
+and low-beta cases. The upper panels correspond to the                        HLLD scheme is presented in panel (d). The overall structure
+compressible mode (fast/slow modes for the high/low-beta                      is well reproduced in all of the solutions. Figure 10 shows
+cases) and the entropy mode, while the lower panels                           the relative difference of the temperature proﬁle from the
+correspond to the Alfvén mode. The solution agrees well with                  reference Tref, deﬁned as dT = ∣T - Tref ∣ Tref , to examine
+the theoretical dispersion relation w = lkx denoted by the solid              the numerical error of the solutions, panels (a)–(c). Notice-
+lines in each plasma frame (stationary in the left panels,                    able numerical oscillations are marked by dashed squares.
+subsonic in the middle panels, and supersonic in the right                    The numerical oscillation around the current sheet at (x,
+panels), where kx, ω, and λ are the wavenumber, frequency, and                y)=(0, π) is observed in all of the solutions. Solution (c) has
+eigenvalues, respectively. Note that the horizontal stripes seen              the largest amplitude of the error, while solution (a) exhibits
+in Figures 7(a) and 8(a) are pseudo entropy modes owing to a                  the smallest. In addition, solution (c) shows the oscillation
+ﬁnite domain size, w = ukx  2pncf , s L x (n = 1, 2 ,...), irre-             around (x, y)=(3.0, 0.6) and (x, y)=(3.0, 6.0), at which
+spective of the choice of the ﬂux function. Any spurious                      the slow mode rarefaction wave propagates in the low
+growth of the wave is not observed until the simulation ends at               plasma beta region. This indicates that the SLAU2-type
+t=40. This problem conﬁrms that the MLAU scheme does                        pressure ﬂux underestimates the interface pressure for
+not alter the propagation speed of the eigenmodes, nor does it                magnetized ﬂows dominated by the slow mode,
+degrade their numerical stability.                                            ∣u∣ ~ a  cf (the third term of Equation (60) becomes
+                                                                              negligible). The oscillation is not seen in the solution (b),
+                   4.3. Orszag–Tang Vortex                                    owing to the fact that the pressure ﬂux in Equation (61) is
+ The Orszag–Tang vortex is a standard two-dimensional                         almost uncorrected in the low-beta region, cu∼cf, and it
+MHD test problem to verify the capability of capturing multiple               stabilizes the slow mode wave.
+
+                                                                         10
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                     Minoshima, Kitamura, & Miyoshi
+
+
+
+
+                          Figure 5. One-dimensional switch-off slow rarefaction wave. The format is the same as in Figure 3.
+
+
+
+
+                   Figure 6. One-dimensional super-fast expansion with a Mach number of 3.1. The format is the same as in Figure 3.
+
+       4.4. Blast Wave in Strongly Magnetized Medium                          solutions (Balsara & Kim 2004; Balsara 2010, 2012; Felker
+   We simulate the propagation of MHD shocks in a strongly                    & Stone 2018; Minoshima et al. 2019). The periodic
+magnetized medium, which has been tested in many studies in                   computational domain ranging from −2<x<2 and
+the literature as a simple, yet stringent problem for astro-                  −2<y<2 is resolved by 1024×1024 grid points. The
+physical phenomena (Balsara & Spicer 1999; Londrillo & Del                    initial condition (r, u , v, w, Bx , By , Bz , P ) = (1, 0, 0, 0, B0 sin (q ),
+Zanna 2000; Mignone et al. 2007; Stone et al. 2008; Balsara                   B0 cos (q ), 0, 1) where B0=10, θ=30°, and then, a high-
+et al. 2009). Due to the strong ambient ﬁeld, the solution                    pressure cylinder is imposed at the center of the domain,
+quality is considerably affected by the numerical errors of                   P=100 for x 2 + y 2 < 0.125.
+the magnetic ﬁeld, speciﬁcally, by the error associated with                     Figure 11 compares the two-dimensional proﬁle of the gas
+the treatment of the divergence-free condition. A family of the               and magnetic pressures at t=0.1 obtained with the HLLD (left
+constrained transport method seems to provide reliable                        panel) and MLAU (right panel) schemes. Their solutions are
+
+                                                                         11
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                              Minoshima, Kitamura, & Miyoshi
+
+
+
+
+Figure 7. Dispersion relation of MHD eigenmodes for β=10. The upper panels represent the Fourier amplitude of density, corresponding to the fast and entropy
+modes. The lower panels show the Fourier amplitude of By, corresponding to the Alfvén mode. Panels (a)–(b) show the stationary case (u=0), panels (c)–(d) show
+the subsonic case (u=0.1cf), and panels (e)–(f) show the supersonic case (u=1.5cf), respectively. The dashed lines represent the theoretical dispersion relation.
+
+
+
+indistinguishable from each other, and we conﬁrm that the level                       plasma into the planetary magnetosphere through the magne-
+of oscillation at the shocks is comparable between them. On the                       topause. In addition, the ﬂow can amplify the in-plane
+other hand, the Roe scheme presents negative pressure caused                          magnetic ﬁeld via stretching, and it is related to the dynamo
+by the numerical error of the magnetic ﬁeld and fails to                              process taking place in stars, planets, and accretion disks. We
+resolve this problem immediately after the simulation starts.                         simulate the growth of the KHI to assess the capability of
+The MLAU scheme with the SLAU2-type pressure ﬂux                                      resolving a shear ﬂow. The two-dimensional computational
+(Equation (60)) shows an intolerable level of oscillation around                      domain ranging from 0x<L and −L/2y<L/2 is
+the high-pressure cylinder and eventually crashes the simula-                         resolved by N×N cells. The boundary condition is periodic
+tion run, which stems from a deﬁciency of the interface                               and symmetric in the x and y directions. The initial condition
+pressure for strongly magnetized ﬂows, as is mentioned in                             has a velocity shear, u = ((V0 2) tanh ( y l ), 0, 0), uniform
+Section 4.3. This indicates that the numerical dissipation with a                     density and pressure ρ=ρ0, P=P0, and a uniform magnetic
+scale of Alfvén speed inherent in the HLLD scheme is effective                        ﬁeld B = B0 (cos q, 0, sin q ), with ρ0=V0=B0=λ=1.0
+at stabilizing multidimensional shocks in low-beta plasma. The                        and P0=500 as a ﬁducial run. We use γ=2.0. Since the
+MLAU scheme possesses the same level of numerical                                     Mach number of the initial ﬂow M0=0.5V0/a=0.0158, it is
+dissipation in the pressure and magnetic tension ﬂuxes, and
+                                                                                      reasonably approximated as an incompressible ﬂow. To initiate
+thus, it provides a solution for low-beta plasma comparable to
+                                                                                      the instability, we impose a small (1%) perturbation on the y-
+the HLLD scheme.
+                                                                                      component of the velocity around the boundary with a
+                                                                                      wavelength equal to L, and the length is chosen to be the
+                  4.5. Kelvin–Helmholtz Instability                                   fastest growing mode under the adopted initial condition.
+   The Kelvin–Helmholtz instability (KHI) is the hydrody-                                To verify the numerical code, we compare the linear growth
+namic instability that occurs at the velocity shear layer. This                       rate obtained from the theory to the simulation. The theoretical
+instability can induce the mixing of different species of                             growth rate ωi is obtained by numerically solving the linearized
+plasmas, for example, the entry of tailward-ﬂowing solar wind                         equations for the in-plane velocity and magnetic ﬁeld, and the
+
+
+
+                                                                                12
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                        Minoshima, Kitamura, & Miyoshi
+
+
+
+
+                        Figure 8. The same as Figure 7 but for β=0.1. The upper panels correspond to the slow and entropy modes.
+
+
+
+
+Figure 9. Temperature proﬁle in the Orszag–Tang vortex problem at t=π obtained with, panel (a), the HLLD scheme, panel (b), the MLAU scheme, and, panel (c),
+the MLAU scheme with the SLAU2-type pressure ﬂux (Equation (60)). The resolution N=200. The reference solution with the HLLD scheme at N=1600 is
+presented in panel (d). The left half of the domain is shown.
+
+
+
+
+                                                                             13
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                       Minoshima, Kitamura, & Miyoshi
+
+
+
+
+Figure 10. Relative difference of the temperature proﬁle in the Orszag–Tang vortex problem for, panel (a), the HLLD scheme, panel (b), the MLAU scheme, and,
+panel (c), the MLAU scheme with the SLAU2-type pressure ﬂux (Equation (60)). Spurious oscillations are marked by dashed squares.
+
+pressure Pt = P + Bz2 2 as an eigenvalue problem as follows:                     speed (Section 3.3). As a result, the HLLD scheme cannot
+                                                                                 reproduce the theoretical growth rate at resolutions N128. In
+                    V0       ⎛y⎞
+      wi u = - ikx      tanh ⎜ ⎟ u                                               contrast, the solution with the MLAU scheme converges to the
+                     2       ⎝l ⎠                                                theory at N 64 and agrees with an incompressible ﬂuid
+                        V0          ik                                           simulation result obtained with the conventional simpliﬁed
+              -                 v - x Pt ,
+                 2 cosh2 ( y l)      r0                                          marker and cell (SMAC) scheme (dotted–dashed line) because
+                             ⎛y⎞                                                 of the proper scaling of the pressure ﬂux for low Mach number
+                    V
+      wi v = - ikx 0 tanh ⎜ ⎟ v                                                  ﬂows (Equation (61)). This problem was investigated by
+                     2       ⎝l ⎠
+                                                                                 Minoshima et al. (2019), wherein we obtained the convergence
+                  1 ⎡ ¶ Pt            ⎛ ¶B         ⎞⎤                            of the HLLD scheme with a fourth-order interpolation at N 64
+              -      ⎢     + B0 cos q ⎜ x - ikBy⎟ ⎥ ,                            (see Figure 5 therein). Notably, the MLAU scheme is comparable
+                 r 0 ⎣ ¶y             ⎝ ¶y         ⎠⎦
+                                                                                 to, or better than, the aforementioned scheme, despite the fact that
+                    V        ⎛y⎞          ⎛        ¶v ⎞                          it employs a lower-order MUSCL interpolation.
+      wi Pt = - ikx 0 tanh ⎜ ⎟ Pt - 2Pt 0 ⎜ikx u +    ⎟,
+                     2       ⎝l ⎠         ⎝        ¶y ⎠                             The second problem entails the in-plane magnetic ﬁeld
+                                                                                 where θ=71°. 565, B = B0 ( 0.9 , 0, 0.1 ), and L=20λ.
+                   V0      ⎛y⎞
+     wi Bx = - ikx    tanh ⎜ ⎟ Bx                                                Figure 13(a) shows the growth rate obtained from the theory
+                   2       ⎝l ⎠                                                  compared to the simulation. The theoretical growth rate
+                      V0                    ¶v                                   ωi=0.051V0/λ, and the simulations are carried out at
+             +                 By - B0 cos q ,
+                2 cosh2 ( y l)              ¶y                                   N=64, 128, 256. Again, the MLAU scheme converges well
+                   V       ⎛y⎞                                                   with the help of the pressure ﬂux correction. Figure 13(b)
+     wi By = - ikx 0 tanh ⎜ ⎟ By + ikvB0 cos q ,                     (68)        compares the growth rate among different initial pressures
+                   2       ⎝l ⎠
+                                                                                 (Mach number) P0=500, 5000, and 50,000 (M0=0.0158,
+where Pt0 = P0 + (B0 sin q )2 2, kx = 2p L , and i is the                        0.005, and 0.00158) at N=64. The theoretical growth rate is
+imaginary unit.                                                                  identical among the three cases because the ﬂow is almost
+   The ﬁrst problem is the out-of-plane magnetic ﬁeld case                       incompressible. While the solutions for the HLLD scheme get
+where θ=90°, B = (0, 0, B0 ), and L=14λ. The situation is                    worse upon decreasing the Mach number, those with the
+essentially hydrodynamic because the in-plane magnetic ﬁeld is                   MLAU scheme are independent of the Mach number. This is
+kept at zero. Figure 12 shows the growth rate obtained from the                  indicative of the all-speed capability for MHD ﬂows.
+theory compared to the simulation. The theoretical growth rate                      Figure 14 shows the stream line at t=80, 119, and 159 with
+ωi=0.095V0/λ (dashed line), and the simulations are carried                    P0=500. Panels (a)–(c) correspond to the HLLD scheme
+out at N=32, 64, 128. Since the Mach number of the ﬂow is                      at N=256, panels (d)–(f) correspond to the MLAU scheme at
+very low, the familiar shock-capturing schemes suffer from                       N=256, and panels (g)–(i) correspond to the HLLD scheme at
+excessive numerical diffusion with a scale of fast magnetosonic                  N=1024 as a reference. At t=119, the ﬂow is distorted
+
+
+                                                                            14
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                            Minoshima, Kitamura, & Miyoshi
+
+
+
+
+Figure 11. Two-dimensional proﬁle of the gas pressure (top panels) and the magnetic pressure (bottom panels) in the blast wave problem at t=0.1 obtained with the
+HLLD (left panels) and MLAU (right panels) schemes.
+
+
+inside the primary vortex by the magnetic tension force                                               4.6. Richtmyer–Meshkov Instability
+(5x15,7y13). The MLAU scheme evidently
+                                                                                        When a shock collides with a corrugated contact disconti-
+exhibits this pattern (panel (e)), and it is in good agreement                       nuity, the Richtmyer–Meshkov instability (RMI) is induced,
+with the reference (panel (h)). Figure 15 shows the time proﬁle                      and the interface develops nonlinearly (Richtmyer 1960;
+of the increase of the in-plane magnetic ﬁeld energy,                                Meshkov 1972). The RMI is proposed to be a mechanism of
+(Bx2 + By2 ) (Bx2 (0) + By2 (0)) - 1. The magnetic ﬁeld is more                      the magnetic ﬁeld ampliﬁcation at supernova remnants because
+ampliﬁed as the resolution is increased, as is demonstrated by                       it can amplify the magnetic ﬁeld far beyond the compression by
+Mignone et al. (2010). The MLAU scheme achieves a higher                             a single shock (Sano et al. 2012, 2013). An MHD simulation of
+ﬁeld ampliﬁcation than the HLLD scheme; in particular, it                            the RMI requires a sophisticated numerical scheme to robustly
+requires a quarter of the resolution to match the result with the                    capture high Mach number shocks and simultaneously resolve
+HLLD scheme.                                                                         the ﬁlamentary structure of the magnetic ﬁeld associated with
+   These problems verify that the pressure ﬂux correction in                         rotational ﬂows. Exercising caution with respect to numerical
+Equation (61) greatly improves the solution accuracy, and                            shock instability may be needed when an incident shock is well
+consequently, the MLAU scheme provides a reliable solution                           aligned with the grid spacing (e.g., planer shock propagation in
+of low Mach number MHD ﬂows. Note that the HLLD and                                  Cartesian grids). We simulate the nonlinear evolution of the
+MLAU schemes provide similar results for moderate Mach                               RMI with the Roe, HLLD, and MLAU schemes. The initial
+number ﬂows (not shown here).                                                        condition is similar to that in Minoshima et al. (2019), i.e., (ρ,
+
+                                                                               15
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                          Minoshima, Kitamura, & Miyoshi
+
+
+
+
+Figure 12. Time proﬁle of the Fourier amplitude of the y-component of the velocity in the two-dimensional Kelvin–Helmholtz instability with the out-of-plane
+magnetic ﬁeld. The cold- and warm-colored lines are the solutions obtained with the HLLD and MLAU schemes at N=32, 64, and 128. The dotted–dashed line is the
+solution obtained from an incompressible ﬂuid simulation with the SMAC scheme at N=64. The dashed line indicates the solution obtained from the linear theory.
+
+
+
+
+Figure 13. The same as Figure 12 but with the in-plane magnetic ﬁeld. Panel (a): comparison among different resolutions at N=64, 128, and 256. Panel (b):
+comparison among different initial pressure values P0=500, 5000, and 50,000.
+
+u, v, w, Bx, By, Bz, P)=(1.0, 0,−1.0, 0, 0.000034641, 0, 0,                        Figure 16 shows the density proﬁle at t=15 obtained with
+0.00006) for y>0 (upstream) and (3.9988, 0,−0.250075, 0,                        the three schemes. The surface at y=2.6 corresponds to the
+0.000138523, 0, 0, 0.75) for y<0 (downstream) that satisﬁes                      transmitted shock, and the mushroom-shaped spike in
+the Rankine–Hugoniot condition for perpendicular MHD                               0<y<1 is the consequence of the nonlinear evolution of
+shocks. The upstream Mach number M = ∣u∣ a = 100 and                               the RMI. Apparently, the solution with the Roe scheme is
+the plasma beta b = 2P ∣B∣2 = 10 5. A corrugated contact                           severely distorted by numerical shock instability (panel (a)).
+discontinuity is imposed in the upstream region, ycd =                             The void around y=2.2 was unphysically generated at the
+Y0 + y0 cos (2px l ), where Y0=1.0, ψ0=0.1 is a corruga-                       shock at t=5, and it ﬂows in the y-direction. The instability
+tion amplitude, and λ=1.0 is a wavelength. The density                           also damages the structure of the region of interest
+increases to ρ=10 behind the contact discontinuity y>ycd,                      (0<y<1), and the resulting proﬁle deviates from the
+while Minoshima et al. (2019) investigated the case of the                         solution with the other two schemes. Note that the simulation
+density decrease to ρ=0.01. This setup is numerically more                       is carried out in the co-moving frame with the interface, which
+stringent than the previous one because the Mach number of a                       minimizes the numerical dissipation for capturing the contact
+transmitted shock increases with decreasing sound speed. We                        discontinuity (D( ρ) in Equation (30) approaching zero in the y-
+shift a frame moving with v=−0.625 that is the interface                         direction). The actual local Mach number ∣u∣ cf = 0.01 - 0.1
+velocity after the collision with the incident shock so that the                   around the spike. This setup is a stringent condition against the
+structure of the RMI stays around y=0 throughout the                             numerical shock instability because the instability may be
+simulation run. The domain 0x<λ and −40λy<40λ                            suppressed by increasing the numerical dissipation for a density
+is resolved by N×80N cells, where N=128. The boundary                          gradient (Pandolﬁ & D’Ambrosio 2001).
+condition is periodic in the x-direction and is ﬁxed to be the                        The HLLD scheme largely remedies the catastrophic proﬁle
+initial state in the y-direction.                                                  observed in the Roe scheme (panel (b)), but it still exhibits
+
+                                                                              16
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                         Minoshima, Kitamura, & Miyoshi
+
+
+
+
+Figure 14. Stream line in the Kelvin–Helmholtz instability with the in-plane magnetic ﬁeld at t=80 (top panels), t=119 (middle panels), and t=159 (bottom
+panels). Panels (a)–(c): HLLD scheme at N=256; panels (d)–(f): MLAU scheme at N=256; and panels (g)–(i): HLLD scheme at N=1024.
+
+
+
+grid-scale oscillation at the shock front (panel (d)). The MLAU                    off (θ=1), the mass ﬂux of the MLAU scheme has a ﬁnite
+scheme succeeds in eliminating these unphysical modes and                          pressure difference term in the direction parallel to the shock,
+obtains a smooth solution (panel (c)), by virtue of the shock                      and the resulting solution exhibits a grid-scale oscillation
+detection in the mass ﬂux (Equation (25)). Figure 17 shows the                     similar to the HLLD scheme (not shown here).
+shock-detecting factor θ for the x-component of the mass ﬂux.                         The rotational ﬂow and the magnetic ﬁeld can be ampliﬁed
+(The factor for the y-component of the mass ﬂux exceeds 0.9                        by the RMI, and their time evolution and saturation level are of
+over the whole domain.) The factor ∼0 at the transmitted shock                     particular interest to astrophysical applications (Sano et al.
+at x=2.6, while ∼0.45 at the reﬂected shock at x=−6 and                        2012, 2013). Meanwhile, their growth is sensitive to code
+>0.9 elsewhere; thus, it works mostly in the vicinity of shocks.                   design, such as the grid resolution, the interpolation technique,
+The shock detection does not degrade the accuracy of the spike,                    and the ﬂux function, as well as plasma parameters (Minoshima
+as is shown in Figure 16(e). When the shock detection is turned                    et al. 2019). The numerical shock instability observed in the
+
+
+                                                                              17
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                       Minoshima, Kitamura, & Miyoshi
+
+                                                                                                                5. Summary
+                                                                                         We have developed a novel numerical scheme for ideal
+                                                                                      MHD simulations based on the AUSM scheme (Liou &
+                                                                                      Steffen 1993; Liou 1996), which is a simple, yet accurate and
+                                                                                      robust scheme employed in computational aerodynamics. The
+                                                                                      present scheme splits the inviscid ﬂux in MHD equations into
+                                                                                      the advection, pressure, and magnetic tension parts, and then
+                                                                                      individually evaluates the mass, pressure, and magnetic tension
+                                                                                      ﬂuxes. The mass ﬂux follows the AUSM+-up scheme
+                                                                                      (Liou 2006) upon including shock detection to control the
+                                                                                      pressure difference term to avoid numerical shock instability in
+                                                                                      multidimensions. The magnetic tension ﬂux is derived to be
+                                                                                      consistent with the HLLD approximate Riemann solver
+                                                                                      (Miyoshi & Kusano 2005). As opposed to preceding AUSM-
+                                                                                      family schemes for MHD simulations, the present scheme can
+                                                                                      correctly capture MHD tangential and rotational discontinu-
+Figure 15. Time proﬁle of the increase of the in-plane magnetic ﬁeld energy in        ities, as well as the contact discontinuity. The pressure ﬂux is a
+the Kelvin–Helmholtz instability.                                                     weighted average of the left and right states, similar to the
+                                                                                      shock-capturing schemes, and is then corrected to improve the
+Roe and HLLD schemes contaminates the region of interest                              resolution of low Mach number ﬂows in high-beta plasma. In
+and prevents quantitative discussion. Consequently, we                                low-beta plasma, on the other hand, the pressure ﬂux is
+compare the solutions of the MLAU scheme with and without                             comparable to that of the HLLD scheme, and it provides
+the pressure ﬂux correction to check the dependence on the ﬂux                        numerical dissipation sufﬁcient to stabilize the magne-
+function. The latter one, simply replacing cu in Equation (61)                        tized ﬂows.
+by cf, corresponds to an MHD extension of the AUSM+-up                                   We measure the performance of the present scheme through
+scheme. The overall structure of the solution obtained with the                       various benchmark tests, including shocks, waves, and low and
+AUSM+-up scheme is similar to the MLAU scheme in                                      high Mach number ﬂows. In standard benchmark tests (shock
+Figure 16(c); thus, it is not shown here. Figure 18 shows the                         problems in Sections 4.1 and 4.4, and Orszag–Tang vortex in
+time proﬁle of the increment of the spatially-averaged                                Section 4.3), the solution with the present scheme is
+rotational energy r∣uR ∣2 2, thermal energy (P−Pref)/(γ−1),                         comparable to the HLLD scheme, and it is more robust than
+and magnetic energy ∣B∣2 2 - ∣B∣2ref 2 through the RMI,                               the Roe scheme. We verify the advantages of the present
+where Pref and Bref are the solutions without corrugation. The                        scheme through stringent problems. In the problem of the low
+rotational velocity uR satisﬁes  · uR = 0 (Equation (52) in                          Mach number MHD KHI (Section 4.5), the solution with the
+Minoshima et al. 2019) and is kept at zero without corrugation.                       present scheme is independent of the Mach number and agrees
+In the course of the simulation until t=60, the rotational                          with the linear theory and the incompressible solution (“all-
+energy is 1000 times higher than the magnetic ﬁeld energy;                            speed” capability), while the familiar shock-capturing scheme
+thus, the magnetic ﬁeld is continuously ampliﬁed by stretching                        gets worse with decreasing Mach number. This advantage
+(Cao et al. 2008; Sano et al. 2012). The MLAU scheme                                  stems from the pressure ﬂux with a scale of advection speed
+exhibits a higher level of rotational energy and a lower level of                     rather than fast magnetosonic speed (Equation (61)). We expect
+thermal energy than the AUSM+-up scheme. Meanwhile, the                               that the present scheme maintains all-speed capability as long
+level of magnetic energy is comparable between them. This                             as the ﬂow is approximately faster than the Alfvén speed
+indicates that the rotational energy is less dissipated numeri-                       because the pressure ﬂux properly scales down to ∣u∣ = ca , and
+cally into the thermal energy with the MLAU scheme due to                             the magnetic tension ﬂux has a numerical diffusion term with a
+the improved resolution by the pressure ﬂux correction in the                         scale of Alfvén speed inherited from the baseline HLLD
+co-moving frame with the interface (the third and fourth terms                        scheme that will suppress sub-Alfvénic ﬂows. Therefore, we
+of Equation (61) become small). The magnetic energy can be                            consider that the present scheme achieves “quasi-all-speed”
+ampliﬁed to a level comparable to the rotational energy                               capability for super-Alfvénic ﬂows.
+(Minoshima et al. 2019); although, the present simulation does                           The problem of the RMI involves both high and low Mach
+not reach the saturation state owing to the limited computa-                          number ﬂows (Section 4.6). The present scheme can capture a
+tional time and domain. Consequently, we extrapolate the time                         very high Mach number shock without numerical instability,
+proﬁles of the rotational and magnetic energies in 30<t<60                        such as the odd–even decoupling and the Carbuncle phenom-
+with a linear function and then determine the level at the                            ena found in familiar shock-capturing schemes, by virtue of the
+intersection points as a proxy for saturation. The estimated                          shock detection in the mass ﬂux. Given that the shock detection
+level considerably differs according to the ﬂux function:                             solely drops the pressure difference term in the direction
+7.2×10−5 at t=170 for the AUSM+-up scheme, and                                    parallel to the shock that is a possible cause of the numerical
+2.0×10−4 at t=440 for the MLAU scheme.                                            instability (Liou 2000), it does not degrade the accuracy of the
+   This problem undoubtedly veriﬁes that the MLAU scheme                              contact discontinuity, which is of particular interest for the
+can tackle a situation including both the low and high Mach                           RMI. As a consequence of the RMI, the rotational ﬂows grow
+number ﬂows with satisfactory accuracy and stability. The very                        and the magnetic ﬁeld is ampliﬁed there. The evolution of
+high Mach number shock is robustly captured without the                               the rotational energy in the nonlinear stage depends on the
+numerical instability, while the resolution of the low-speed                          resolution of the ﬂux function. The present scheme with the
+ﬂow is improved by the pressure ﬂux correction.                                       pressure ﬂux correction exhibits higher levels of rotational
+
+                                                                                 18
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                               Minoshima, Kitamura, & Miyoshi
+
+
+
+
+Figure 16. Density proﬁle in the Richtmyer–Meshkov instability at t=15. Panels (a)–(c): two-dimensional proﬁle obtained with the Roe, HLLD, and MLAU
+schemes. The arrows represent the direction of the rotational velocity. Panels (d)–(e): one-dimensional proﬁles along the shock surface at y=2.5 and across the spike
+at y=0.3. The blue, red, and black lines correspond to the Roe, HLLD, and MLAU schemes, respectively.
+
+                                                                                          Since the present work employs an explicit time integration
+                                                                                       method, the time step of the simulation is restricted by the CFL
+                                                                                       condition of the propagation speed of the fast mode. Thus, it
+                                                                                       requires a huge number of time steps to solve the dynamics of
+                                                                                       the convective motion in nearly incompressible ﬂows. Owing
+                                                                                       to the CFL restriction, the explicit method is also poor at
+                                                                                       solving problems using local ﬁne grid spacing, e.g., the
+                                                                                       boundary layer problem. An implicit time integration method is
+                                                                                       frequently employed in computational aerodynamics to deal
+                                                                                       with these issues, but the implicit method is not necessarily
+                                                                                       suited for modern massively-parallel supercomputers. Hotta
+                                                                                       et al. (2012) employed the reduced speed of the sound
+                                                                                       technique to relax the CFL restriction and reduce the
+                                                                                       computational cost of low Mach number ﬂow simulations
+                                                                                       with an explicit scheme. Recently, Iijima et al. (2019) modiﬁed
+                                                                                       the technique to tackle low Mach number ﬂows with a large
+                                                                                       density variation. In the new technique, the basic equations are
+Figure 17. Shock-detecting factor θ for the x-component of the mass ﬂux. The
+                                                                                       written in a semiconservative form, and they reduce to a
+black, blue, and red symbols represent the proﬁle at x=0, 0.25, and 0.5,             conservative form when the sound speed is unchanged.
+respectively.                                                                          Therefore, it is applicable to both low and high Mach number
+                                                                                       ﬂows. Combining this technique with the present scheme might
+energy than the scheme without the correction due to the                               enhance both the accuracy of the solution and the computa-
+reduced numerical dissipation. Thus, it may provide higher                             tional efﬁciency of the simulations of wide-ranging Mach
+saturation levels of the magnetic energy.                                              number ﬂows.
+
+                                                                                 19
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                               Minoshima, Kitamura, & Miyoshi
+
+                                                                                             where
+                                                                                                   ⎡u r         0⎤    ⎡- a 2 0 1 ⎤     ⎡ 1     r ⎤
+                                                                                                   ⎢             ⎥    ⎢           ⎥    ⎢ -   0     ⎥
+                                                                                                                1⎥
+                                                                                               A = ⎢0 u
+                                                                                                                        0    1 0 ⎥         2
+                                                                                                                   ,L=⎢             ,R=⎢ a     a ⎥,
+                                                                                                   ⎢            r⎥    ⎢0        1 ⎥    ⎢0    1 0 ⎥
+                                                                                                   ⎢             ⎥           0
+                                                                                                   ⎣ 0 ra2      u⎦    ⎢
+                                                                                                                      ⎣        ra ⎥
+                                                                                                                                  ⎦    ⎢
+                                                                                                                                       ⎣ 0   0 ra ⎥⎦
+                                                                                                                                                           (A2)
+                                                                                             and (LAR) is symmetric. Applying a preconditioning matrix
+                                                                                             G-1 = diag (1, 1,  ) proposed by Weiss & Smith (1995), the
+                                                                                             preconditioned Jacobian expressed in primitive variables (ρ, u,
+                                                                                             P) is obtained as
+                                                                                                                       ⎡                   u⎤
+                                                                                                                       ⎢ u r   - (1 -  ) 2 ⎥
+                                                                                                                                          a
+                                                                                                                       ⎢                     ⎥
+                                                                                                   A˜ = R (G-1LAR) L = ⎢ 0 u    1            ⎥,            (A3)
+                                                                                                                       ⎢        r            ⎥
+                                                                                                                       ⎢                     ⎥
+                                                                                                                       ⎣ 0 ra  u
+                                                                                                                              2
+                                                                                                                                             ⎦
+                                                                                             and its eigenvalues and left- and right-eigenvectors are
+
+                                                                                                     l1 = u , l1 = (1, 0, - 1 a2) , r1 = (1, 0, 0)T ,      (A4)
+
+                                                                                                                ⎛        ra+a-        a+       ⎞
+                                                                                              l2 = u - a+, l2 = ⎜0, -              ,           ⎟,
+                                                                                                                ⎝     (a+ + a-) a (a+ + a-) a ⎠
+                                                                                                                                 2           2
+Figure 18. Time proﬁle of the increment of, panel (a), the rotational energy
+r∣uR ∣2 2 , panel (b), the thermal energy (P−Pref)/(γ−1), and panel (c), the                     ⎛      a2      ⎞T
+magnetic energy ∣B∣2 2 - ∣B∣2ref 2 through the Richtmyer–Meshkov instabil-
+                                                                                               r2 = ⎜1, -     , a 2⎟ ,
+                                                                                                    ⎝     ra+      ⎠
+ity. Pref and Bref are the solutions in the absence of the instability. The solid red
+and dashed black lines are obtained with the AUSM+-up (MLAU without the                                                                                    (A5)
+pressure ﬂux correction) scheme and the MLAU scheme.
+                                                                                                                ⎛    ra+a-        a-       ⎞
+                                                                                              l3 = u + a-, l3 = ⎜0,            ,           ⎟,
+   Through the benchmark tests, we verify that the present                                                      ⎝ (a+ + a-) a (a+ + a-) a ⎠
+                                                                                                                             2           2
+scheme satisﬁes the following three properties, namely, (i) a
+robust capturing of one- and multidimensional shocks, (ii) an                                       ⎛   a2      ⎞T
+                                                                                               r3 = ⎜1,    , a 2⎟ ,                                        (A6)
+accurate solution of low Mach number ﬂows, i.e., quasi-all-                                         ⎝ ra-       ⎠
+speed capability for super-Alfvénic ﬂows, and (iii) a correct
+capturing of MHD discontinuities. Hence, the present scheme                                  where
+must be a promising tool for MHD simulations of space and
+astrophysical plasmas that include both low and high Mach                                                 [ (1 -  )2 u 2 + 4  a 2  (1 -  ) u ]
+number ﬂows, shocks, turbulence, and magnetic ﬁeld inhomo-                                           a =
+                                                                                                                             2
+geneities, for example, the solar system from the Sun’s interior                                          ⎧a,                  if  = 1,
+and atmosphere, interplanetary space, planetary magneto-                                                 =⎨                                                (A7)
+sphere, termination shock, and beyond.                                                                    ⎩ ( 5 ∣u ∣  u ) 2,  if  = u2 a2  1
+
+   We thank the anonymous referee for carefully reviewing our                                modiﬁes the wave speed to be a scale of the advection speed if
+manuscript and giving insightful comments. We thank                                          ò∼M2. From the characteristic relations l · dQ = 0 ,
+T. Hanawa, Y. Matsumoto, H. Hotta, T. Mamashita, and
+R. Matsumoto for their fruitful discussion. We also thank                                                   ⎧ dP - ra-du = 0, along l2 ,
+H. Iijima for reading our manuscript and giving comments.                                                   ⎨                                              (A8)
+                                                                                                            ⎩ dP + ra+du = 0, along l3.
+K.K. was partially supported by JSPS KAKENHI grant No.
+JP19K04834. We would like to thank Editage (www.editage.com)                                 Discretizing them along characteristics (λ2<0, λ3>0), we
+for English language editing.                                                                approximate the interface pressure as
+                        Appendix                                                                                1
+                                                                                                       P1 2 =     [PL + PR - r1 2 aDu] if  = 1            (A9)
+   Hyperbolic System of Preconditioned Euler Equations                                                          2
+    The one-dimensional Euler equations are rewritten for symme-
+trizing variables dQ = [dS , du , dP rc]T , dS = dP - a2dr as                                      1⎡           5             ⎤
+                                                                                               =    ⎢PL + PR -    r1 2∣u1 2∣Du⎥ if  = u2 a2  1.
+                       ¶Q         ¶Q                                                               2⎣          2              ⎦
+                          + (LAR)    = 0,                                     (A1)
+                       ¶t         ¶x                                                                                                            (A10)
+
+
+                                                                                        20
+The Astrophysical Journal Supplement Series, 248:12 (21pp), 2020 May                                                        Minoshima, Kitamura, & Miyoshi
+
+The velocity difference term in Equation (A10) has the same                      Liou, M.-S. 2000, JCoPh, 160, 623
+scaling as the pressure ﬂux corrected in Section 3.3, while the                  Liou, M.-S. 2006, JCoPh, 214, 137
+                                                                                 Liou, M.-S., & Steffen, C. J. 1993, JCoPh, 107, 23
+term originally scales as the speed of sound in Equation (A9).                   Londrillo, P., & Del Zanna, L. 2000, ApJ, 530, 508
+                                                                                 Maron, J., & Goldreich, P. 2001, ApJ, 554, 1175
+                             References                                          Matsumoto, Y., Asahina, Y., Kudoh, Y., et al. 2019, PASJ, 71, 83
+                                                                                 Meshkov, E. E. 1972, FlDy, 4, 101
+Balsara, D. S. 1998, ApJS, 116, 119                                              Mignone, A., Bodo, G., Massaglia, S., et al. 2007, ApJS, 170, 228
+Balsara, D. S. 2010, JCoPh, 229, 1970                                            Mignone, A., Tzeferacos, P., & Bodo, G. 2010, JCoPh, 229, 5896
+Balsara, D. S. 2012, JCoPh, 231, 7476                                            Minoshima, T., Miyoshi, T., & Matsumoto, Y. 2019, ApJS, 242, 14
+Balsara, D. S., & Kim, J. 2004, ApJ, 602, 1079                                   Miyoshi, T., & Kusano, K. 2005, JCoPh, 208, 315
+Balsara, D. S., Rumpf, T., Dumbser, M., & Munz, C.-D. 2009, JCoPh,               Nishikawa, H., & Kitamura, K. 2008, JCoPh, 227, 2560
+    228, 2480                                                                    Orszag, S. A., & Tang, C.-M. 1979, JFM, 90, 129
+Balsara, D. S., & Spicer, D. S. 1999, JCoPh, 149, 270                            Pandolﬁ, M., & D’Ambrosio, D. 2001, JCoPh, 166, 271
+Brio, M., & Wu, C. C. 1988, JCoPh, 75, 400                                       Qiu, J., & Shu, C.-W. 2002, JCoPh, 183, 187
+Cao, J., Wu, Z., Ren, H., & Li, D. 2008, PhPl, 15, 042102                        Quirk, J. J. 1994, IJNMF, 18, 555
+Dai, W., & Woodward, P. R. 1994, JCoPh, 111, 354                                 Richtmyer, R. D. 1960, Commun. Pure Applied Math., 13, 297
+Felker, K. G., & Stone, J. M. 2018, JCoPh, 375, 1365                             Roe, P. L. 1981, JCoPh, 43, 357
+Fromang, S., Hennebelle, P., & Teyssier, R. 2006, A&A, 457, 371                  Sano, T., Inoue, T., & Nishihara, K. 2013, PhRvL, 111, 205001
+Godunov, S. K. 1959, Matematicheskii Sbornik, 47, 271, http://mi.mathnet.        Sano, T., Nishihara, K., Matsuoka, C., & Inoue, T. 2012, ApJ, 758, 126
+    ru/eng/msb4873                                                               Schekochihin, A. A., Cowley, S. C., Taylor, S. F., Maron, J. L., &
+Gottlieb, S., & Shu, C. W. 1998, MaCom, 67, 73                                      McWilliams, J. C. 2004, ApJ, 612, 276
+Han, S.-H., Lee, J.-I., & Kim, K. H. 2009, AIAAJ, 47, 970                        Shen, Y., Zha, G., & Huerta, M. A. 2012, JCoPh, 231, 6233
+Hanawa, T., Mikami, H., & Matsumoto, T. 2008, JCoPh, 227, 7952                   Shima, E., & Kitamura, K. 2011, AIAAJ, 49, 1693
+Harten, A., Lax, P., & van Leer, B. 1983, SIAMR, 35, 25                          Shima, E., & Kitamura, K. 2013, AIAAJ, 51, 992
+Hotta, H., Rempel, M., Yokoyama, T., Iida, Y., & Fan, Y. 2012, A&A,              Shu, C., & Osher, S. 1988, JCoPh, 77, 439
+    539, A30                                                                     Shu, C.-W. 2009, SIAMR, 51, 82
+Iijima, H., Hotta, H., & Imada, S. 2019, A&A, 622, A157                          Steger, J. L., & Warming, R. F. 1981, JCoPh, 40, 263
+Kim, S.-s., Kim, C., Rho, O.-H., & Kyu Hong, S. 2003, JCoPh, 185, 342            Stone, J. M., Gardiner, T. A., Teuben, P., Hawley, J. F., & Simon, J. B. 2008,
+Kitamura, K., & Balsara, D. S. 2019, ShWav, 29, 611                                 ApJS, 178, 137
+Kitamura, K., & Shima, E. 2013, JCoPh, 245, 62                                   Toro, E. F., Spruce, M., & Speares, W. 1994, ShWav, 4, 25
+Kritsuk, A. G., Nordlund, Å., Collins, D., et al. 2011, ApJ, 737, 13             van Leer, B. 1979, JCoPh, 32, 101
+Lee, D., & Deane, A. E. 2009, JCoPh, 228, 952                                    Wada, Y., & Liou, M.-S. 1997, SIAM J. Sci. Comput., 18, 633
+Lesur, G., & Longaretti, P. Y. 2005, A&A, 444, 25                                Weiss, J. M., & Smith, W. A. 1995, AIAAJ, 33, 2050
+Li, S. 2005, JCoPh, 203, 344                                                     Xisto, C. M., Páscoa, J. C., & Oliveira, P. J. 2014, JCoPh, 275, 323
+Liou, M.-S. 1996, JCoPh, 129, 364                                                Zenitani, S., & Miyoshi, T. 2011, PhPl, 18, 022105
+
+
+
+
+                                                                            21
+

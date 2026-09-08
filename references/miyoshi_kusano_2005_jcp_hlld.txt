@@ -1,0 +1,1705 @@
+                                     Journal of Computational Physics 208 (2005) 315–344
+                                                                                                        www.elsevier.com/locate/jcp
+
+
+
+
+             A multi-state HLL approximate Riemann solver for
+                        ideal magnetohydrodynamics
+                                    Takahiro Miyoshi a,*, Kanya Kusano b
+       a
+           Department of Physical Science, Graduate School of Science, Hiroshima University, Higashi-Hiroshima 739-8526, Japan
+             b
+               Earth Simulator Center, Japan Agency for Marine-Earth Science and Technology, Yokohama 236-0001, Japan
+
+                   Received 15 November 2004; received in revised form 7 February 2005; accepted 18 February 2005
+                                                   Available online 14 April 2005
+
+
+
+
+Abstract
+
+    A new multi-state Harten–Lax–van Leer (HLL) approximate Riemann solver for the ideal magnetohydrodynamic
+(MHD) equations is developed based on the assumption that the normal velocity is constant over the Riemann fan.
+This assumption is same as that used in the HLLC (‘‘C’’ denotes Contact) approximate Riemann solver for the Euler
+equations. From the assumption, it is naturally derived that the Riemann fan should consist of four intermediate states
+for Bx 6¼ 0, whereas the number of the intermediate states is reduced to two when Bx = 0. Since the intermediate states
+satisﬁed with all jump conditions in this approximate Riemann system are analytically obtained, the multi-state HLL
+Riemann solver can be constructed straightforwardly. It is shown that this solver can exactly resolve isolated discon-
+tinuities formed in the MHD system, and hence named as HLLD Riemann solver. (Here, ‘‘D’’ stands for Discontinu-
+ities.) It is also analytically proved that the HLLD Riemann solver is positively conservative like the HLLC Riemann
+solver. Indeed, the HLLD Riemann solver corresponds to the HLLC Riemann solver when the magnetic ﬁeld vanishes.
+Numerical tests demonstrate that the HLLD Riemann solver is more robust and eﬃcient than the linearized Riemann
+solver, and its resolution is equally good. It indicates that the HLLD solver must be useful in practical applications for
+the ideal MHD equations.
+ 2005 Elsevier Inc. All rights reserved.
+
+Keywords: Magnetohydrodynamics; Approximate Riemann solver; HLL; HLLC; HLLD; Positivity
+
+
+
+1. Introduction
+
+  The magnetohydrodynamic (MHD) equations are the basic equations to represent macroscopic phe-
+nomena in various ﬁelds such as laboratory, space, and astrophysical plasmas, and the development of
+
+ *
+     Corresponding author.
+     E-mail address: miyoshi@sci.hiroshima-u.ac.jp (T. Miyoshi).
+
+0021-9991/$ - see front matter  2005 Elsevier Inc. All rights reserved.
+doi:10.1016/j.jcp.2005.02.017
+316                   T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344
+
+accurate, eﬃcient, and robust numerical schemes for MHD becomes increasingly important. Particularly,
+in space and astrophysical plasmas, it can often happen that the density becomes rather low and the inter-
+nal energy is less dominant than the kinetic energy and, in some cases, the magnetic energy. The physical
+solutions of the MHD equations possess a positivity preserving property such that positive densities and
+positive pressures must be retained in every situation. However, numerical simulations for such low density
+plasmas sometimes generate unphysical solutions of negative densities or negative pressures. Therefore,
+robustness of the MHD scheme is quite important for practical applications with realistic parameters.
+   In order to obtain accurate numerical solutions for the ideal MHD equations, Brio and Wu [4] ﬁrst
+developed the Roe-type linearized Riemann solver [26] for MHD with c = 2. For general c, construction
+of the Roe-type matrix and corresponding Roe-type average, which are more elaborate than those for
+c = 2, has been pursued, for instance, by Cargo and Gallice [5] or Balsara [1]. Practically, an arithmetic
+average was often utilized instead of the Roe average, and it seems to work well [27]. Although the linear-
+ized Riemann solver for MHD is considerably more complicated than for the Euler equations and less eﬃ-
+cient than ‘‘classical’’ MHD schemes such as Lax–Wendroﬀ, it is accurate and robust enough and also
+eﬃcient in comparison with the nonlinear Riemann solver [6,27]. Thus, the linearized Riemann solver might
+be a standard solver for the practical MHD simulations at present (e.g., [18,22,25,28]).
+   However, it has been shown that any linearization of certain Riemann problems for the Euler equations
+will yield a negative density or pressure, and therefore, no linearized Riemann solver for the Euler equations
+can maintain the positivity of density and pressure in every situation [9]. Moreover, the linearized Riemann
+solvers for MHD become more problematic than for the Euler equations in terms of positivity because neg-
+ative pressures may be produced by numerical errors of not only the kinetic energy but also the magnetic
+energy.
+   As for the Euler solvers, the positivity preserving property is assured by variants of the ﬂux vector split-
+ting (FVS) method [12], the Harten–Lax–van Leer (HLL) approximate Riemann solver [9] and the HLLC
+Riemann solver (where ‘‘C’’ stands for Contact wave) [2]. These schemes are said to be positively conser-
+vative. Particularly, we notice that the HLLC Riemann solver where the intermediate states in the Riemann
+fan are separated into two intermediate states by a contact discontinuity can resolve isolated contact dis-
+continuities exactly. The other positively conservative schemes cannot resolve those discontinuities and,
+as a consequence, are quite dissipative.
+   On the other hand, for MHD, appropriate FVS schemes equivalent to the Euler equations have not been
+constructed so far partly because the ﬂux function of the MHD equations is not homogeneous of degree
+one in the vector of the conservative variables. The positivity preserving property of the HLL Riemann sol-
+ver for MHD was investigated by Janhunen [16], where the MHD equations are modiﬁed to allow numer-
+ical magnetic monopoles, and conﬁrmed from the extensive numerical experiments. Recently, Gurski [13]
+extended the HLLC Riemann solver of the Euler equations to the MHD equations and proposed an
+HLLC-type MHD Riemann solver and a modiﬁed version of the HLLC solver called smooth HLLC.
+The smooth HLLC was thought to be more accurate than the HLLC-type solver and a positively conser-
+vative variant of Lindes two-state approximate Riemann solver [20,21]. Independently, Li [19] also pre-
+sented another variant of the HLLC-type Riemann solver for MHD. However, those solvers may not
+exactly resolve isolated rotational discontinuities probably due to the two-state approximation in the
+Riemann fan, although the HLLC-type Riemann solvers are more eﬃcient than the standard linearized
+Riemann solver. As a result, it seems that the numerical resolution of the HLLC-type MHD solvers is
+not comparable with that of the linearized solver except for fast and entropy waves.
+   Thus, the previous schemes that are positively conservative for MHD are not satisfactory with respect to
+resolution, although the positivity preserving property is quite important in practical applications. There-
+fore, in this paper, a new scheme for the MHD equations is developed, which can satisfy the requirements
+of both positivity and high resolution nearly comparable to the linearized Riemann solver. The new solver
+is constructed by extending the HLL and the HLLC solvers for the Euler equations. Although there is
+                       T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344         317
+
+another essential problem for multi-dimensional MHD concerned with the violation of the divergence
+constraint (see, e.g., [8,16]), discussions of positivity here are restricted to one-dimensional MHD. Our
+HLL based solver for MHD can exactly resolve not only isolated contact discontinuities but also all other
+isolated discontinuities formed in the ideal MHD system, and therefore, the solver is named as HLLD.
+   The organization of the paper is as follows: After introduction, the MHD equations and their nature are
+presented in Section 2. We brieﬂy review the single-state and two-state HLL approximate Riemann solvers
+in Sections 3 and 4. In Section 5.1, new multi-state approximate Riemann solver for MHD, called HLLD
+solver, is proposed. The important properties of the HLLD solver such as an exact resolution of disconti-
+nuities and a positivity preserving property are argued in Sections 5.2 and 5.3. In Section 6, several numer-
+ical tests are performed, and those results are discussed. Finally, concluding remarks are given in Section 7.
+
+
+2. Governing equations
+
+  General one-dimensional hyperbolic conservation laws can be written as
+     oU oF
+        þ    ¼ 0;                                                                                         ð1Þ
+     ot   ox
+where all eigenvalues of the Jacobian A = oF/oU are real and distinct, and the set of corresponding eigen-
+vectors is complete. In one-dimensional ideal MHD equations, the conservative variable vector U and the
+ﬂux function F are given by
+            0    1         0                         1
+              q                        qu
+            B    C         B                         C
+            B qu C         B    qu2 þ pT  B2x       C
+            B    C         B                         C
+            B qv C         B      qvu   B   B       C
+            B    C         B               x   y     C
+            B    C         B                         C
+      U ¼ B qw C; F ¼ B          qwu  Bx Bz         C;                                                ð2Þ
+            B    C         B                         C
+            B By C         B       By u  B x v      C
+            B    C         B                         C
+            B    C         B                         C
+            @ Bz A         @      Bz u  B x w       A
+               e             ðe þ pT Þu  Bx ðv  BÞ
+where v = (u, v, w), B = (Bx, By, Bz), pT denotes the total pressure, and other notations are standard. Here,
+due to the divergence free condition of the magnetic ﬁeld, Bx is given as a constant in one dimension. The
+pressure p and the total pressure pT are given by
+                                      
+                       1     2   1 2                       1 2
+     p ¼ ðc  1Þ e  qjvj  jBj            and pT ¼ p þ jBj ;
+                       2         2                         2
+
+respectively.
+   It is well known that these equations have seven eigenvalues which correspond to two Alfvén waves, four
+magneto-acoustic (two fast and two slow) waves, and one entropy wave:
+     k2;6 ¼ u  ca ;   k1;7 ¼ u  cf ;        k3;5 ¼ u  cs ;        k4 ¼ u;                              ð3Þ
+where
+                            8           r
+                                         ﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+                                                              2                    91=2
+                            >
+                            >                                                     2>
+                                                                    4cpBx >
+                                     2                      2
+          jBx j             <cp þ jBj      cp þ jBj                                =
+     ca ¼ pﬃﬃﬃ ;   cf;s ¼                                                                  :
+            q               >
+                            >                         2q                         >
+                                                                                 >
+                            :                                                    ;
+318                    T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344
+
+It is obvious that the inequalities
+      k 1 6 k2 6 k3 6 k4 6 k5 6 k6 6 k7
+are satisﬁed, and thus, some eigenvalues may coincide depending on the direction and the strength of the
+magnetic ﬁeld. Therefore, the MHD equations are not strictly hyperbolic, and, as a consequence, the com-
+plete set of the eigenvectors is not obtained straightforwardly [1,4,5]. In addition, as ﬁrst pointed out by
+Brio and Wu [1], the ﬂux function F is not convex in the vector U in the MHD system.
+    Since the MHD equations possess non-convexity as well as non-strict hyperbolicity, a solution of the
+Riemann problem may be composed not only of ordinary shock and rarefaction waves but also other waves
+as compound waves and overcompressible shocks [4,17]. Although it is not so easy to solve the Riemann
+problem for such MHD system in general, the discontinuous solutions formed by the regular waves can be
+discussed easily using the Rankine–Hugoniot relations, S[U] = [F], where S denotes the speed of the discon-
+tinuities and [ Æ ] indicates the jump of the states ahead of and behind the discontinuities, U1 and U2. When
+we consider solutions for which u1, u2 6¼ S, i.e., there is net particle transport across the discontinuities, and
+Bx 6¼ 0, three types of shock solutions are obtained. In the cases of the compressible solutions, that is,
+q1 < q2 and u1 > u2, the fast and slow shocks are realized, in which both shocks conserve the signs of the
+tangential components of the magnetic ﬁeld. While the magnetic ﬁeld is strengthened behind the fast shock,
+it is weakened behind the slow shock. On the other hand, the incompressible condition for which q1 = q2
+and u1 = u2 gives the following relations:
+                     h        i         pﬃﬃﬃ              pﬃﬃﬃ
+       ½q ¼ ½p ¼ B2y þ B2z ¼ 0;  q½v ¼ ½By ;  q½w ¼ ½Bz ;                                               ð4Þ
+
+across the discontinuity which moves with the Alfvén wave speed k2 or k6. This solution is called the Alfvén
+shock. Since thermodynamical quantities, q and p, are not changed across the discontinuity, it is also called
+the rotational discontinuity. Also, the discontinuity moving with the entropy wave speed k4 must be satisﬁed
+with
+
+      ½By  ¼ ½Bz  ¼ ½v ¼ ½w ¼ ½p ¼ 0                                                                      ð5Þ
+
+for the case of Bx 6¼ 0, or
+      "              #
+           B2y þ B2z
+        pþ             ¼0                                                                                      ð6Þ
+               2
+
+for Bx = 0. The former discontinuity is called the contact discontinuity. At the contact discontinuity, the tan-
+gential components of the velocity and magnetic ﬁeld must be continuous. The latter relation, on the other
+hand, indicates that the tangential velocity and the tangential magnetic ﬁeld may have a jump across the
+discontinuity. Thus, that is called the tangential discontinuity.
+
+
+
+3. HLL Riemann solver
+
+   Let us consider general hyperbolic conservation laws (1), where U and F are not speciﬁed here. The inte-
+gral form of the conservation laws for a rectangle (x1, x2) · (t1, t2) is given by
+      Z x2               Z x2               Z t2                  Z t2
+           Uðx; t2 Þdx       Uðx; t1 Þdx þ      FðUðx2 ; tÞÞdt       FðUðx1 ; tÞÞdt ¼ 0:              ð7Þ
+       x1                 x1                 t1                     t1
+
+Harten et al. [15] showed that the Godunov-type scheme for (1) can be written in conservative form:
+                         T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344           319
+
+                      Dt                                         
+      Unþ1
+       i   ¼ Uni         F Rð0; Uni ; Uniþ1 Þ  F Rð0; Uni1 ; Uni Þ ;
+                      Dx
+where n and i indicate a time step and a cell number, respectively, and Rðx=t; Uni ; Uniþ1 Þ is the approximate
+solution of the Riemann problem around the interface xi+1/2. In this form, the appropriate numerical ﬂuxes
+are obtained by applying the integral conservation laws (7) over the rectangle (xi, xi+1/2) · (tn, tn+1) as
+                      Z xiþ1=2 
+                    1            x  xiþ1=2 n n            xiþ1=2  xi n
+      Fiþ1=2 ¼ Fi            R            ; Ui ; Uiþ1 dx þ            Ui ;                                 ð8Þ
+                    Dt xi           Dt                          Dt
+where Fiþ1=2 ¼ FðRð0; Uni ; Uniþ1 ÞÞ; Fi ¼ FðUni Þ, and Dt = tn+1  tn. We note that the exact solution of the Rie-
+mann problem Rexact produces the ﬂuxes of the original Godunov scheme. The numerical ﬂuxes Fi+1/2 ob-
+tained by the other integral conservation laws over (xi+1/2, xi+1) · (tn, tn+1) must coincide with (8) due to the
+consistency with the integral form of conservation laws over (xi, xi+1) · (tn, tn+1).
+   Particularly, Harten et al. [15] proposed one of the simplest Godunov-type scheme, the so-called HLL
+approximate Riemann solver. The HLL Riemann solver is constructed by assuming an average intermedi-
+ate state between the fastest and slowest waves. Consider a ‘‘subsonic’’ solution of the single-state approx-
+imate Riemann problem at the interface between the left and right states, UL and UR, where the minimum
+signal speed SL and the maximum signal speed SR are negative and positive, respectively (Fig. 1). By apply-
+ing the integral conservation laws (7) over the Riemann fan, (DtSL, DtSR) · (0, Dt), the intermediate state is
+given by
+             S R UR  S L UL  FR þ FL
+      U ¼                             :                                                                       ð9Þ
+                      SR  SL
+After that, as denoted by (8), the integral over (DtSL, 0) · (0, Dt) gives the HLL ﬂuxes,
+             S R FL  S L FR þ S R S L ðUR  UL Þ
+      F ¼                                        :                                                           ð10Þ
+                           SR  SL
+If both signal speeds are of the same sign, the ﬂuxes must be evaluated only from the upstream side. There-
+fore, in general, the HLL ﬂuxes become
+               8
+               < FL if S L > 0;
+               >
+      FHLL ¼        F   if S L 6 0 6 S R ;                                                                   ð11Þ
+                >
+                :
+                    FR   if S R < 0:
+Practically, (11) can be uniﬁed with (10) if the signal speeds are replaced by SL = min(SL, 0) and
+SR = max(SR, 0).
+   In order to complete the HLL Riemann solver, SR and SL must be estimated appropriately. Correctly
+speaking, the upper and lower bounds of the signal speed in the system cannot be obtained without infor-
+mation of the exact Riemann solution [2]. Particularly, the diﬃculty for the MHD equations may be
+
+
+                                                             t
+                                           SL = x/t                           SR = x/t
+
+                                                             U∗
+
+                                                 UL                      UR
+                                                                                     x
+
+                          Fig. 1. Schematic structure of the Riemann fan with one intermediate state.
+320                       T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344
+
+increased because bounded waves are capable of compound waves. Therefore, we should determine the
+algorithm as exactly as possible so as not to underestimate the minimum and maximum signal speeds.
+For example, Davis [7] gave those speeds as
+      S L ¼ min ½k1 ðUL Þ; k1 ðUR Þ;
+                                                                                                          ð12Þ
+      S R ¼ max ½km ðUL Þ; km ðUR Þ;
+or Einfeldt et al. [9] used the algorithm as
+                                
+      S L ¼ min k1 ðUL Þ; k1 URoe ;
+                                                                                                       ð13Þ
+      S R ¼ max km URoe ; km ðUR Þ ;
+where k1 and km are the smallest and largest eigenvalues of (1), and kj(URoe) denotes the eigenvalue of the
+Roe matrix. Although these are not correct bounds of the signal speed [2], these algorithms seem to be
+highly eﬀective. Indeed, the HLL solver for the Euler equations with appropriate choices for SL and SR
+is extremely robust since it satisﬁes an entropy inequality automatically [7] and ensures a positivity preserv-
+ing property [9]. The robustness of the HLL solver is also expected for the MHD equations [16].
+    However, the HLL solver cannot resolve isolated discontinuities and, as a result, is quite dissipative be-
+cause the solution of the Riemann problem is approximated by one intermediate state. Therefore, it is a
+natural thought that the single-state approximation should be extended to a two-state approximation in
+order to be more accurate while maintaining the nice properties.
+
+
+4. Two-state HLL Riemann solver
+
+4.1. HLLC Riemann solver for the Euler equations
+
+   In this subsection, we devote attention to the solver for the Euler equations, which are obtained by set-
+ting the magnetic ﬁeld to zero in (2). In [15], it was suggested that a two-state approximate Riemann solver
+could be constructed to exactly resolve isolated contact discontinuities as well as isolated shocks although
+that was not implemented practically. However, Toro et al. [29] proposed a simple implementation of the
+two-state HLL Riemann solver for the Euler equations.
+   Consider the approximate Riemann problem in the Riemann fan which is separated into the left and the
+right intermediate states, UL and UR , by the contact wave, SM, as shown in Fig. 2. Toro et al. [29] assumed
+that the normal component of the velocity is constant over the Riemann fan, that is,
+      uL ¼ uR ¼ S M :
+Particularly, Batten et al. [2] insisted that SM should be evaluated from the HLL average (9) as
+
+
+
+
+                                                             t
+                                            SL                   SM              SR
+
+                                                       UL∗            UR∗
+
+                                                 UL                         UR
+                                                                                      x
+
+                          Fig. 2. Schematic structure of the Riemann fan with two intermediate states.
+                           T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344     321
+
+              ðquÞ ðS R  uR ÞqR uR  ðS L  uL ÞqL uL  pR þ pL
+     SM ¼          ¼                                              ;                                      ð14Þ
+               q           ðS R  uR ÞqR  ðS L  uL ÞqL
+where SL and SR are estimated by (12) or (13). Once SM is given by (14), the jump conditions across the Sa
+wave,
+     S a Ua  Fa ¼ S a Ua  Fa ;                                                                       ð15Þ
+where a = L or R, give the pressure in the Riemann fan as
+     p ¼ pL ¼ pL þ qL ðS L  uL ÞðS M  uL Þ
+        ¼ pR ¼ pR þ qR ðS R  uR ÞðS M  uR Þ:                                                          ð16Þ
+These equalities are consistent with the fact that the pressure does not change across the contact disconti-
+nuity. Also, other intermediate states are derived from (15):
+                  S a  ua
+     qa ¼ qa              ;                                                                             ð17Þ
+                  Sa  SM
+
+     va ¼ va ;                                                                                          ð18Þ
+
+     wa ¼ wa ;                                                                                          ð19Þ
+
+             ðS a  ua Þea  pa ua þ p S M
+     ea ¼                                  :                                                            ð20Þ
+                        Sa  SM
+Thus, we obtain the complete set of Ua and Fa . It is certain that the jump condition across the middle wave
+SM is satisﬁed. Since the integral conservation laws over (SLDt, 0) · (0, Dt) for SMP0 and
+(0, SRDt) · (0, Dt) for SM60 coincide with (15), the two-state HLL ﬂuxes become
+              8
+              > FL             if S L > 0;
+              >
+              >
+              < F             if S L 6 0 6 S M ;
+                 L
+      FHLLC ¼                                                                                            ð21Þ
+              >
+              >
+              > F             if S M 6 0 6 S R ;
+              : R
+                FR             if S R < 0:
+This solver is called HLLC Riemann solver since the HLLC solver can resolve isolated contact discontinu-
+ities exactly [2,29].
+    Batten et al. [2] showed that the HLLC solver is positively conservative if the conditions,
+                  sﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ                 sﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+                      c1                       c1
+       S L < uL               aL ; S R > uR þ              aR                                        ð22Þ
+                       2c                          2c
+                                   pﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+where a is the sound speed cp=q, are satisﬁed. These are the same conditions as those for the single-state
+HLL Riemann solver shown by Einfeldt et al. [9] exactly and always satisﬁed by the estimates of (12) or
+(13).
+
+4.2. HLLC-type Riemann solver for the MHD equations
+
+    Before constructing the new solver, some approaches to the extension of the HLLC Riemann solver for
+the Euler equations to the MHD equations are worth reviewing and discussing.
+    Recently, Gurski [13] developed the HLLC-type Riemann solver for ideal MHD, where the Riemann fan
+is separated into two intermediate states, UL and UR , in the same way as the HLLC Riemann solver. As an
+322                            T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344
+
+estimation of SL and SR, the algorithm (13) is adopted. Also, the middle wave SM is evaluated from the
+HLL average like the HLLC. In MHD, the total pressure must be continuous across the middle wave in-
+stead of the pressure in the Euler equations as found from (5) or (6). Therefore, (16) is replaced by
+
+      pT ¼ pTL þ qL ðS L  uL ÞðS M  uL Þ
+          ¼ pTR þ qR ðS R  uR ÞðS M  uR Þ:                                                                 ð23Þ
+
+Since the normal velocity in the Riemann fan is assumed to be constant, the densities in the intermediate
+states qa are given by the same as the HLLC Riemann solver, (17). In the case of Bx = 0, the tangential
+momentum equations of MHD coincide with those of the Euler equations. Also, the tangential components
+of the magnetic ﬁeld behave like passive scalars. Therefore, in this case, the intermediate states,
+      va ¼ va ;                                                                                             ð24Þ
+
+      wa ¼ wa ;                                                                                             ð25Þ
+
+                     S a  ua
+      By a ¼ By a            ;                                                                              ð26Þ
+                     Sa  SM
+
+                     S a  ua
+      Bza ¼ Bza              ;                                                                              ð27Þ
+                     Sa  SM
+
+              ðS a  ua Þea  pTa ua þ pT S M
+      ea ¼                                    ;                                                             ð28Þ
+                          Sa  SM
+are easily obtained by the similar procedure for the HLLC solver. In the case of Bx 6¼ 0, on the other hand,
+the intermediate states from (24)–(28) are not consistent with the jump condition on the contact disconti-
+nuity (5) in which the tangential components of the velocity and magnetic ﬁeld must be continuous. There-
+fore, those are replaced by the HLL average (9) as
+                           
+                      ðqvÞ
+      vL ¼ vR ¼           v ;                                                                            ð29Þ
+                       q
+
+                       ðqwÞ
+      wL ¼ wR ¼             w ;                                                                          ð30Þ
+                         q
+
+      By L ¼ By R ¼ By ;                                                                                  ð31Þ
+
+      BzL ¼ BzR ¼ Bz ;                                                                                    ð32Þ
+
+              ðS a  ua Þea  pTa ua þ pT S M þ Bx ðva  Ba  v  B Þ
+      ea ¼                                                              :                                   ð33Þ
+                                      Sa  SM
+Finally, Fa are computed from each jump condition. This solver is referred to as HLLC-G Riemann solver
+in this paper.
+   It is found that the ﬂuxes obtained by (29)–(33) are not reduced to those by (24)–(28) in the limit of
+Bx = 0, and partly correspond to the single-state HLL ﬂuxes. Therefore, the HLLC-G Riemann solver can-
+not simulate the structures related to the Alfvén and slow waves with high enough resolution although iso-
+lated contact discontinuities as well as isolated fast shocks can be resolved exactly.
+   In order to resolve the discontinuities across the slow and Alfvén waves sharply, Gurski [13] also pro-
+posed another method, as it were extended HLLC-type solver, where the intermediate states are obtained
+                        T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344          323
+
+by the jump conditions on Sa (15) properly. (These intermediate states will be shown later explicitly by (44)–
+(48) in subsection 5.1.) Although these are reduced to (24)–(28) in the case of Bx = 0, the jump condition
+across the middle wave is not satisﬁed, and thus, the conservation laws in the Riemann fan are broken
+in the sense of HLL-type solver. Consequently, as shown in Fig. 5 of [13], unphysical oscillations are pro-
+duced even in the simple one-dimensional shock tube test. To remove these oscillations, a certain dissipa-
+tion was also introduced in analogy with Lindes Riemann solver [20,21].
+   As another approach to recover the resolution of the HLLC-G solver and to suppress unphysical oscil-
+lations in the extended HLLC-type solver, by introducing the following form of the intermediate tangential
+velocities as
+                                 
+                 Bx By a  By
+      va ¼ va þ                     ;                                                                    ð34Þ
+                  q a ð S a  ua Þ
+                                  
+                 Bx Bza  Bz
+      wa ¼ wa þ                      ;                                                                    ð35Þ
+                   qa ð S a  u a Þ
+instead of (29) and (30), Li [19] constructed another HLLC-type Riemann solver for MHD, referred to as
+HLLC-L Riemann solver in this paper. The intermediate states of the HLLC-L solver are consistent with
+the integral of the conservation laws over the Riemann fan as opposed to the extended HLLC-type solver.
+Also, the HLLC-L solver naturally returns to the HLLC solver in the limit of zero magnetic ﬁeld. We note,
+however, that the HLLC-L solver does not necessarily satisfy the jump condition on the contact disconti-
+nuity (5) due to the deﬁnitions (34) and (35). This fact does not mean that the HLLC-L solver cannot re-
+solve isolated contact discontinuities exactly. In addition, since (31) and (32) are still used as the
+intermediate states of the magnetic ﬁeld even in the HLLC-L solver, (26) and (27) cannot be realized in
+the limit where Bx becomes zero.
+
+
+4.3. Lindes Riemann solver for hyperbolic conservation laws
+
+   Another two-state HLL Riemann solver was constructed by Linde [20,21]. In this solver, the jump of the
+intermediate states are connected with the jump of the left and the right states empirically by
+     UR  UL ¼ bðUL ; UR ÞðUR  UL Þ;        0 6 b 6 1;                                                  ð36Þ
+where b becomes 1 if an isolated discontinuity is detected in the Riemann fan, whereas b is 0 if the inter-
+mediate states are continuous. Thus, b is considered as a strength of the middle wave. Then, Lindes ﬂuxes
+are derived by substituting (36) into the integral conservation laws over the two-state approximate Riemann
+fan as
+             S R FL  S L FR þ ð1  bÞS R S L ðUR  UL Þ þ bS a S M ðUR  UL Þ
+     Fa ¼                                                                     :                           ð37Þ
+                                         SR  SL
+We ﬁnd at once that Lindes ﬂuxes return to the single-state HLL ﬂuxes (10) when b becomes zero.
+   Since SM and b are not speciﬁed in particular, it is obvious that the ability of the Linde solver is strongly
+dependent on the choice of SM and b. In [20], SM and b are given by the Roe average of the normal velocity
+and a heuristic linear function with respect to a gap from the jump condition, SMDU  DF, while those are
+obtained through the least-squares solution of the jump condition with appropriate rescaling in [21]. Par-
+ticularly, the latter method does not need any information about the eigensystem for the conservation laws.
+Thus, one can construct various versions of the Linde solver by introducing some adequate SM and b.
+   Gurski [13] indicated that the expressions of the HLLC Riemann ﬂuxes can be reformulated similar to
+Lindes ﬂuxes. This is not surprising because the Linde solver may include any two-state Riemann solver
+324                    T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344
+
+due to the arbitrariness of SM and b. The reformulation of the HLLC-type MHD solver inspired that the
+extended HLLC-type solver which is accurate but oscillatory can be modiﬁed so as to smooth unwanted
+oscillations while preserving the positivity of density and pressure [13]. In this solver, named as smooth
+HLLC MHD solver, SM is given by the HLL average and b is computed from A*1DW* = bA1DW instead
+of (36), where DW possesses the unit of momentum and a certain linearization as DU = A1DW is assumed.
+The smooth HLLC MHD solver is thought to be a positively conservative variant of the Linde solver.
+   The advantage of Lindes method is that the algorithm of the solver is independent of the details of the
+governing equations despite the exact resolution of isolated contact discontinuities. However, necessary and
+suﬃcient conditions of b to eliminate numerical oscillations completely have not been presented yet, and
+some class of Lindes ﬂuxes may generate unphysical oscillations. Therefore, the Linde solver should be ap-
+plied for a complex system without detail knowledge of its characteristics rather than the well-known sys-
+tem as the Euler equations and the MHD equations [21].
+
+
+5. Multi-state HLL Riemann solver
+
+5.1. HLLD Riemann solver for the MHD equations
+
+   The HLLC-type Riemann solvers for MHD as reviewed in the previous section may have some
+inconsistency with respect to the jump conditions without a particular treatment. We suppose that the
+HLLC-type solvers may include inconsistency between the assumption of constant normal velocity and
+the two-state approximation of the intermediate states in the Riemann fan. Therefore, in this subsection,
+the multi-state (more than two-state) HLL Riemann solver for the MHD equations is constructed based
+on the same basic assumption as that in the HLLC Riemann solver for the Euler equations.
+   Assume that the normal velocity is constant over the Riemann fan. Our assumption which is the same as
+in the HLLC solver [2,29] leads to the following noticeable conclusions: The normal velocity in the Rie-
+mann fan corresponds to the speed of the middle (entropy) wave. The total pressure is constant over the
+Riemann fan. Slow shocks cannot be formed inside the Riemann fan. Rotational discontinuities propagat-
+ing with the Alfvén waves, on the other hand, may be generated. The latter two conclusions suggest that, in
+order to construct a more accurate HLL Riemann solver for MHD than the single-state HLL solver, the
+Riemann fan may be divided into four intermediate states, UL ; U              
+                                                                     L ; UR ; and UR , as illustrated in Fig. 3.
+Therefore, we consider the approximate Riemann problem in the four-state Riemann fan separated by
+one entropy and two Alfvén waves, SM and S L ; S R .
+   The choice of SM, in the present solver, is to evaluate the average normal velocity from the HLL average
+(9) as Batten et al. [2], Gurski [13] and Li [19] did:
+             ðS R  uR ÞqR uR  ðS L  uL ÞqL uL  pTR þ pTL
+      SM ¼                                                   ;                                             ð38Þ
+                      ðS R  uR ÞqR  ðS L  uL ÞqL
+
+
+                                                             t
+                                          SL         S *L        SM    S R*        SR
+
+                                                          UL∗∗ UR∗∗
+                                                    UL∗               UR∗
+
+                                               UL                             UR
+                                                                                        x
+
+                        Fig. 3. Schematic structure of the Riemann fan with four intermediate states.
+                             T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344          325
+
+which is identical to (14) except that p is replaced by pT. Since the normal velocity is assumed to be constant
+over the Riemann fan, the equalities
+      uL ¼ u      
+             L ¼ uR ¼ uR ¼ S M                                                                                   ð39Þ
+are given. In addition to (39), our assumption will restrict the total pressure to constant as
+      pTL ¼ p                
+              TL ¼ p TR ¼ p TR ¼ p T :                                                                           ð40Þ
+The average total pressure pT in the Riemann fan should be evaluated consistent with the jump conditions
+for each wave. The present choice of SM (38) consistently gives the equalities that pT ¼ pTL ¼ pTR from the
+jump conditions of the normal momentum across SR and SL as indicated by (23) for the HLLC-type solver.
+More explicitly, (23) can also be rewritten as
+              ðS R  uR ÞqR pTL  ðS L  uL ÞqL pTR þ qL qR ðS R  uR ÞðS L  uL ÞðuR  uL Þ
+      pT ¼                                                                                  :                   ð41Þ
+                                      ðS R  uR ÞqR  ðS L  uL ÞqL
+The other equalities p                
+                      TL ¼ p TR ¼ pT are also satisﬁed automatically as shown later. Note that contact, tan-
+gential, and rotational discontinuities can be formed in the Riemann fan even under the restriction (40).
+   Once SM and pT are given, the states Ua neighboring Ua are obtained from the jump conditions across
+Sa,
+          0  1 0                                          1       0        1 0                                1
+             qa                         qa S M                       qa                      q a ua
+          B q S C B           qa S 2M þ pT  B2x        C       B        C B       qa u2a þ pTa  B2x       C
+          B a MC B                                         C       B q a ua C B                                C
+          B   C B                                        C       B        C  B                               C
+          B qa va C B          q  
+                                                         C       B        C  B      q  v   u     B  B       C
+          B       C B              v
+                                 a a M S        B  B
+                                                  x ya     C       B qa va C B          a a a         x ya     C
+          B  C B                                      C       B        C B       qa wa ua  Bx Bza        C
+      S a B qa wa C  B        qa wa S M  Bx Bza          C ¼ S a B qa wa C  B                               C; ð42Þ
+          B  C B                                          C       B        C  B                               C
+          B B C B                  
+                                 By a S M  Bx v a        C       B        C  B       By a u a  B x v a      C
+          B ya C B                                         C       B By a C B                                  C
+          B  C B                                        C       B        C B                                C
+          @ B za A @            B za S M  B x w a         A       @ B za A @          Bza ua  Bx wa          A
+             ea         ðea þ pT ÞS M  Bx ðva  Ba Þ            ea         ðea þ pTa Þua  Bx ðva  Ba Þ
+where a = L or R as used in the previous section. It is certain that the second equation of (42) is consistent
+with our choice of SM and pT because pT itself is derived from this equation. The ﬁrst equation of (42) gives
+                 S a  ua
+      qa ¼ qa            ;                                                                                      ð43Þ
+                 Sa  SM
+which is identical to (17) except for the expression of SM. Solving the third and ﬁfth equations of (42) simul-
+taneously, one obtains that
+                                       S M  ua
+      va ¼ va  Bx By a                                     ;                                                   ð44Þ
+                            qa ðS a  ua ÞðS a  S M Þ  B2x
+                                        2
+                           qa ðS a  ua Þ  B2x
+      By a ¼ By a                                    :                                                          ð45Þ
+                     qa ðS a  ua ÞðS a  S M Þ  B2x
+Also, from the fourth and sixth equations, we obtain that
+
+                                         S M  ua
+      wa ¼ wa  Bx Bza                                        ;                                                 ð46Þ
+                              qa ðS a  ua ÞðS a  S M Þ  B2x
+
+                                        2
+                           qa ðS a  ua Þ  B2x
+      Bza ¼ Bza                                      :                                                          ð47Þ
+                     qa ðS a  ua ÞðS a  S M Þ  B2x
+326                        T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344
+
+Note that the numerical operations of 0/0 seem to appear in (44)–(47) if SM = ua, S a ¼ ua  cf a ,
+By a ¼ Bza ¼ 0, and B2x P cpa . In these cases, (44)–(47) can be simply replaced by va ¼ va ; wa ¼ wa , and
+By a ¼ Bza ¼ 0 since there is no shock across Sa i.e., qa ¼ qa ; ua ¼ ua ; and pTa ¼ pTa . Finally, the seventh
+equation of (42) with (44)–(47) gives ea as
+              ðS a  ua Þea  pTa ua þ pT S M þ Bx ðva  Ba  va  Ba Þ
+      ea ¼                                                                :                                   ð48Þ
+                                      Sa  SM
+The expressions (44)–(48) are the same than those employed for the intermediate states of the extended
+HLLC-type Riemann solver for MHD [13].
+   Subsequently, the inner intermediate states U
+                                                a are considered. From the jump condition of the continu-
+ity equation across an arbitrary S where SL < S < SM or SM < S < SR,
+      q   
+       a ¼ qa ;                                                                                                ð49Þ
+because of the relation (39). When (49) is given, the jump condition for the normal momentum across S leads to
+      p     
+       Ta ¼ p Ta :                                                                                             ð50Þ
+Thus, (40) is satisﬁed. Also from (49), it is appropriate that the propagation speeds of the Alfvén waves (3)
+in the intermediate states are evaluated by
+                   jBx j                    jBx j
+      S L ¼ S M  pﬃﬃﬃﬃﬃ ;   S R ¼ S M þ pﬃﬃﬃﬃﬃﬃ :                                                         ð51Þ
+                     qL                       qR
+Although we should consider the other jump conditions across S a waves, the jump conditions,
+          0   1 0                     1      0  1 0                        1
+            qa va      qa va S M  Bx Bya          qa va     qa va S M  Bx By a
+          B q w C B q w S M  Bx B C       B q w C B q w S M  Bx B C
+          B a a C B a a                  za C     B a a C   B a a                za C
+     S a B  C  B                      C ¼ S aB     CB                    C;                          ð52Þ
+          @ By a A @ By a S M  Bx v a    A      @  B ya A @  B ya S M  B x v a A
+               B
+                za             B             
+                                za S M  B x w a                Bza           Bza S M  Bx wa
+appear not to be solvable if S a is deﬁned by (51).
+   Therefore, we consider the jump conditions for the tangential components of the velocity and magnetic
+ﬁeld across SM,
+          0   1 0                      1      0   1 0                        1
+            qL vL       qL vL S M  Bx ByL          qR vR       qR vR S M  Bx B yR
+          B q w C B q w S M  Bx B C        B q w C B q w S M  Bx B C
+          B L L C B L L                   zL C      B R RC B R R                      zR C
+      S M B  C  B                       C ¼ S MB     C  B                  C:          ð53Þ
+          @ By L A @ By L S M  Bx v  L    A      @  B yR  A  @  B yR S M  B x v R    A
+                B
+                 zL              B             
+                                  z L S M  Bx w L                 B
+                                                                    zR             B           
+                                                                                    zR S M  Bx wR
+
+It is obvious that the equalities
+      v      
+       L ¼ vR  v ;                                                                                            ð54Þ
+
+      w      
+       L ¼ wR  w ;                                                                                            ð55Þ
+
+      B           
+       y L ¼ By R  B y ;                                                                                      ð56Þ
+
+      B           
+       zL ¼ B z R  B z                                                                                        ð57Þ
+
+are derived from (53) if Bx 6¼ 0. These equalities indicate the conditions for the contact discontinuities (5).
+On the other hand, if Bx = 0, (53) also becomes unsolvable. The case of Bx = 0 is discussed later. The rela-
+tions (54)–(57) show that v, w, By, and Bz are approximated by three intermediate states in our assumption
+                        T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344            327
+
+(Fig. 4). Therefore, by substituting (49),(51), and (54)–(57) into the integral conservation laws over the Rie-
+mann fan,
+      ðS R  S R ÞUR þ ðS R  S M ÞU                            
+                                       R þ ðS M  S L ÞUL þ ðS L  S L ÞUL  S R UR þ S L UL þ FR  FL ¼ 0;   ð58Þ
+it is derived that
+             pﬃﬃﬃﬃﬃ  pﬃﬃﬃﬃﬃﬃ 
+        
+               qL vL þ qR vR þ ðBy R  By L ÞsignðBx Þ
+       v ¼                    pﬃﬃﬃﬃﬃ pﬃﬃﬃﬃﬃﬃ           ;                                                    ð59Þ
+                                qL þ qR
+          pﬃﬃﬃﬃﬃ  pﬃﬃﬃﬃﬃﬃ 
+        
+           qL wL þ qR wR þ ðBzR  BzL ÞsignðBx Þ
+      w ¼                  pﬃﬃﬃﬃﬃ pﬃﬃﬃﬃﬃﬃ        ;                                                          ð60Þ
+                             qL þ qR
+             pﬃﬃﬃﬃﬃ  pﬃﬃﬃﬃﬃﬃ        pﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+              qL By R þ qR By L þ qL qR ðvR  vL ÞsignðBx Þ
+      B
+       y ¼                     pﬃﬃﬃﬃﬃ pﬃﬃﬃﬃﬃﬃ                   ;                                           ð61Þ
+                                  qL þ qR
+            pﬃﬃﬃﬃﬃ        pﬃﬃﬃﬃﬃﬃ        pﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+               qL BzR þ qR BzL þ qL qR ðwR  wL ÞsignðBx Þ
+      B
+       z ¼                          pﬃﬃﬃﬃﬃ pﬃﬃﬃﬃﬃﬃ             ;                                         ð62Þ
+                                     qL þ qR
+where sign(Bx) is 1 for Bx > 0 and 1 for Bx < 0. Here, it is found that the jump conditions across S a (52)
+are satisﬁed by (59)–(62). Finally, the jump condition of the energy density across S a waves can be solved as
+                   pﬃﬃﬃﬃﬃ  
+      e    
+       a ¼ ea        qa ðva  Ba  v  B ÞsignðBx Þ;                                                 ð63Þ
+where the minus and the plus of the right side correspond to a = L and R, respectively.
+   In this way, we can derive the complete set of the intermediate states, UL ; U              
+                                                                                    L ; UR ; and UR , and corre-
+                                 
+sponding ﬂuxes, FL ; FL ; FR and FR , which are satisﬁed with all jump conditions in our approximate Rie-
+mann problem. Therefore, the numerical ﬂuxes of our solver are obtained by the integral of conservation
+laws over the left or the right half of the Riemann fan, (SLDt, 0) · (0, Dt) or (0, SRDt) · (0, Dt), as in (8), for
+instance such that
+       F ¼ FL þ S L UL  S L UL ¼ FL                                                                        ð64Þ
+for S L 6 0 6 S L , or
+      F ¼ FL þ S L U                           
+                     L  ðS L  S L ÞUL  S L UL ¼ FL                                                         ð65Þ
+for S L 6 0 6 S M . In general, the ﬂuxes are given by
+              8
+              > FL        if S L > 0;
+              >
+              > 
+              >
+              > FL        if S L 6 0 6 S L ;
+              >
+              >
+              >
+              < F
+                 L        if S L 6 0 6 S M ;
+      FHLLD ¼                                                                                               ð66Þ
+              >
+              >
+              > FR        if S M 6 0 6 S R ;
+              >
+              >  
+              > F
+              > R         if S R 6 0 6 S R ;
+              >
+              :
+                FR        if S R < 0:
+
+                                                             t
+                                           SL         S *L            S R*        SR
+
+                                                             V ∗∗
+                                                     VL∗            VR∗
+
+                                                VL                           VR
+                                                                                       x
+
+                        Fig. 4. Schematic structure of the Riemann fan with three intermediate states.
+328                        T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344
+
+This solver is named as HLLD solver because, as shown in the next subsection, not only isolated contact
+discontinuities but also isolated all other discontinuities (not shocks) in the MHD system are exactly re-
+solved, i.e., ‘‘D’’ represents all Discontinuities in MHD.
+   It is found at once that the four-state HLL Riemann solver for MHD as illustrated in Fig. 3 is naturally
+reduced to the two-state solver as in Fig. 2 for Bx = 0 because, in this case, S L ¼ S R ¼ S M from (51). There-
+fore, the estimation of the inner intermediate states as (59)–(62) is not necessary for the case of Bx = 0. Note
+also that the HLLC solver for the Euler equations [2,29] is included in the HLLD solver for the MHD equa-
+tions as the limit of zero magnetic ﬁeld.
+   In order to obtain the exact upper and lower bounds of the signal speeds for the Riemann prob-
+lem, complicated exact solutions for the MHD Riemann problem are needed [2]. Therefore, SL and
+SR may be estimated approximately by (12) or (13). Also, since the explicit expressions of the larg-
+est and smallest eigenvalues for MHD are known as in (3), other estimations may be utilized, for
+instance such that
+        S L ¼ minðuL ; uR Þ  maxðcf L ; cf R Þ;   S R ¼ maxðuL ; uR Þ þ maxðcf L ; cf R Þ;                  ð67Þ
+or any adequate estimations (e.g., [16]).
+
+
+5.2. Exact resolution of isolated discontinuities and shocks
+
+      At an isolated tangential discontinuity (6),
+        uL ¼ uR ¼ u;      pTL ¼ pTR ¼ pT :                                                                   ð68Þ
+Substituting (68) into (38) gives
+               ðS R  uÞqR u  ðS L  uÞqL u
+        SM ¼                                 ¼ u:                                                            ð69Þ
+                ðS R  uÞqR  ðS L  uÞqL
+Then, by substituting (69) into (43) to (48), it is obtained that
+        UL ¼ UL ;     UR ¼ UR :                                                                            ð70Þ
+In the case of which tangential discontinuities can be formed, i.e., Bx = 0, the HLLD solver is reduced to the
+two-state HLL solver as stated previously. Thus, the HLLD solver gives the exact solution of an isolated
+tangential discontinuity for a general x/t,
+                UL     if x=t < u;
+         U¼                                                                                                  ð71Þ
+                UR     if x=t > u:
+At an isolated contact discontinuity (5), in addition to (68),
+        vL ¼ vR ¼ v;      wL ¼ wR ¼ w;        By L ¼ By R ¼ B y ;   B zL ¼ B zR ¼ B z :                      ð72Þ
+From the condition (68), (70) is obtained in the same way. Also, by substituting (72) into (59)–(63) with
+(49),
+        U
+         L ¼ UL ;      U
+                        R ¼ UR :                                                                             ð73Þ
+Therefore, an isolated contact discontinuity can be resolved exactly as (71) in the HLLD solver.
+   Rotational discontinuities must satisfy the jump conditions of (4). Therefore, at an isolated rotational
+discontinuity,
+        qL ¼ qR ¼ q;                                                                                         ð74Þ
+besides (68). Therefore, the wave speed of an isolated rotational discontinuity is given by
+                         T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344           329
+
+               jBx j
+      sA ¼ u  pﬃﬃﬃ ;                                                                                        ð75Þ
+                 q
+that is, sA = k2 or k6 of (3). Without loss of generality, assume here that Bx > 0 and sA > u. In this case, the
+relations,
+      pﬃﬃﬃ                          pﬃﬃﬃ
+         qðvR  vL Þ ¼  By R  By L ;    qðwR  wL Þ ¼ ðBzR  BzL Þ;                                     ð76Þ
+must be realized from the jump conditions. Similar to the discussion for an isolated contact or tangential
+discontinuity, (70) is obtained from (68). Substituting (76) into (59)–(63) gives
+      U   
+       L ¼ UR ¼ UL                                                                                           ð77Þ
+with the help of
+                 pﬃﬃﬃ
+      eR  eL ¼  qðvR  BR  vL  BL Þ:                                                                     ð78Þ
+The equalities (77) are retained also for Bx < 0. On the other hand, when sA < u,
+      UL ¼ UL ;    U      
+                     L ¼ UR ¼ UR ¼ UR :                                                                      ð79Þ
+Therefore, in general,
+              UL    if x=t < sA ;
+      U¼                                                                                                     ð80Þ
+              UR    if x=t > sA :
+Thus it is shown that the HLLD solver also resolves an isolated rotational discontinuity exactly.
+  The speed of an isolated fast shock sf is computed as the largest or smallest eigenvalue of the Roe matrix. We
+may consider an isolated shock corresponding to the largest eigenvalue only, i.e., sf ¼ kRoe
+                                                                                           7 , because of the sym-
+metry of the left and the right states. The left and the right states at an isolated fast shock are related by
+      sf ðUR  UL Þ ¼ FR  FL :                                                                              ð81Þ
+Once the maximum signal speed SR in the HLLD solver is given by the exact shock velocity, (38) gives
+             ðsf  uL ÞqL uL  ðS L  uL ÞqL uL
+      SM ¼                                      ¼ uL                                                         ð82Þ
+                ðsf  uL ÞqL  ðS L  uL ÞqL
+by using the jump conditions for the continuity equation and the normal component of the momentum
+equation in (81). Also,
+      pT ¼ pTL ;                                                                                            ð83Þ
+by substituting (82) into (41) or equivalently (23). Then, substituting (82) and (83) into (43)–(48), some alge-
+braic manipulations with the help of (81) give
+      UL ¼ UR ¼ UL :                                                                                       ð84Þ
+Therefore, it is also obtained straightforwardly from (59)–(63) that
+      U   
+       L ¼ UR ¼ UL :                                                                                         ð85Þ
+Similarly, when sf = SL,
+      UL ¼ U      
+             L ¼ UR ¼ UR ¼ UR :                                                                              ð86Þ
+Thus, the exact shock solution,
+
+              UL    if x=t < sf ;
+      U¼                                                                                                     ð87Þ
+              UR    if x=t > sf ;
+330                    T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344
+
+is obtained in the HLLD solver. It is noted that the exact resolution of an isolated fast shock (87) relies on
+the proper choices of SL and SR, and thus, the algorithm of (13) is appropriate in this particular viewpoint.
+On the other hand, the resolution of an isolated contact, tangential discontinuity (71) and rotational dis-
+continuity (80) does not depend on the detailed estimation of SR and SL.
+
+
+5.3. Positivity of HLLD solver
+
+ Consider the set of the physically realistic states with positive densities and positive pressures for the
+MHD equations such that
+        82      3                                    9
+        >
+        >    q                                       >
+                                                     >
+        >
+        > 6     7                                    >
+                                                     >
+        >
+        > 6 qu  7                                    >
+                                                     >
+        >
+        > 6     7                                    >
+                                                     >
+        >6
+        >       7                                    >
+                                                     >
+        >
+        <6  qv  7                                    >
+                                                     =
+          6     7                1     2   1 2
+   G ¼ 6 qw 7; q > 0 and e  qjvj  jBj > 0 :
+        >
+        > 6     7                2         2         >
+                                                     >
+        >6 B y 7
+        >                                            >
+                                                     >
+        >
+        > 6     7                                    >
+                                                     >
+        >
+        > 6     7                                    >
+                                                     >
+        >
+        > 4 B z 5                                    >
+                                                     >
+        >
+        :                                            >
+                                                     ;
+             e
+
+   In the MHD equations, and likewise in the Euler equations, the average states deﬁned by
+U = (1  h)U1 + hU2 with 0 6 h 6 1 are physically realistic states if both U1 and U2 are physical [16]. Since
+Godunov-type schemes update the subsequent states by averaging the states of the exact or the approxi-
+mate solution of the Riemann problem, a positively conservative scheme can be constructed in those
+schemes if all the states generated are physical. Thus, a positively conservative Riemann solver generates
+states in G if the preceding states are contained in G.
+   We now consider the right outer and inner intermediate states, UR and U   R . The positivity preserving
+conditions become
+      qR > 0;                                                                                           ð88Þ
+
+      q
+       R > 0;                                                                                            ð89Þ
+                                               
+                         1             1
+      pR ¼ ðc  1Þ eR  qR jvR j2  jBR j2 > 0;                                                     ð90Þ
+                         2             2
+                                               
+                      1   2 1  2
+      pR ¼ ðc  1Þ eR  qR jvR j  jBR j > 0:                                                            ð91Þ
+                          2              2
+In order to simplify the subsequent arguments, the following variables are introduced:
+      n  S R  uR ;   g  SR  SM ;     f  S M  uR :                                                  ð92Þ
+Since SR is the maximum signal speed in the Riemann system, both n and g are positive. On the other hand,
+f can be either positive or negative.
+   The conditions of (88) and (89) are easily shown from (43) and (49) such that
+                n
+      qR ¼ q
+             R ¼ qR > 0:                                                                                 ð93Þ
+                g
+To show the inequality (90), let us consider the positivity of u deﬁned and rearranged by some algebraic
+manipulations as follows:
+                         T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344           331
+                                  
+                1   2 1  2
+      u  g eR  qR jvR j  jBR j
+                 2           2
+          qR n 2         pR n   q n       2         2   n       2         2   f       2         2
+        ¼     f þ pR f þ       þ R ðjv?R j  jv?R j Þ þ ðjB?R j  jB?R j Þ þ ðjB?R j þ jB?R j Þ
+           2             c1     2                      2                     2
+             þ Bx ðv?R  B?R  v?R  B?R Þ
+                                    !
+             qR n         jB?R j2                 p n
+           ¼        1            2
+                                     f2 þ p R f þ R ;                                                         ð94Þ
+              2         qR ng  Bx               c1
+
+where v^ = (0, v, w) and B^ = (0, By, Bz). It is noted that (94) is identical to the corresponding equation for
+the HLLC solver [2] except for the correction in the ﬁrst term. Since SR is expressed by k7 of (3) and is the
+maximum speed in the Riemann system, the inequalities, n P cf R and g P cf R , will be satisﬁed. Therefore,
+                                   !
+                               2
+          qR n          jB?R j                   p n
+       0
+     u ¼          1             2
+                                     f2 þ pR f þ R 6 u:                                                    ð95Þ
+            2             2
+                      qR cf R  Bx              c1
+
+This relation indicates that u is necessarily positive if u 0 is positive. (We point out here that Gurski [13]
+misled a ‘‘stronger condition’’ for positivity in view of the inequality (95).) Since
+          2                    2
+qc2f  jBj ¼ qc2f  B2x  jB? j > 0 except when B^ = 0 and B2x P cp, the ﬁrst term of (95) is necessarily po-
+sitive. Note that u in the case of B^ = 0 fully corresponds to that for the HLLC solver [2], and therefore, the
+positivity of u is assured in this case. Thus, since all coeﬃcients with respect to f are positive, u 0 is positive
+for any f if the discriminant of u 0 is negative:
+                                                 !
+                                            2
+                      2qR pR         jB?R j
+            0    2
+       Dðu Þ ¼ pR             1                  n2 < 0:
+                      c1          qR c2fR  B2x
+
+Therefore,
+                                             !1
+                                         2
+       2  ðc  1ÞpR      jB?R j
+      n >           1                               :                                                        ð96Þ
+             2qR       qR c2fR  B2x
+If Bx 6¼ 0, by using the relations that
+                       B2x jB? j2                 cpB2x
+      qc2s  B2x ¼               ;   c2f c2s ¼         ;
+                       qc2f  B2x                  q2
+(96) can be rewritten as
+             c1 2
+      n2 >       c :                                                                                          ð97Þ
+              2c f R
+Also, if Bx = 0, where qc2f ¼ cp þ jB? j2 , the identical inequality is easily derived from (96). Therefore, from
+(92) and (97), in order to preserve the positivity of the pressure (90), SR must be chosen to be satisﬁed with
+the inequality as
+                  sﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+                    c1
+      S R > uR þ               cf :                                                                           ð98Þ
+                      2c R
+
+Note that the resultant inequality (98) is quite similar to the corresponding inequality for the HLLC solver
+(22) but the fast magnetosonic speed cfR must be replaced by the sound speed aR. As found form (12), (13),
+332                    T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344
+
+or (67), since the HLLD solver for MHD clearly satisﬁes (98), our solver ensures the positivity preserving
+property (90).
+   Subsequently, if the pressure at the outer states is retained as positive, the positivity of the pressure at the
+inner states is shown straightforwardly by using (59)–(63) to be
+                                                   
+                              1   2 1  2
+      p
+       R  ¼  ðc  1Þ   e 
+                         R     q    jv j     jB j
+                              2 R            2
+                  c1       p ﬃﬃﬃﬃﬃ
+                                   ﬃ                  2  pﬃﬃﬃﬃﬃﬃ            2
+                                                                                 
+          ¼ pR þ              qR vR þ BR signðBx Þ   qR v þ B signðBx Þ     ¼ pR > 0:                 ð99Þ
+                     2
+Also, it is noted from (99) that our solver is consistent with the continuous condition of the pressure across
+rotational discontinuities.
+   The positivity of the density and pressure at the left outer and inner intermediate states, UL and UL , is
+also assured if the inequality,
+                  sﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+                    c1
+      S L < uL                cf ;                                                                      ð100Þ
+                      2c L
+is satisﬁed. Thus, the proof of the positivity is completed. It is obvious that (98) and (100) are stronger than
+the conditions by Gurski [13]. The present proof will also be applicable to the single-state HLL Riemann
+solver since the one intermediate state of the HLL solver is given by the average of the HLLD intermediate
+states contained in G.
+    At the end of this subsection, we reconsider the prerequisite inequalities to obtain a stronger condition
+for the pressure positivity (95). We ﬁnd at once that the prerequisite inequality as n P cf R is assured due to
+the estimation (67) or something equivalent. On the other hand, it is not so easy to conﬁrm whether the
+other inequality g P cf R is satisﬁed or not at any situation, because SM is evaluated not only from the right
+states but also from the left states. In order to simplify the discussion, we only pay attention to expansion
+waves which are more problematic than shocks in terms of positivity. From the jump condition of the nor-
+mal momentum across SR, we obtain that
+              pTR  pT
+      g¼nþ              :
+                qR n
+Since pTR is greater than pT under the condition uR  uL > ðpTR  pTL Þ=qL ðS L  uL Þ, the inequalities
+g > n P cf R are satisﬁed at such strong expansion waves. Thus, both prerequisite inequalities for the pres-
+sure positivity are satisﬁed in the most problematic situation. Notice that this fact does not mean that other
+situations than strong expansion waves would necessarily break the prerequisite inequalities. Moreover,
+since the positivity preserving condition (98) is a rather weak and easily conquerable restriction, the HLLD
+solver is thought to be a positively conservative scheme.
+
+
+
+6. Numerical tests
+
+   We present in this section results for several test problems computed by the HLLD Riemann solver. For
+comparison, the same problems are solved by the single-state HLL Riemann solver and the standard lin-
+earized Riemann solver, the so-called Roe scheme [26], in which we adopt the Roe average by Balsara [1].
+Also, the HLLD solver is compared with the variants of the HLLC-type solver. In our tests, as an algo-
+rithm to estimate SL and SR, (67) is used for simplicity and eﬃciency because numerical solutions by
+(67) are indistinguishable from those by (13) in spite of not resolving isolate fast shocks exactly. Also, c
+is ﬁxed to 5/3 throughout our numerical tests. In order to evaluate the essential abilities of the solver,
+                         T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344                       333
+
+we restrict our attention to the scheme of ﬁrst-order accuracy in space and second-order in time without
+additional notice.
+
+6.1. One-dimensional shock tube problems
+
+    We perform several one-dimensional shock tube problems which are solved within the interval
+0.5 6 x 6 0.5, with 800 grid points, and with a CFL number of 0.8, through this subsection.
+    We perform a typical shock tube problem presented ﬁrst by Dai and Woodward [6], and tested by Ryu
+and Jones [27] and  pﬃﬃﬃﬃﬃmany others,
+                          ﬃ pﬃﬃﬃﬃﬃ
+                                 ﬃ     where the initial states           ﬃﬃﬃﬃﬃﬃ by ðq; p; u; v; w; By ; Bzp
+                                                             pﬃﬃﬃﬃﬃﬃare pgiven                             Þ¼ﬃﬃﬃﬃﬃﬃð1:08; 0:95;
+1:2; 0:01; 0:5; 3:6= 4p; 2= 4pÞ for x < 0, ð1; 1; 0; 0; 0; 4= 4p; 2= 4pÞ for x > 0, with Bx ¼ 4= 4p. The exact
+solution of this problem is composed of various shocks and discontinuities; two fast shocks, two rotational
+discontinuities, two slow shocks, one contact discontinuity [6,27]. In Fig. 5, the numerical results are plotted
+at t = 0.2. It is found that the numerical solution of the HLLD solver seems to be indistinguishable from
+that of the Roe scheme, whereas the HLL solver cannot resolve the contact and the rotational discontinu-
+ities in particular. The magniﬁcations of the density proﬁle, where the solution of the HLL solver is omitted
+for clarity, around the fast and slow shocks at the left of the contact discontinuity also indicate that the
+resolution of the HLLD solver is almost equal to that of the Roe scheme even for the slow shock in this
+problem.
+    Since the solution of this problem includes all ordinary discontinuities in MHD, it is worth considering
+whether the similar solvers to the HLLD solver, the variants of the HLLC-type solver by Gurski (HLLC-
+G) [13] and by Li (HLLC-L) [19], can resolve discontinuities and shocks well or not. While the smooth
+HLLC-type solver [13] was thought to be comparable with one of the Linde solver [20], another Lindes
+solver [21] seemed to be less accurate than the HLLC-L solver [19]. Thus, the numerical test by the smooth
+HLLC-type solver are not performed. Since all solvers tested here may resolve isolated fast shocks exactly if
+we choose (13), the resolution of the fast shocks in these solvers seems to be comparable with one another.
+In order to be clear about the diﬀerences of the solvers, we only show the solution without the fast shocks in
+Fig. 6. The diﬀerence between the results of the HLLD solver and that of the Roe scheme is invisible even in
+this enlarged ﬁgure. We ﬁnd that the HLLC-type solvers as well as the HLLD solver can resolve the contact
+discontinuity as expected although the contact discontinuity is smeared out by the HLL solver. The rota-
+tional discontinuities, on the other hand, are extremely smeared out in both of the HLLC-type solvers
+although the HLLC-L solver is slightly more accurate in comparison with the HLLC-G solver. As a con-
+sequence, the numerical solution of the HLL or the HLLC-type solver seems to be quite diﬀerent from the
+solution of the HLLD solver or the Roe scheme. We also ﬁnd from Fig. 7 that the resolution of the HLLC-
+type solver cannot be recovered to the level of the HLLD solver or the Roe scheme even when the solvers
+are extended to second-order accuracy in space, which are achieved by a linear reconstruction for the prim-
+itive variables with minmod limiter. The failure of the HLLC-type solvers is probably caused by the
+assumption that the magnetic ﬁeld is constant over the Riemann fan. Thus, the HLLD solver has an obvi-
+ous advantage over the two-state Riemann solvers.
+    We also test a standard shock tube problem ﬁrst discussed by Brio and Wu [4] and tested by many oth-
+ers, where the initial states are (q, p, u, v, w, By, Bz) = (1, 1, 0, 0, 0, 1, 0) for x < 0, (0.125, 0.1, 0, 0, 0, 1, 0)
+for x > 0, with Bx = 0.75. Although c = 2 in the original test, our test follows the corresponding test by Ryu
+and Jones [27] with c = 5/3. Fig. 8 shows the results at t = 0.1, which include not only ordinary waves but
+also the slow compound wave caused by the non-convexity of the MHD equations. We ﬁnd that the numer-
+ical solution of the HLLD solver is almost comparable to that of the Roe scheme as a whole, whereas the
+contact and compound waves are not well resolved by the single-state HLL solver. The magniﬁcations of
+the density around the slow compound wave and the slow shock, however, indicate that the solution of the
+HLLD solver seems to be slightly smeared out compared with that of the Roe scheme although the peaks of
+the density on the compound wave are little diﬀerent from each other (qRoe = 0.820, qHLLD = 0.815), and
+334                          T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344
+
+                                                                        1.6
+                HLL solver                                                    HLLD solver                  HLLD solver
+               HLLD solver                                                    Roe scheme                   Roe scheme
+               Roe scheme                                               1.5
+         1.5                                                                      ρ                          ρ
+                   ρ                                                    1.4                          1.6
+
+                                                                        1.3
+
+                                                                        1.2
+
+                                                                        1.1                          1.5
+         1.0
+                                                                        1.0
+            -0.5                      0.0                       0.5       -0.22 -0.20 -0.18 -0.16 0.02 0.04            0.06 0.08
+
+
+
+         0.2                                                            0.5
+                   v                                                              w
+
+
+         0.0
+
+                 HLL solver                                                    HLL solver
+                HLLD solver                                             0.0   HLLD solver
+                Roe scheme                                                    Roe scheme
+
+            -0.5                      0.0                       0.5        -0.5                      0.0                       0.5
+
+
+
+                                                                        0.8
+         1.5
+                   By                                                             Bz
+
+
+
+                                          HLL solver                    0.5    HLL solver
+                                         HLLD solver                          HLLD solver
+         1.0                             Roe scheme                           Roe scheme
+
+            -0.5                      0.0                       0.5        -0.5                      0.0                       0.5
+
+Fig.     5. Results      of     one-dimensional
+                                 pﬃﬃﬃﬃﬃﬃ pﬃﬃﬃﬃﬃﬃ  shock      tube     test      with
+                                                                                 pﬃﬃﬃﬃﬃﬃ the
+                                                                                          pﬃﬃﬃﬃﬃﬃ initial left pﬃﬃﬃﬃﬃ
+                                                                                                                  states
+                                                                                                                    ﬃ    ðq; p; u; v; w; By ; Bz Þ ¼
+ð1:08; 0:95; 1:2; 0:01; 0:5; 3:6= 4p; 2= 4pÞ, the right states ð1; 1; 0; 0; 0; 4= 4p; 2= 4pÞ, and Bx ¼ 4= 4p. Numerical solutions of the
+HLL solver, the HLLD solver, and the Roe scheme are plotted at t = 0.2. (Top left) q, (middle left) v, (middle right) w, (bottom left) By,
+(bottom right) Bz, (top middle) q around the left fast shock, (top right) q around the left slow shock are shown.
+
+
+
+the diﬀerences may not be important. The smaller resolution of the slow shocks in the HLLD solver may be
+because the slow waves in the Riemann fan are not explicitly included. On the other hand, although the
+solution near the head of the rarefaction attached to the compound wave are almost equivalent, the tail
+of the compound rarefaction calculated by our Roe scheme seems to be very slightly undershot. This fact
+                           T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344                              335
+
+
+
+                                          1.6
+                                                                                       ρ
+
+                                          1.5
+
+
+
+                                          1.4      HLL solver
+                                                HLLC-G solver
+                                                HLLC-L solver
+                                                  HLLD solver
+                                          1.3    Roe scheme
+
+                                                0.0             0.1              0.2
+
+                                                                       0.6
+            0.2
+                                                                       0.5
+                                                            v                                                          w
+                                                                       0.4
+            0.1
+                                                                       0.3
+
+                                                                       0.2
+            0.0
+                      HLL solver                                                HLL solver
+                   HLLC-G solver                                       0.1   HLLC-G solver
+                   HLLC-L solver                                             HLLC-L solver
+           -0.1      HLLD solver                                       0.0     HLLD solver
+                    Roe scheme                                                Roe scheme
+                                                                      -0.1
+                   0.0              0.1               0.2                     0.0              0.1              0.2
+
+
+                               HLL solver                              0.8                HLL solver
+                            HLLC-G solver                                              HLLC-G solver
+                            HLLC-L solver                                              HLLC-L solver
+                              HLLD solver                              0.7               HLLD solver
+                             Roe scheme                                                 Roe scheme
+            1.5
+
+                                                                       0.6
+
+
+                                                                       0.5
+                    By                                                        Bz
+            1.4
+                   0.0              0.1               0.2                     0.0              0.1              0.2
+
+Fig. 6. Results of one-dimensional shock tube test with the same initial states as in Fig. 5. Numerical solutions of the HLL solver, the
+HLLC-type solver by Gurski (HLLC-G) [13], the HLLC-type solver by Li (HLLC-L) [19], the HLLD solver, the Roe scheme are
+plotted at t = 0.2. (Top) q, (middle left) v, (middle right) w, (bottom left) By, (bottom right) Bz are shown within 0.02 < x < 0.26.
+
+
+
+
+might be due to the underestimation of the signal speed of the rarefaction wave in the Roe scheme, which is
+inevitable for the linearized Riemann solver. Corresponding undershoots are not observed in the HLLD
+solver.
+336                           T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344
+
+                                                                      0.6
+                                                                                               1st-HLLC-L solver
+            0.2     v                                                                         2nd-HLLC-L solver
+                                                                                                 1st-HLLD solver
+                                                                      0.5                       2nd-HLLD solver
+
+
+                                                                      0.4
+
+            0.1
+                   1st-HLLC-L solver                                  0.3
+                  2nd-HLLC-L solver
+                     1st-HLLD solver                                           w
+                    2nd-HLLD solver
+                                                                      0.2
+                        0.0                                    0.1                0.0                                     0.1
+
+
+                                                                      0.8                      1st-HLLC-L solver
+                                                                                              2nd-HLLC-L solver
+                    By                                                                           1st-HLLD solver
+                                                                                                2nd-HLLD solver
+                                                                      0.7
+            1.5
+
+                                                                      0.6
+
+                 1st-HLLC-L solver
+                2nd-HLLC-L solver                                     0.5
+            1.4    1st-HLLD solver                                             Bz
+                  2nd-HLLD solver
+                                                                      0.4
+                        0.0                                    0.1                0.0                                     0.1
+
+Fig. 7. Results of one-dimensional shock tube test with the same initial states as in Fig. 5. Numerical solutions of the ﬁrst- and second-
+order HLLC-type solver by Li (1st- and 2nd-HLLC-L) [19], the ﬁrst- and second-order HLLD solver (1st- and 2nd-HLLD) are plotted
+at t = 0.2. (Top left) v, (top right) w, (bottom left) By, (bottom right) Bz are shown within 0.02 < x < 0.1.
+
+
+
+
+   Although the above two tests contain a number of diﬀerent waves and are quite useful when comparing
+MHD solvers with one another, tests for isolated waves are also meaningful. Since information of the slow
+waves is lost when constructing the HLLD solver, we concentrate on test problems for the slow waves in
+particular. Following the test of a slow switch-oﬀ shock by Falle et al. [11], the initial states are given by
+(q, p, u, v, w, By, Bz) = (1.368, 1.769, 0.269, 1, 0, 0, 0) for x < 0, (1, 1, 0, 0, 0, 1, 0) for x > 0, with Bx = 1.
+Fig. 9 shows the results at t = 0.2, where the tangential component of the magnetic ﬁeld, By, is switched
+oﬀ behind the shock. It is found that the HLLD solver can resolve the isolated slow shock equally to
+the Roe scheme despite the loss of information on the slow waves while the HLL solver cannot resolve
+the shock well. We note that an error caused by the jump of the initial states is observed in every solver.
+We also perform the test of a slow switch-oﬀ rarefaction given also by [11], where the initial states are
+(q, p, u, v, w, By, Bz) = (1, 2, 0, 0, 0, 0, 0) for x < 0, (0.2, 0.1368, 1.186, 2.967, 0, 1.6405, 0,) for x > 0, with
+Bx = 1. Fig. 10 shows the results at t = 0.2, where By is switched oﬀ over the head of the rarefaction. Also
+in this test, a startup error is observed near the tail of the rarefaction. It is thought that such errors may be
+inevitable unless the initial left and right states are connected continuously with a ﬁnite width. We ﬁnd that
+the strong slow rarefaction can be calculated by the HLL and the HLLD solvers without any extra numer-
+ical dissipation. The isolated fast rarefaction [11] can also be calculated although the results are not shown
+in this paper. The success of these solvers may be because the solvers are bounded by the maximum and
+                             T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344                                     337
+
+
+
+             1.0                             HLL solver                              HLLD solver        0.3       HLLD solver
+                                            HLLD solver                              Roe scheme                   Roe scheme
+                    ρ                       Roe scheme
+                                                                           0.8                     ρ                            ρ
+
+
+                                                                                                        0.2
+             0.5
+                                                                           0.7
+
+
+
+                                                                                                        0.1
+             0.0                                                           0.6
+                -0.5                      0.0                       0.5           -0.04       0.00         0.11              0.15
+
+
+             1.0                             HLL solver
+                                            HLLD solver
+                    p                       Roe scheme                               u
+                                                                           0.5
+
+
+
+             0.5
+                                                                           0.0
+                                                                                    HLL solver
+                                                                                   HLLD solver
+                                                                                   Roe scheme
+             0.0
+                -0.5                      0.0                       0.5       -0.5                       0.0                        0.5
+
+
+
+             0.0                                                           1.0
+                       v                                                             By
+                                                                           0.5
+            -0.5
+
+                                                                           0.0
+            -1.0
+                                                                           -0.5
+                    HLL solver                                                      HLL solver
+            -1.5   HLLD solver                                                     HLLD solver
+                   Roe scheme                                              -1.0    Roe scheme
+
+                -0.5                      0.0                       0.5       -0.5                       0.0                        0.5
+
+Fig. 8. Results of one-dimensional shock tube test with the initial left states (q, p, u, v, w, By, Bz) = (1, 1, 0, 0, 0, 1, 0), the right states
+(0.125, 0.1, 0, 0, 0, 1, 0), and Bx = 0.75. Numerical solutions of the HLL solver, the HLLD solver, and the Roe scheme are plotted at
+t = 0.1. (Top left) q, (middle left) p, (middle right) u, (bottom left) v, (bottom right) By, (top middle) q around the slow compound wave,
+(top right) q around the slow shock are shown.
+
+
+minimum signal speeds in the Riemann fan and, as a result, include the eﬀect of not only the slow rarefac-
+tion but also the fast rarefaction properly. On the other hand, the Roe scheme fails in this test, where the
+entropy condition is broken at x = 0. It is found, however, that an additional entropy correction (e.g., [14])
+can cure the unphysical solution in this problem.
+338                          T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344
+
+           1.5                                                            1.5
+
+                     ρ                                                             ρ
+
+
+
+
+                   HLL solver                                                    HLL solver
+           1.0    HLLD solver                                             1.0   HLLD solver
+                  Roe scheme                                                    Roe scheme
+
+              -0.5                      0.0                       0.5       0.15                      0.20                     0.25
+
+
+                                                                                 HLL solver
+           1.0                                                            1.0   HLLD solver
+                     v                                                          Roe scheme
+
+                                                                                   By
+           0.5                                                            0.5
+
+
+                   HLL solver
+                  HLLD solver
+           0.0                                                            0.0
+                  Roe scheme
+
+              -0.5                      0.0                       0.5       -0.5                       0.0                      0.5
+
+Fig. 9. Results of one-dimensional shock tube test with the initial left states (q, p, u, v, w, By, Bz) = (1.368, 1.769, 0.269, 1, 0, 0, 0), the
+right states (1, 1, 0, 0, 0, 1, 0), and Bx = 1. Numerical solutions of the HLL solver, the HLLD solver, and the Roe scheme are plotted at
+t = 0.2. (Top left) q, (bottom left) v, (bottom right) By, (top right) q around the slow switch-oﬀ shock are shown.
+
+
+
+   In the ﬁnal shock tube test, we consider super-fast expansions which may be rather extreme situations.
+The initial states are given by (q, p, u, v, w, By, Bz) = (1, 0.45, u0, 0, 0, 0.5, 0) for x < 0,
+(1, 0.45, u0, 0, 0, 0.5, 0) for x > 0, with Bx = 0. The fast magnetosonic Mach number Mf of the expansion
+wave is given by u0 since the fast magnetosonic speed cf is 1 at the initial states. This type of problem
+for the Euler equations was shown not to be linearizable for certain Mach numbers [9]. This will also be
+true for the MHD equations. Indeed, as shown in Fig. 11, although the physically realistic solutions,
+non-negative density and pressure, can be obtained in the problem with Mf = 3 for all solvers, the Roe
+scheme even with the entropy correction fails in the problem with Mf = 3.1. On the other hand, the
+HLL and the HLLD solvers preserve the positivity without any extra numerical dissipation as expected
+analytically.
+
+6.2. Applicability to multi-dimensions
+
+   It is known that the extension of the one-dimensional upwind-type MHD solver to multi-dimensions is
+not straightforward because the solenoidal condition of the magnetic ﬁeld is broken numerically. In order
+to remove the numerical divergence errors, several approaches have been applied to the upwind-type solver
+and compared with one another (e.g., [8,30]). Although the so-called constrained transport (CT) method by
+                             T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344                                      339
+
+
+
+                                             HLL solver                                                      HLL solver
+           1.0                              HLLD solver                    1.0                              HLLD solver
+                     ρ                      Roe scheme                               ρ                       Roe + E-fix
+
+
+
+
+           0.5                                                             0.5
+
+
+
+
+           0.0                                                             0.0
+              -0.5                       0.0                       0.5        -0.5                       0.0                       0.5
+
+
+
+           3.0
+                                                                           1.5
+                     v                                                               By
+           2.0
+                                                                           1.0
+
+
+           1.0
+                                                                           0.5
+                                             HLL solver                                                     HLL solver
+                                            HLLD solver                                                    HLLD solver
+           0.0                              Roe scheme                     0.0                             Roe scheme
+
+              -0.5                       0.0                       0.5        -0.5                       0.0                       0.5
+
+Fig. 10. Results of one-dimensional shock tube test with the initial left states (q, p, u, v, w, By, Bz) = (1, 2, 0, 0, 0, 0, 0), the right states
+(0.2, 0.1368, 1.186, 2.967, 0, 1.6405, 0), and Bx = 1. Numerical solutions of the HLL solver, the HLLD solver, and the Roe scheme are
+plotted at t = 0.2. (Top left) q, (bottom left) v, (bottom right) By, (top right) q by the Roe scheme with the entropy condition (Roe +
+E–ﬁx) are shown.
+
+
+
+
+Evans and Hawley [10] can maintain the divergence free condition within machine accuracy, there are no
+general guidelines to apply any one-dimensional MHD solver properly. Thus, the application of the CT
+method to the HLLD solver is beyond the scope of this paper. On the other hand, the other divergence
+cleaning method by projection [3], diﬀusion [23], or transport [8,25] of divergence errors can be directly
+added on to existing one-dimensional MHD schemes.
+   Particularly, Dedner et al. [8] showed that some add-on divergence cleaning methods can be expressed by
+the so-called generalized Lagrange multiplier (GLM) formulation of the MHD equations. They also
+pointed out that the choice of the mixed hyperbolic/parabolic GLM-MHD gives excellent results since
+the divergence errors in the mixed GLM-MHD are transported out of the domain by two waves with
+the maximal admissible speed even in stagnation points and are damped at the same time. The mixed
+GLM-MHD is also eﬀective in other aspects; easy to implement on an existing code, fast due to the explicit
+approximation, conservative for the physical quantities. Thus, keeping practical applications in mind, the
+divergence cleaning method based on the mixed GLM-MHD is adopted in our multi-dimensional test.
+   We perform, in particular, the so-called Orszag–Tang vortex problem [24] which is a standard two-
+dimensional test for MHD schemes (e.g., [30] and many other references therein). The Orszag–Tang vortex
+problem is thought to be appropriate for comparing the resolution of MHD schemes because complex
+340                                 T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344
+
+
+               0                                                                0
+          10                                                               10
+                      log10( ρ )                                                       log10( ρ )
+            -1                                                               -1
+          10                                                               10
+
+
+
+            -2                                                               -2
+          10                                                               10
+                                                    HLL solver
+                                                   HLLD solver                                                  HLL solver
+                                                    Roe + E-fix                                                HLLD solver
+            -3                                                               -3
+          10                                                               10
+               -0.5                          0.0                    0.5         -0.5                     0.0                        0.5
+
+
+
+          3.0                                                              3.0
+
+          2.0
+                       u                                                   2.0
+                                                                                       u
+          1.0                                                              1.0
+
+          0.0                                                              0.0
+
+         -1.0                                                             -1.0
+
+         -2.0                                       HLL solver            -2.0
+                                                   HLLD solver                                                  HLL solver
+         -3.0                                       Roe + E-fix           -3.0                                 HLLD solver
+
+               -0.5                          0.0                    0.5         -0.5                     0.0                        0.5
+               0                                                                0
+          10                                                               10
+
+
+                      log (p )                                                         log (p )
+            -1             10   T                                            -1            10   T
+          10                                                               10
+
+
+
+            -2                                                               -2
+          10                                                               10
+
+                                                    HLL solver
+            -3                                     HLLD solver               -3                                 HLL solver
+          10                                        Roe + E-fix            10                                  HLLD solver
+
+               -0.5                          0.0                    0.5         -0.5                     0.0                        0.5
+
+Fig. 11. Results of one-dimensional shock tube test with the initial left states (q, p, u, v, w, By, Bz) = (1, 0.45, u0, 0, 0, 0.5, 0), the right
+states (1, 0.45, u0, 0, 0, 0.5, 0), and Bx = 0. Numerical solutions of the HLL solver, the HLLD solver, and the Roe scheme with the
+entropy correction (Roe + E–ﬁx) are plotted at t = 0.05. (Left) u0 = 3, (right) u0 = 3.1. (Top to bottom) log10q, u, log10p T are shown.
+Note that the solution of the Roe scheme is not plotted in the right panel because the Roe scheme fails after several time steps in the
+case of u0 = 3.1.
+                           T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344                         341
+
+Table 1
+Relative diﬀerences of the temperature from the solution of the Roe scheme with corresponding accuracy and resolution, dTRoe
+N                        1st HLL                         1st HLLD                      2nd HLL                       2nd HLLD
+ 50                      0.0779                          0.0054                        0.0239                        0.0040
+100                      0.0579                          0.0043                        0.0143                        0.0028
+200                      0.0453                          0.0034                        0.0083                        0.0027
+400                      0.0353                          0.0024                        0.0046                        0.0011
+
+
+
+
+interactions of several MHD shock waves are included in the evolution of the vortex. The initial conditions
+of the problem are given by (q, p, u, v, w, Bx, By, Bz) = (c2, c, sin y, sin x, 0, sin y, sin 2 x, 0) in a square
+domain 0 < x, y < 2p with N · N grids. Periodic boundary conditions are adopted in both coordinate direc-
+tions. In the present test, second-order accurate schemes with the monotonized central (MC) limiter as well
+as ﬁrst-order accurate schemes are compared with one another at the resolution of N = 50, 100, 200, and
+400. In all simulations, a CFL number of 0.4 is used. Especially, as an indicator of the ability of the
+schemes, the numerical solution of the temperature T = p/q at t = p is taken notice of in the following dis-
+cussions. In Table 1, we show the relative diﬀerences of the temperature from the solution of the Roe
+scheme with corresponding accuracy and grid number deﬁned as
+               P HLL=HLLD
+                   T            T Roe
+      dT Roe ¼         P Roe           ;
+                           T
+
+where the summation is taken over the grid cells. We ﬁnd that dTRoe for the HLL solver becomes large
+especially with decreasing accuracy and grid number, whereas dTRoe for the HLLD solver is less than
+1% in every case. In Table 2, we also summarize the relative diﬀerences of the temperature from the refer-
+ence solution as
+                P HLL=HLLD=Roe
+                 T               T ref:
+      dT ref: ¼        P                 ;
+                         T ref:
+
+where the reference temperature Tref. is calculated by the second-order MUSCL Roe scheme with the MC
+limiter at the ﬁner grid N = 800 adopting the projection divergence cleaning method, which is one of the
+most accurate and reliable method at present [30]. It is found that dTref. for the HLLD solver is comparable
+to that for the Roe scheme with corresponding accuracy and resolution within a trivial error although cor-
+responding dTref. for the HLL solver is large. Indeed, as seen in Figs. 12 and 13, the numerical solution of
+the HLLD solver is almost equal to that of the Roe scheme over the whole domain, while the HLL solver is
+less accurate and less resolved than the Roe and HLLD solvers especially around (x, y) = (p, p). Thus, these
+results imply that the HLLD MHD solver is applicable to the multi-dimensional problems even with com-
+plex wave structures equally to the Roe scheme.
+
+
+Table 2
+Relative diﬀerences of the temperature from the reference solution, dTref.
+N              1st HLL              1st HLLD               1st Roe           2nd HLL             2nd HLLD              2nd Roe
+ 50            0.4106               0.3661                 0.3650            0.1580              0.1365                0.1357
+100            0.3340               0.2953                 0.2950            0.0844              0.0676                0.0675
+200            0.2620               0.2257                 0.2257            0.0394              0.0308                0.0315
+400            0.1960               0.1644                 0.1647            0.0172              0.0132                0.0131
+342                        T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344
+
+
+
+
+Fig. 12. Gray-scale images of the temperature distribution in the Orszag–Tang vortex problem at t = p for (left to right) the HLL
+solver, the HLLD solver, the Roe scheme at N = 200, and the reference solution. The left half of the domain is shown.
+
+
+
+
+       3.0                                       HLL solver                                                   HLL solver
+                                                HLLD solver                                                  HLLD solver
+       2.0                                      Roe scheme          1.0                                      Roe scheme
+
+
+       1.0
+                                                                    0.5
+       0.0
+             0     1        2       3       4        5       6            0     1       2        3       4       5        6
+
+Fig. 13. One-dimensional temperature distribution in the same problem as in Fig. 12 along (left) y = 0.64p, (right) y = p. for the HLL
+solver, the HLLD solver, and the Roe scheme. The solid line shows the reference solution in each panel.
+
+
+
+7. Conclusions
+
+    We have proposed the multi-state HLL approximate Riemann solver for the ideal MHD equations,
+named as HLLD approximate Riemann solver. The HLLD Riemann solver was constructed under the
+assumption that the normal velocity is constant over the Riemann fan. This assumption naturally con-
+cluded that the four states approximation in the Riemann fan are appropriate for Bx 6¼ 0, whereas the
+intermediate states are reduced to the two states when Bx = 0. We showed that the HLLD solver can ex-
+actly resolve all isolated discontinuities in the MHD system as well as isolated fast shocks. We also proved
+analytically that the HLLD solver is positively conservative if proper inequalities for the maximum and
+minimum signal speeds are satisﬁed. Especially, it was shown that those conditions are quite similar to the
+conditions for the HLLC solver except for the diﬀerence of the expressions for the maximum and mini-
+mum eigenvalues. Thus, we considered that the HLLD solver for MHD is a natural extension of the
+HLLC solver for the Euler equations. Also, several numerical tests demonstrated that the HLLD solver
+is accurate enough in comparison with the linearized Riemann solver while keeping its robustness. From a
+typical two-dimensional test, it was considered that the extension to multi-dimensions in the HLLD solver
+                          T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344                          343
+
+may be applicable in a similar way as in the linearized Riemann solver. The ratios of CPU time s for the
+Orszag–Tang vortex problem at N = 400 in our codes are (sHLL:sHLLD:sRoe) = (1:1.35:2.67) in the part of
+the ﬂux calculation and (1:1.13:1.69) over the whole simulation run, although the actual eﬃciency for the
+whole simulation much depends not only on the optimization of the code but also on the algorithm of the
+divergence cleaning method, the higher-order extension method, the time integration method, and so on.
+Thus, the HLLD solver seems to be eﬀective particularly in regard to robustness and eﬃciency rather than
+the Roe scheme, although exact positivity preserving property in multi-dimensions may not be necessarily
+assured even in the HLLD solver. Also, the HLLD solver may be applicable to the modiﬁed MHD system
+as subtracting oﬀ the background potential ﬁeld ﬁrst proposed by Tanaka [28] and applied by many oth-
+ers [18,22,25]. In this modiﬁed system, the HLLD solver will be constructed by replacing the total pressure
+                                                                  2
+pT with the ﬂuctuating part of the total pressure ~pT ¼ pT  jB0 j =2 in (41) for example. A detailed algo-
+rithm will be given in the future paper. These all results indicate that the HLLD Riemann solver for the
+ideal MHD equations can be an alternative to the linearized Riemann solver for MHD.
+
+
+Acknowledgements
+
+   Part of this work was ﬁnancially supported by the collaboration program of Japan Atomic En-
+ergy Research Institute (JAERI), that was arranged by Y. Kishimoto and Y. Ishii of Numerical
+EXperiment of Tokamak (NEXT) group at Naka Fusion Research Establishment, JAERI. We thank
+the anonymous reviewers for constructive comments and suggestions improving the readability of the
+paper.
+
+
+References
+
+ [1] D.S. Balsara, Linearized formulation of the Riemann problem for adiabatic and isothermal magnetohydrodynamics, Astrophys. J.
+     Supp. 116 (1998) 119.
+ [2] P. Batten, N. Clarke, C. Lambert, D.M. Causon, On the choice of wave speeds for the HLLC Riemann solver, SIAM J. Sci.
+     Statist. Comput. 18 (1997) 1553.
+ [3] J.U. Brackbill, D.C. Barnes, The eﬀect of nonzero $ Æ B on the numerical solution of the magnetohydrodynamic equations, J.
+     Comput. Phys. 35 (1980) 426.
+ [4] M. Brio, C.C. Wu, An upwind diﬀerencing scheme for the equations of ideal magnetohydrodynamics, J. Comput. Phys. 75 (1988)
+     400.
+ [5] P. Cargo, G. Gallice, Roe matrices for ideal MHD and systematic construction of Roe matrices for systems of conservation laws,
+     J. Comput. Phys. 136 (1997) 446.
+ [6] W. Dai, P.R. Woodward, An approximate Riemann solver for ideal magnetohydrodynamics, J. Comput. Phys. 111 (1994) 354.
+ [7] S.F. Davis, Simpliﬁed second-order Godunov-type methods, SIAM J. Sci. Statist. Comput. 9 (1988) 445.
+ [8] A. Dedner, F. Kemm, D. Kröner, C.-D. Munz, T. Schnitzer, M. Wesenberg, Hyperbolic divergence cleaning for the MHD
+     equations, J. Comput. Phys. 175 (2002) 645.
+ [9] B. Einfeldt, C.D. Munz, P.L. Roe, B. Sjögreen, On Godunov-type methods near low densities, J. Comput. Phys. 92 (1991) 273.
+[10] C.R. Evans, J.F. Hawley, Simulation of magnetohydrodynamic ﬂows: a constrained transport method, Astrophys. J. 332 (1988)
+     659.
+[11] S.A.E.G. Falle, S.S. Komissarov, P. Joarder, A multidimensional upwind scheme for magnetohydrodynamics, Mon. Not. R.
+     Astron. Soc. 297 (1998) 265.
+[12] J. Gressier, P. Villedieu, J.M. Moschetta, Positivity of ﬂux vector splitting schemes, J. Comput. Phys. 155 (1999) 199.
+[13] K.F. Gurski, An HLLC-type approximate Riemann solver for ideal magnetohydrodynamics, SIAM J. Sci. Comput. 25 (2004)
+     2165.
+[14] A. Harten, J.M. Hyman, Self adjusting grid methods for one-dimensional hyperbolic conservation laws, J. Comput. Phys. 50
+     (1983) 235.
+[15] A. Harten, P.D. Lax, B. van Leer, On upstream diﬀerencing and Godunov-type schemes for hyperbolic conservation laws, SIAM
+     Rev. 25 (1983) 35.
+344                       T. Miyoshi, K. Kusano / Journal of Computational Physics 208 (2005) 315–344
+
+[16] P. Janhunen, A positive conservative method for magnetohydrodynamics based on HLL and Roe methods, J. Comput. Phys. 160
+     (2000) 649.
+[17] A. Jeﬀrey, T. Taniuti, Non-linear Wave Propagation, Academic Press, New York, 1964.
+[18] A.V. Koldoba, M.M. Romanova, G.V. Ustyugova, R.V.E. Lovelace, Three-dimensional magnetohydrodynamic simulations of
+     accretion to an inclined rotator: the ‘‘cubed sphere’’ method, Astrophys. J. Lett. 576 (2002) L53.
+[19] S. Li, An HLLC Riemann solver for magneto-hydrodynamics, J. Comput. Phys. 203 (2005) 344.
+[20] T.J. Linde, A three-dimensional adaptive multiﬂuid MHD model of the heliosphere, Ph.D. Dissertation, University of Michigan,
+     Ann Arbor, MI, 1998.
+[21] T.J. Linde, A practical, general-purpose, two-state HLL Riemann solver for hyperbolic conservation laws, Int. J. Numer. Methods
+     Fluids 40 (2002) 391.
+[22] T. Miyoshi, K. Kusano, A global MHD simulation of the Jovian magnetosphere interacting with/without the interplanetary
+     magnetic ﬁeld, J. Geophys. Res. 106 (2001) 10723.
+[23] B. Marder, A method for incorporating Gauss law into electromagnetic PIC codes, J. Comput. Phys. 68 (1987) 48.
+[24] A. Orszag, C.M. Tang, Small-scale structure of two-dimensional magnetohydrodynamic turbulence, J. Fluid. Mech. 90 (1979)
+     129.
+[25] K.G. Powell, P.L. Roe, T.J. Linde, T.I. Gombosi, D.L. De Zeeuw, A solution-adaptive upwind scheme for ideal
+     magnetohydrodynamics, J. Comput. Phys. 154 (1999) 284.
+[26] P.L. Roe, Approximate Riemann solvers, parameter vectors, and diﬀerence schemes, J. Comput. Phys. 43 (1981) 357.
+[27] D. Ryu, T.W. Jones, Numerical magnetohydrodynamics in astrophysics: algorithm and tests for one-dimensional ﬂow,
+     Astrophys. J. 442 (1995) 228.
+[28] T. Tanaka, Finite volume TVD scheme on an unstructured grid system for three-dimensional MHD simulation of inhomogeneous
+     systems including strong background potential ﬁelds, J. Comput. Phys. 111 (1994) 381.
+[29] E.F. Toro, M. Spruce, W. Speares, Restoration of the contact surface in the HLL Riemann solver, Shock Waves 4 (1994) 25.
+[30] G. Tóth, The $ Æ B = 0 constraint in shock-capturing magnetohydrodynamics codes, J. Comput. Phys. 161 (2000) 605.
+

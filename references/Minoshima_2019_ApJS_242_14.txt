@@ -1,0 +1,1518 @@
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                          https://doi.org/10.3847/1538-4365/ab1a36
+© 2019. The American Astronomical Society. All rights reserved.
+
+
+
+
+        A High-order Weighted Finite Difference Scheme with a Multistate Approximate
+           Riemann Solver for Divergence-free Magnetohydrodynamic Simulations
+  1
+                                                  Takashi Minoshima1, Takahiro Miyoshi2, and Yosuke Matsumoto3
+      Center for Mathematical Science and Advanced Technology, Japan Agency for Marine-Earth Science and Technology, 3173-25, Syowa-machi, Kanazawaku,
+                                                      Yokohama 236-0001, Japan; minoshim@jamstec.go.jp
+                           2
+                             Graduate School of Science, Hiroshima University, 1-3-1, Kagamiyama, Higashi-hiroshima, 739-8526, Japan
+                                   3
+                                     Department of Physics, Chiba University, 1-33, Yayoi-cho, Inage-ku, Chiba, 263-8522, Japan
+                                  Received 2018 June 22; revised 2019 April 15; accepted 2019 April 15; published 2019 May 29
+
+                                                                           Abstract
+              We design a conservative ﬁnite difference scheme for ideal magnetohydrodynamic simulations that attains high-
+              order accuracy, shock-capturing, and a divergence-free condition of the magnetic ﬁeld. The scheme interpolates
+              pointwise physical variables from computational nodes to midpoints through a high-order nonlinear weighted
+              average. The numerical ﬂux is evaluated at the midpoint by a multistate approximate Riemann solver for correct
+              upwinding, and its spatial derivative is approximated by a high-order linear central difference to update the
+              variables with the designed order of accuracy and conservation. The magnetic and electric ﬁelds are deﬁned at
+              staggered grid points employed in the constrained transport (CT) method by Evans & Hawley. We propose a new
+              CT variant, in which the staggered electric ﬁeld is evaluated so as to be consistent with the base one-dimensional
+              Riemann solver, and the staggered magnetic ﬁeld is updated to be divergence-free as designed by the high-order
+              ﬁnite difference representation. We demonstrate various benchmark tests to measure the performance of the present
+              scheme. We discuss the effect of the choice of interpolation methods, Riemann solvers, and the treatment for the
+              divergence-free condition on the quality of numerical solutions in detail.
+              Key words: magnetic ﬁelds – magnetohydrodynamics (MHD) – methods: numerical
+
+
+                                    1. Introduction                                Stone 2005, 2008; Mignone et al. 2007; Stone et al. 2008;
+                                                                                   Lee & Deane 2009; Mignone & Tzeferacos 2010; Lee 2013;
+   Magnetohydrodynamic (MHD) modeling has been exten-
+                                                                                   Matsumoto et al. 2016; Lee et al. 2017). The choice of
+sively applied to various macroscopic dynamics in space and
+                                                                                   Riemann solvers impacts the quality of numerical solutions.
+astrophysical plasmas, such as ﬂares and coronal mass ejections
+                                                                                      Because the original Godunov’s method assumes variables
+in the solar corona, evolution of the solar wind through
+                                                                                   to be piecewise constant in a cell, a numerical error of the
+interplanetary space, auroral substorms and magnetic storms in                     solution is reduced only to ﬁrst order. Improving the accuracy
+the planetary magnetosphere, formation of the heliosphere                          of the method is necessary for practical simulations with a
+through the interaction between the solar wind plasma and the                      reasonable computational cost. A straightforward way is
+interstellar medium (ISM), turbulence and dynamo in magne-                         increasing the order of accuracy of a scheme. For Godunov-
+tized accretion disks, and so on. MHD simulation is an                             type schemes, it is achieved by reconstructing Riemann states
+indispensable tool to study such plasmas as the system of                          with a desired order of accuracy. Piecewise linear interpolation
+equations is highly nonlinear and a variety of phenomena are                       is one of the conventional methods to obtain left and right
+coupled with each other. Rapid development in computational                        Riemann states with second-order accuracy, and the inter-
+technology and science enables us to conduct high-resolution                       mediate state through the Riemann solver. However, high-order
+and long-term numerical simulations for global dynamics as                         linear interpolation methods generally suffer from numerical
+well as local physics.                                                             oscillation and then tend to crash the simulation of nonlinear
+   A common strategy to build an MHD simulation code for                           hyperbolic equations. The robustness, as well as the accuracy,
+space and astrophysical plasmas is based on an upwind-type                         of the simulation relies on interpolation methods. A nonlinear
+shock-capturing method, the so-called Godunov’s method. The                        interpolation method is designed to preserve a high order of
+Godunov-type scheme is based on a ﬁnite volume scheme that                         accuracy in smooth regions but degrade to ﬁrst order at
+updates volume-averaged variables deﬁned in computational                          discontinuous regions so as to avoid the oscillation. The
+cells through an integral form of the hyperbolic conservation                      second-order MUSCL scheme (van Leer 1979) is one of the
+laws in space and time (Godunov 1959). Godunov’s method                            standard nonlinear interpolation methods and has been widely
+evaluates a numerical ﬂux at a cell interface through an exact or                  adopted for practical MHD simulations. To obtain a second-
+approximate solution of the Riemann problem for the left- and                      order accurate solution, one may combine a spatially second-
+right-side variables as an initial state. The solution of the                      order scheme with a multistep time integration method. Many
+Riemann problem retains upwind property for eigenmodes in a                        nonlinear second-order schemes are built to be total variation
+hyperbolic system, and thus implicitly introduces numerical                        diminishing (TVD), which inevitably degrades the accuracy at
+diffusion enough to stabilize a simulation. The method is suited                   a proﬁle extremum. To preserve the proﬁle extremum, some
+for plasma that frequently contains supersonic ﬂows, shocks,                       third- and higher order schemes have been implemented in
+and discontinuities. Godunov’s method has been extensively                         MHD simulation codes (Jiang & Wu 1999; Balsara &
+successful in hydrodynamic simulations and utilized for                            Shu 2000; Matsumoto & Seki 2008; Li 2010; Mignone et al.
+modern MHD simulation codes as well (Gardiner &                                    2010; Matsumoto et al. 2016; Lee et al. 2017). Another
+
+                                                                               1
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                         Minoshima, Miyoshi, & Matsumoto
+
+approach is to statically or adaptively reﬁne the mesh at regions           & Del Zanna 2000). Balsara & Spicer (1999) calculated the
+to be resolved ﬁnely. The Adaptive Mesh Reﬁnement (AMR)                     electric ﬁeld through an arithmetic average of the neighboring
+technique has been implemented in MHD simulation codes to                   numerical ﬂux for the in-plane magnetic ﬁeld obtained from a
+tackle problems including extreme dynamic range in space and                one-dimensional Riemann solver. Their method has been
+time, for example, in star formation and the heliosphere                    employed as a baseline for subsequent schemes (Gardiner &
+(Powell et al. 1999; Balsara 2001; Fromang et al. 2006;                     Stone 2005; Lee & Deane 2009; Lee 2013). Meanwhile, the
+Matsumoto 2007; Ziegler 2008; Stone et al. 2008; Mignone                    solution of a multidimensional Riemann solver was derived for
+et al. 2012). The ﬁnite volume scheme is usually combined                   a staggered electric ﬁeld (Londrillo & Del Zanna 2004;
+with the AMR because the scheme is ﬂexible about the mesh                   Balsara 2010, 2012; Amano 2015). Comparative studies
+structure. In AMR, single-step time integration methods are                 between divergence-cleaning and divergence-free methods
+better suited for the reduction of the computational cost of                have been reported by Tóth (2000), Balsara & Kim (2004),
+communications between different mesh levels (Gardiner &                    and Miyoshi & Kusano (2011).
+Stone 2005, 2008; Lee & Deane 2009; Mignone & Tzeferacos                       Numerous studies have been devoted to develop novel
+2010; Lee 2013).                                                            numerical schemes so as to attain accurate and robust MHD
+   The Godunov-type scheme can be extended to multi-                        simulations. A high-order scheme combined with a shock-
+dimension through a dimension-by-dimension reconstruction.                  capturing method improves the resolution of shocks and
+However, ensuring an exact order of accuracy better than two                discontinuities, smooth structures such as vortices and waves,
+in a multidimensional ﬁnite volume Godunov-type scheme is                   and their interaction driven by a high speed ﬂow at high
+computationally expensive. This is because one needs to                     Reynolds number (Shu 2009). A divergence-cleaning method
+reconstruct the numerical ﬂux along orthogonal directions for               can be combined with a shock-capturing method in a
+the face average: this is not identical to the solution of the              straightforward manner. However, it might lead to a spurious
+Riemann problem for face-averaged variables (Zhang et al.                   solution for a stringent problem such as multiple-shock
+2011; Büchmuller & Helzel 2014; Lee et al. 2017).                           interaction, in which a continuously produced local divergence
+Alternatively, a ﬁnite difference scheme is designed for                    error has global effects through the cleaning method (Balsara &
+hyperbolic conservation laws to retain a high order of accuracy,            Kim 2004). A recipe for combining a high-order (better than
+conservation, and upwind property (Liu et al. 1994; Jiang &                 two) scheme, an MHD shock-capturing method, and a
+Shu 1996; Deng & Zhang 2000). Extension of the high-order                   divergence-free method must be useful for space and astro-
+ﬁnite difference scheme to multiple dimensions is straightfor-              physical plasma simulations (Del Zanna et al. 2007; Balsara
+ward because it updates pointwise variables at computational                et al. 2009; Li 2010; Felker & Stone 2018).
+                                                                               The purpose of this paper is to design a numerical scheme
+nodes rather than volume-averaged ones. The calculation of
+                                                                            for ideal MHD simulations, speciﬁcally focusing on high-order
+source terms is also straightforward for the ﬁnite difference
+                                                                            interpolation and the treatment of the divergence-free condi-
+scheme, while the ﬁnite volume scheme needs their high-order
+                                                                            tion. We build the scheme based on the ﬁnite difference scheme
+reconstruction in cells to retain spatial accuracy better than two.
+                                                                            with several criteria: (1) the order of accuracy can be improved
+Note that the two schemes are essentially identical at the
+                                                                            to an arbitrary level (in principle) through a dimension-by-
+second-order level.                                                         dimension interpolation, (2) a variety of Riemann solvers are
+   Multidimensional MHD simulations should take special care                available, and (3) the multidimensional scheme is divergence-
+with the divergence-free condition for the magnetic ﬁeld. The               free and reduces to the base one-dimensional scheme for one-
+Godunov-type scheme discretizes hyperbolic conservation laws                dimensional problems. Section 2 presents the scheme design.
+into a divergence form. Generally, in the baseline Godunov                  Details of the ﬁnite difference scheme for hyperbolic
+scheme without any special divergence control, the magnetic                 conservation laws are introduced in Section 2.1. The high-
+ﬁeld is not necessarily divergence-free, and a ﬁnite divergence             order interpolation methods are described in Sections 2.2–2.3,
+error may lead to an unphysical solution, even though the ﬁeld              the Riemann solver is brieﬂy introduced in Section 2.4, and the
+is updated in the divergence form (Brackbill & Barnes 1980).                treatment of the divergence-free condition is presented in
+Recipes against this problem are classiﬁed into two types,                  Section 2.5. Section 3 details the numerical simulation results
+divergence-cleaning and divergence-free methods. The diver-                 of various benchmark tests so as to measure the performance of
+gence-cleaning method keeps the divergence error within a                   the present scheme. We compare a variety of schemes to assess
+tolerable level by correcting the magnetic ﬁeld through the                 the effect of numerical techniques on the quality of solutions.
+Poisson equation (Brackbill & Barnes 1980; Ryu et al. 1995;                 Finally, Section 4 summarizes the paper.
+Crockett et al. 2005), additional source terms (Powell et al.
+1999), or additional equations (Dedner et al. 2002). The                     2. High-order Finite Difference Schemes for Ideal MHD
+divergence-free method utilizes staggered grid spacing so as to
+discretize the induction equation to be consistent with                       The normalized, fully compressible ideal MHD equations are
+Faraday’s law, termed the constrained transport (CT) method
+                                                                                               ¶r
+(Evans & Hawley 1988). The CT method deﬁnes the in-plane                                          +  · (ru) = 0,                        (1 )
+magnetic ﬁeld at cell interfaces and the out-of-plane electric                                 ¶t
+ﬁeld at cell corners to preserve the divergence-free condition in
+a discretized manner within machine precision (e.g.,                             ¶ (ru)       ⎡      ⎛    ∣B∣2 ⎞       ⎤
+Tóth 2000). Because the staggered electric ﬁeld is not directly                         +  · ⎢ruu + ⎜P +      ⎟ I - BB⎥ = 0,            (2 )
+                                                                                   ¶t         ⎣      ⎝     2 ⎠         ⎦
+obtained from a one-dimensional Riemann solver, a variety of
+methods have been proposed to calculate it while retaining the
+upwind property (Hawley & Stone 1995; Dai & Woodward                                            ¶B
+                                                                                                   +  ´ E = 0,                          (3 )
+1998; Ryu et al. 1998; Balsara & Spicer 1999; Londrillo                                         ¶t
+
+                                                                        2
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                   Minoshima, Miyoshi, & Matsumoto
+
+        ¶e       ⎡⎛ ru2    gP ⎞           ⎤                                 Christlieb et al. 2014),
+           +  · ⎢⎜     +      ⎟ u + E ´ B⎥ = 0,                 (4 )
+        ¶t       ⎣⎝ 2     g - 1⎠          ⎦                                              ¶F             Fˆi + 1 2 - Fˆi - 1 2
+                                                                                                    =                         + O (Dx q) ,        (12)
+where r, u = (u , v, w ), B = (Bx , By , Bz ), E = (Ex , Ey, Ez ), e,                    ¶x     i                Dx
+and P are the ﬂuid mass density, the velocity, the magnetic ﬁeld,
+                                                                            where Fˆi + 1 2 is the pointwise numerical ﬂux at a midpoint
+the electric ﬁeld, the total energy density, and the gas pressure,
+respectively. The electric ﬁeld and the gas pressure are determined         i+1/2 and Δx is a grid size. The numerical ﬂux F̂ is
+from Ohm’s law and the equation of state,                                   evaluated so that its two-point difference is an approximation
+                                                                            of the ﬂux derivative with the desired order of accuracy q; it is
+                        E = - u ´ B,                             (5 )       not identical to the qth-order approximation of the physical ﬂux
+                           ⎛    r∣u∣2   ∣B∣2 ⎞                              F (U ) itself for q>2. As is shown by, e.g., Mignone et al.
+             P = ( g - 1 ) ⎜e -       -      ⎟,                  (6 )       (2010), Fˆi + 1 2 is reconstructed from the pointwise physical ﬂux
+                           ⎝      2      2 ⎠
+                                                                            Fi = F (Ui ) with the same reconstruction method used for ﬁnite
+where γ is the speciﬁc heat ratio. The magnetic ﬁeld should                 volume schemes.
+satisfy the divergence-free condition                                           An example procedure of the conventional ﬁnite difference
+                                                                            scheme is as follows: (i) the physical ﬂux Fi is calculated at the
+                           · B = 0.                             (7 )       node and is split into positive and negative ﬂuxes for correct
+  To construct a ﬁnite difference scheme in a dimension-by-                 upwinding, Fi = Fi+ + Fi-, where ¶F+ ¶U > 0 and
+dimension fashion, we ﬁrst consider the one-dimensional MHD                 ¶F- ¶U < 0 , (ii) the numerical ﬂuxes are reconstructed at
+                                                                                                                                           +
+equations in conservative form as                                           the left side at xi + 1 2 and the right side at xi - 1 2 , Fˆi + 1 2 , and
+                                                                               -
+                       ¶U   ¶F                                              Fˆi - 1 2 , with the positive and negative ﬂuxes F from step (i) in
+                          +    = 0,                              (8 )       an upwind-biased stencil (i - r , ¼, i + r ). For example,
+                       ¶t   ¶x
+                                                                            the optimal ﬁfth-order (r = 2) upstream central scheme gives
+                                                                               
+where                                                                       Fˆi  1 2 = (2Fi 2 - 13Fi 1 + 47Fi + 27Fi 1 - 3Fi 2 ) 60 . To
+                ⎡              ru                 ⎤                         suppress the numerical oscillation caused by linear reconstruc-
+       ⎡r ⎤     ⎢ 2                               ⎥                         tion methods, one employs a nonlinear method such as the
+                ⎢ ru + P + (By + Bz - Bx ) / 2 ⎥
+                               2      2      2
+       ⎢ ru ⎥                                                               WENO scheme (Jiang & Shu 1996), and (iii) the numerical ﬂux
+                                                                                                                        +           -
+       ⎢ rv ⎥   ⎢         rvu - Bx By             ⎥                         is obtained at the midpoint, Fˆi + 1 2 = Fˆi + 1 2 + Fˆi + 1 2 , and then
+       ⎢ rw ⎥   ⎢                                 ⎥                         Equation (10) is integrated through Equation (12).
+   U = ⎢ ⎥, F = ⎢        rwu - Bx Bz              ⎥,             (9 )
+       ⎢ By ⎥                                                                   Steger & Warming (1981) developed a ﬂux-vector splitting
+                ⎢         By u - Bx v             ⎥
+       ⎢ Bz ⎥   ⎢                                 ⎥                         method for hydrodynamic simulations, but their method cannot
+       ⎢⎣ e ⎥⎦            Bz u - Bx w                                       be utilized for MHD simulations because the MHD equations
+                ⎢                                 ⎥
+                ⎣(e + P + ∣B∣2 / 2) u - Bx (u · B)⎦                         are not homogeneously of degree one, F ¹ AU , where
+                                                                            A = ¶F ¶U is the Jacobian matrix. One can use the Lax–
+and Bx=constant is given as a constraint in one dimension.                Friedrichs method, Fi = (Fi  ∣l∣max Ui ) 2, where ∣l∣max is
+   We discretize the physical variables U at a time tn on a                 the maximum absolute speed among eigenmodes. Although the
+computational node i as a pointwise representation, Uin =                   Lax–Friedrichs method is applicable to any hyperbolic
+U (xi , tn ). Equation (8) is discretized as                                conservation laws, the solution suffers from numerical
+                                                                            diffusion with a timescale of Dx ∣l∣max , which may be much
+                      d Uin    ¶F
+                            =-                                  (10)        faster than the dynamical timescale (Minoshima et al. 2015).
+                       dt      ¶x      i
+                                                                                                           2.1. Differencing
+and is integrated in time with the third-order Strong Stability
+Preserving Runge–Kutta (SSPRK) method that is popular for                      We adopt another type of high-order ﬁnite difference
+the time integration of partial differential equations (Shu &               scheme, called the weighted compact nonlinear scheme
+Osher 1988; Gottlieb & Shu 1998),                                           (WCNS; Deng & Zhang 2000). This scheme is built based
+                                                                            on the compact ﬁnite difference scheme in Lele (1992), which
+            U * = U n -  (F n) Dt ,                                        expresses a linear combination of ﬂux derivatives around a
+                   3      1                                                 node as a function of ﬂuxes at midpoints (Equation(4) in Deng
+          U ** = U n + (U * -  (F*) Dt ) ,                                 & Zhang 2000). For low computational cost and simplicity in
+                   4      4
+                   1 n    2                                                 parallel computation, we use an explicit form to approximate
+          U n + 1 = U + (U ** -  (F**) Dt ) ,                  (11)        the ﬂux derivative at the node i as
+                   3      3
+where  stands for a difference operator and Δt is a time step.               ¶F                    F˜i + k+ 1 2 - F˜i - k- 1 2
+The quality of numerical solutions relies on the evaluation of                          = å dk                                  + O (Dx p) + O (Dx q) ,
+                                                                              ¶x    i    k 0                   Dx
+the ﬂux derivative as long as the temporal error is relatively
+small.                                                                                                                                           (13)
+   Conventional high-order ﬁnite difference schemes for
+hyperbolic conservation laws approximate the ﬂux derivative                 where we consider uniform grid spacing. Here, the pointwise
+as a two-point difference (Liu et al. 1994; Jiang & Shu 1996;               numerical ﬂux F˜i + 1 2 is a high-order approximation of
+Jiang & Wu 1999; Balsara & Shu 2000; Mignone et al. 2010;                   the physical ﬂux at the midpoint F (U (xi + 1 2 )) itself. The
+
+                                                                        3
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                               Minoshima, Miyoshi, & Matsumoto
+
+
+
+
+Figure 1. One-dimensional grid spacing for the explicit WCNS scheme. Computational nodes and midpoints located at integer and half-integer grid points are
+represented by circles and triangles, respectively. (a) Location of the midpoints used for the fourth-order difference at node i (blue circle) is highlighted by red
+triangles. (b) Stencil for the third-order interpolation to the midpoint i+3/2 (blue triangle) is highlighted by red circles. (c) Stencil for the update at node i (blue
+circle) is highlighted by red circles.
+
+truncation error terms O(Δx p) and O(Δx q) come from the                                They should be a high-order approximation of U (xi  1 2 ). (ii)
+approximations of the numerical ﬂux and the derivative, and                                       L, R
+                                                                                        Using U˜i + 1 2 from step (i) as the initial left and right Riemann
+the spatial accuracy depends on both. The conservative                                  states, the numerical ﬂux is evaluated at the midpoint by a
+property is guaranteed as long as the coefﬁcients dk are                                Riemann solver, F˜i + 1 2 , which is a high-order approximation of
+constant. We use the fourth-order linear central difference                             F (U (xi + 1 2 )) itself, and (iii) Equation (10) is integrated
+                                                                                        through dUin dt = -4 (F˜ )i .
+            27 (F˜i + 1 2 - F˜i - 1 2) - (F˜i + 3 2 - F˜i - 3 2 )                          Because the present scheme interpolates the physical variables
+ 4(F˜ )i =
+                                   24Dx                                                 to the midpoints, one can utilize a variety of Riemann solvers,
+            ¶F            3 ¶ 5F                                                        some of which resolve multiple eigenmodes in the Riemann fan
+          =           -                Dx 4 + O (Dx 6) + O (Dx p).                      that are smeared in the Lax–Friedrichs method. This is a main
+            ¶x i         640 ¶x 5 i                                                     advantage against the conventional ﬁnite difference scheme for
+                                                                  (14)                  MHD simulations. A disadvantage of the scheme is the increase in
+                                                                                        the number of grid points necessary to update. The explicit
+Sixth-, eighth- and tenth-order differences are found in Zhang                          WCNS scheme achieves a (2r + 1)th order of accuracy by
+et al. (2008). At the leftmost interior point i=1, one can use                        combining a (2r + 1)th-order interpolation and a (2r + 2)th-order
+the third-order boundary scheme,                                                        difference. The (2r + 2)th-order ﬂux difference at node i is
+                                                                                        approximated by the numerical ﬂuxes at the midpoints
+                  - F˜7 2 + 3F˜5 2 + 21F˜3 2 - 23F˜1 2                                  (i - 1 2 - r , ¼, i + 1 2 + r ), and the numerical ﬂux at
+       4(F˜ )1 =
+                                  24Dx                                                  the rightmost midpoint (i + 1/2 + r) is reconstructed in the stencil
+                  ¶F         1 ¶ 4F                                                     (i, ¼, i + 2r + 1). Therefore, the (2r + 1)th-order explicit
+                =         -            Dx 3                                             WCNS scheme needs (4r + 3) grid points to update the physical
+                  ¶x 1      24 ¶x 4 1                                                   variables at node i. The example grid spacing for r=1 is
+                    + O (Dx 4) + O (Dx p).                                 (15)         displayed in Figure 1. On the other hand, the (2r + 1)th-order
+                                                                                        conventional ﬁnite difference scheme needs (2r + 3) grid points.
+An expression for the rightmost interior point is symmetrically
+derived. The ﬂux derivative is approximated by the numerical
+ﬂuxes similar to those of Deng & Zhang (2000) and Del Zanna                                                           2.2. Interpolation
+et al. (2007). Meanwhile, one can employ a combination of                                  In this subsection, we consider a scalar linear advection case
+physical ﬂuxes at the nodes and numerical ﬂuxes at the                                  in which F is proportional to U, e.g., F=aU for simplicity.
+midpoints that makes the stencil smaller (Nonomura &                                    The scheme calculates the physical variable at the midpoint
+Fujii 2013; Chen et al. 2016).                                                          i+1/2 in an upwind-biased stencil (i - r , ¼, i + r ). The
+                                                                                                                                  L
+   This scheme allows us to interpolate the physical variables                          optimal third-order interpolation of U˜i + 1 2 from the point
+(Deng & Zhang 2000) or the physical ﬂuxes (Zhang et al.                                 values Ui in the stencil (i - 1, ¼, i + 1) is
+2008) to calculate the numerical ﬂuxes at the midpoints,
+whereas the conventional ﬁnite difference scheme directly                                        L        - Ui - 1 + 6Ui + 3Ui + 1
+reconstructs the numerical ﬂuxes at the midpoints from the                                    U˜i + 1 2 =
+                                                                                                                      8
+physical ﬂuxes at the nodes. The present scheme adopts the
+following procedure: (i) the physical variables are interpolated                                                      1 ¶ 3U         3 + 1 ¶ U
+                                                                                                                                             4
+                                                                                                        = Ui + 1 2 +           D   x
+                                                                    L
+to the left side at xi + 1 2 and to the right side at xi - 1 2 , U˜i + 1 2,                                          16 ¶x 3 i          128 ¶x 4             i
+        R
+and U˜i - 1 2 , in an upwind-biased stencil (i - r , ¼, i + r ).                                          ´ Dx 4 + O (Dx 5).                                        (16)
+
+                                                                                    4
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                                          Minoshima, Miyoshi, & Matsumoto
+                               R
+The equation for            U˜i - 1 2
+                          is symmetric with respect to i.
+Assuming the advection velocity is +1, i.e., F=U, F˜i + 1 2 in
+                                L
+Equation (14) is replaced by U˜i + 1 2 and then Equation (14)
+reduces to
+                   ¶U                    1 ¶ 4U                      9 ¶ 5U
+   4(U˜ L )i =                     +                      Dx 3 -
+                   ¶x       i           16 ¶x 4    i                320 ¶x 5      i
+                  ´ Dx 4 + O (Dx 5).                                                      (17)
+The combination of the third-order interpolation in Equation (16)
+and the fourth-order difference in Equation (14) has the third-
+order dissipation as a leading error. Similarly, the ﬁfth-order
+interpolation in the stencil (i - 2, ¼, i + 2) is
+              3U - 20Ui - 1 + 90Ui + 60Ui + 1 - 5Ui + 2
+  U˜i + 1 2 = i - 2
+     L
+                                  128
+                          3 ¶ 5U
+            = Ui + 1 2 -            Dx 5 + O (Dx 6) ,                                     (18)
+                         256 ¶x 5 i
+
+and Equation (14) reduces to
+                  ¶U                     3 ¶ 5U                       3 ¶ 6U
+   4(U˜ L )i =                 -                          Dx 4 -
+                  ¶x    i               640 ¶x 5       i             256 ¶x 6         i
+                  ´ Dx 5 + O (Dx 6).                                                      (19)
+The combination of the ﬁfth-order interpolation in Equation (18)
+and the fourth-order difference in Equation (14) has the fourth-
+order dispersion as a leading error. One can improve the leading                                     Figure 2. Fourier analysis of high-order ﬁnite difference schemes. (a) Real and
+                                                                                                     (b) imaginary parts of the modiﬁed wave number are shown.
+error to ﬁfth-order dissipation by using a sixth-order difference.
+   The ﬁfth-order interpolation in Equation (18) is not optimal
+for this scheme because the order of accuracy is four despite the
+                                                                                                     Figure 2 shows the real and imaginary parts of the modiﬁed
+ﬁve-point interpolation. Instead, we propose the following
+fourth-order interpolation that is appropriate to Equation (14),                                     wave number as a function of the actual wave number.
+                                                                                                     Evidently, the exact solution is Re(ω*)=ω, Im(ω*)=0. The
+            9U - 56Ui - 1 + 234Ui + 144Ui + 1 - 11Ui + 2                                             combinations of the third-, fourth-, and ﬁfth-order interpolation
+U˜i + 1 2 = i - 2
+   L
+                                  320                                                                methods (Equations (16), (20), and (18)) with the fourth-order
+                        3 ¶ U
+                            4
+                                      4 - 3 ¶ U
+                                              5                                                      difference (Equation (14)) are referred to as 3I4D3, 4I4D5, and
+          = Ui + 1 2 +            D x                                                                5I4D4, where the ﬁrst digit represents the order of interpola-
+                       640 ¶x 4 i        256 ¶x 5 i
+                                                                                                     tion, the second digit is the order of difference, and the last
+           ´ Dx 5 + O (Dx 6).                                                                        digit is the designed order of accuracy, respectively. The third-
+                                                                                          (20)       and ﬁfth-order upstream central schemes (UP3 and UP5) are
+                                           L
+Replacing F˜i + 1 2 in Equation (14) by U˜i + 1 2 , one ﬁnd that the                                 shown for comparison. The imaginary part is not zero
+O(Δx ) error cancels out, and the leading error is the ﬁfth-order
+     4                                                                                               (dissipative) because the interpolation methods are upwind
+dissipation,                                                                                         biased. The numerical dispersion and dissipation are improved
+                                                                                                     with increasing order of accuracy of the interpolation. The
+                ¶U                        9 ¶ 6U                                                     4I4D5 scheme improves/degrades the numerical dispersion/
+     4(U˜ )i =                     -                          Dx 5 + O (Dx 6).           (21)
+                ¶x              i        640 ¶x 6          i
+                                                                                                     dissipation against the 5I4D4 scheme, which can be explained
+                                                                                                     by the fact that the absolute value of the imaginary part in the
+In Appendix A, we combine seventh- and sixth-order                                                   4I4D5 scheme is 1.2 times larger than the 5I4D4 scheme, as is
+interpolation methods with a sixth-order difference, giving                                          found in Equations (19) and (21). In terms of the modiﬁed
+sixth- and seventh-order ﬁnite difference schemes.                                                   wave number, the schemes are slightly better than the same-
+   In order to conﬁrm the dissipative and dispersive properties of                                   order upstream central schemes as mentioned in Deng &
+the above interpolation methods in Equations (16)–(21), we
+                                                                                                     Zhang (2000).
+perform a Fourier analysis similar to Lele (1992). Using the
+                                                                                                        In practical compressible hydrodynamic simulations, high-
+periodic function for a scalar variable Ui = exp ( jwxi ) (here j is the
+imaginary unit), we interpolate it to the midpoints and calculate                                    order linear interpolation methods do not work due to severe
+4 (U ). Subsequently, we evaluate the modiﬁed wave number as                                        numerical oscillation around discontinuities. Therefore, the
+                                                                                                     WCNS scheme adopts the same methodology as the WENO
+                   w* = - j exp ( - jwx ) 4(U ).                                         (22)       scheme to suppress the numerical oscillation. The interpolation
+
+
+                                                                                                 5
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                      Minoshima, Miyoshi, & Matsumoto
+
+                                                                                     We employ the weighted function from the third-order energy-
+                                                                                     stable WENO scheme (Yamaleev & Carpenter 2009),
+                                                                                                        ⎛        t ⎞
+                                                                                                as = cs ⎜1 +         ⎟,
+                                                                                                        ⎝    ISs +  ⎠
+                                                                                               IS0 = (Ui - Ui - 1)2 , IS1 = (Ui + 1 - Ui )2 ,
+                                                                                                 t = (Ui + 1 - 2Ui + Ui - 1)2 ,
+                                                                                                     1         3
+                                                                                                c0 = , c1 = ,                                          (25)
+                                                                                                     4         4
+                                                                                     where ò=10−40 is a positive real number to avoid the
+                                                                                     denominator becoming zero. For the ﬁfth- and fourth-order
+                                                                                     cases (Equations (18) and (20)), the interpolations in three
+                                                                                     substencils (i − 2, i − 1, i), (i − 1, i, i + 1), and (i, i + 1, i + 2)
+                                                                                     are found in Zhang et al. (2008, Equations (2-16)–(2-18)
+                                                                                     therein),
+                                                                                                   L ,0     (3Ui - 2 - 10Ui - 1 + 15Ui )
+                                                                                                U˜i + 1 2 =                               ,
+                                                                                                                           8
+                                                                                                   L ,1     ( - Ui - 1 + 6Ui + 3Ui + 1)
+                                                                                                U˜i + 1 2 =                             ,
+                                                                                                                          8
+                                                                                                   L ,2     (3Ui + 6Ui + 1 - Ui + 2)
+                                                                                                U˜i + 1 2 =                          .                 (26)
+                                                                                                                         8
+                                                                                     The weighted function is the same as that used in Zhang et al.
+                                                                                     (2008),
+                                                                                                 cs
+                                                                                      as =                ,
+                                                                                            (ISs +  )2
+                                                                                             13                              1
+                                                                                      IS0 =      (Ui - 2 - 2Ui - 1 + Ui )2 + (Ui - 2 - 4Ui - 1 + 3Ui )2 ,
+                                                                                             12                              4
+                                                                                             13                             1
+                                                                                      IS1 =     (Ui - 1 - 2Ui + Ui + 1) + (Ui - 1 - Ui + 1)2 ,
+                                                                                                                        2
+                                                                                             12                             4
+                                                                                             13                              1
+                                                                                      IS2 =      (Ui - 2Ui + 1 + Ui + 2)2 + (3Ui - 4Ui + 1 + Ui + 2)2 ,
+                                                                                             12                              4
+                                                                                             1           5         5
+                                                                                      c0 =     , c1 = , c2 =         , (fifth - order interpolation)
+                                                                                            16           8        16
+Figure 3. One-dimensional linear advection over 10 periods solved with (a) the
+                                                                                             3           13        11
+MUSCL-MC scheme, (b) the W3I4D3 scheme, and (c) the W4I4D5 scheme.                    c0 =     , c1 =       , c2 =    ,
+The number of grid points is 200 and the CFL number is 0.4.                                 40           20        40
+                                                                                           (fourth - order interpolation)
+                                                                                                                                                  (27)
+is expressed as a convex combination of substencils,
+                                           as                                        where we use ò=10−40. The smoothness indicator ISs in
+         U˜i + 1 2 = å wk U˜i + 1 2, ws =
+            L                L,k
+                                               ,                        (23)         Equation (27) measures the average of the square of the ﬁrst-
+                     k                    å ak                                       and second-order derivatives in cell [xi - 1 2 , xi + 1 2], whereas
+                                                      k
+         L, k                                                                        the indicator in Deng & Zhang (2000) measures it at point xi.
+where U˜i + 1 2 is the interpolated value in the kth substencil and                  Their difference is very small (the factor of 13/12 is replaced
+the nonlinear weight ws is a function of the smoothness of the                       by 1 in Deng & Zhang 2000) and does not affect the numerical
+proﬁle measured in the substencil. The nonlinear weight is                           simulation results in this paper. The accuracy may be further
+designed to be close to the optimal weight when the proﬁle is                        improved by adopting sophisticated weighted functions such as
+sufﬁciently smooth in all substencils, but to be nearly zero in                      those in Henrick et al. (2005), Borges et al. (2008), Ha et al.
+the substencil containing discontinuities. For the third-order                       (2013), and Fan et al. (2014).
+case (Equation (16)), the interpolations in the two substencils                         Figure 3 shows the numerical solutions of the one-
+(i − 1, i) and (i, i + 1) are                                                        dimensional advection ∂U/∂t+∂U/∂x=0 over 10 periods.
+                      L ,0     ( - Ui - 1 + 3Ui )                                    We set the initial condition of a combination of rectangular and
+                   U˜i + 1 2 =                    ,                                  triangle waves, a Gaussian proﬁle, and a half ellipse, and use
+                                        2                                            200 grid points and a CFL number of 0.4; this is the same
+                      L ,1     (U + Ui + 1)                                          condition used in Jiang & Shu (1996) and Suresh & Huynh
+                   U˜i + 1 2 = i             .                          (24)
+                                      2                                              (1997). From top to bottom, we employ a second-order scheme
+
+                                                                                 6
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                             Minoshima, Miyoshi, & Matsumoto
+
+based on MUSCL reconstruction with a monotonized central                             approximate Riemann solvers have been proposed for and
+ﬂux limiter (MUSCL-MC), the weighted 3I4D3 scheme                                    successful in practical MHD simulation studies (Brio &
+(W3I4D3; Equations (24) and (25)), and the weighted 4I4D5                            Wu 1988; Balsara 1998; Li 2005; Miyoshi & Kusano 2005).
+scheme (W4I4D5; Equations (26) and (27)). All schemes                                Among them, we adopt the HLL-type approximate Riemann
+effectively suppress the numerical oscillation that will arise                       solvers because of their simplicity, good performance, and
+around discontinuities in linear schemes. The MUSCL-MC                               widespread acceptance (Kritsuk et al. 2011). The HLL
+scheme shows an asymmetric proﬁle toward the direction of                            Riemann solver is one of the simplest solver, in which the
+advection. The weighted high-order schemes presented here                            solution of the Riemann problem is approximated as a single
+improve numerical dispersion and then remedy the asymmetry.                          state bounded by the fastest and slowest waves (Harten et al.
+The W3I4D3 scheme considerably dissipates a proﬁle                                   1983). For MHD simulations, we employ the HLLD Riemann
+extremum like TVD schemes (e.g., MUSCL-MC). Using the                                solver developed by Miyoshi & Kusano (2005) to improve the
+ﬁve-point interpolation, the W4I4D5 scheme succeeds in                               accuracy of Alfvén and entropy waves against the HLL
+distinguishing the extremum from the discontinuity and                               Riemann solver.
+preserving it, similar to ﬁfth-order schemes (e.g., Suresh &
+Huynh 1997). Note that the solution of the W4I4D5 scheme is                                                     2.5. Multidimension
+very close to that of the ﬁfth-order WENO scheme (Figure 4.2.
+                                                                                        The ﬁnite difference scheme designed to solve hyperbolic
+in Suresh & Huynh 1997).
+                                                                                     conservation laws in a divergence form is extended to multiple
+                                                                                     dimensions in a dimension-by-dimension fashion. Applying the
+                 2.3. Characteristic Decomposition
+                                                                                     scheme to the MHD equations, the induction Equation (3) may
+   Upwind schemes are developed based on the property of the                         be written in divergence form, ¶B ¶t +  · (uB - Bu) = 0 .
+linear advection equation. When one applies the scheme to                            However, this form does not numerically guarantee  · B = 0
+nonlinear hyperbolic conservation laws, it is more appropriate to                    in multiple dimensions. The errors accumulate and could
+interpolate characteristic variables rather than conservative or                     ﬁnally crash a simulation run. Evans & Hawley (1988)
+primitive variables (Qiu & Shu 2002; Shu 2009). For the                              proposed the CT method to avoid this problem, in which the
+primitive variables in MHD, V = (r, u , v, w, By , Bz , P )T , the                   induction equation is discretized on staggered grid points and is
+nonconservative form of Equation (8),                                                solved in the curl form to preserve  · B within machine
+                                                                                     precision. The present two-dimensional scheme employs the
+ ¶V      ¶V                        ⎛ ¶ U ⎞-1 ⎛ ¶ U ⎞                    ¶F           same grid spacing as the CT method in Figure 4(a) (extension
+    + Ap    = 0,              Ap = ⎜     ⎟ A⎜      ⎟,          A=          ,
+ ¶t      ¶x                        ⎝ ¶V ⎠    ⎝ ¶V ⎠                     ¶U           to three dimensions is straightforward). The in-plane magnetic
+                                                                          (28)       ﬁeld and the out-of-plane electric ﬁeld components are deﬁned
+                                                                                     at the staggered grid points as pointwise representation (not
+is diagonalized by left and right matrices L and R, and then the                     face-averaged or line-averaged ones),
+equations reduce to nonlinear advection equations for char-                                     ⎧ Bx, i + 1 2, j = Bx (xi + 1 2 , yj ) ,
+acteristic variables dQ = L · dV . The matrices consist of left                                 ⎪
+and right eigenvectors of kth characteristic variables l k and r k ,                            ⎨ By, i, j + 1 2 = By (xi , yj + 1 2) ,                     (30)
+                                                                                                ⎪
+                                                                                                ⎩ Ez , i + 1 2, j + 1 2 = Ez (xi + 1 2 , yj + 1 2).
+         ⎛ l1 ⎞
+         ⎜ 2⎟                                                                        A conventional two-point difference formula for the induction
+         ⎜l ⎟
+         ⎜ l 3⎟                                                                      equation preserves  · B with second-order accuracy. To
+     L = ⎜ l 4 ⎟ , R = (r1, r 2 , r 3, r 4 , r 5, r 6, r 7) , LR = 1.     (29)       ensure  · B = 0 with spatial accuracy higher than two, we
+         ⎜ 5⎟                                                                        adopt a similar methodology to Londrillo & Del Zanna (2004)
+         ⎜l ⎟                                                                        and Del Zanna et al. (2007) for the present scheme. As they
+         ⎜⎜ l 6 ⎟⎟
+                                                                                     mentioned, we should measure the derivative in  · B with the
+          ⎝ l 7⎠
+                                                                                     same algorithm used for the ﬂux derivative. Therefore, the
+Using the eigenvectors given by Stone et al. (2008), the                             present scheme measures  · B from the staggered magnetic
+interpolation is carried out through the following steps: (i) V is                   ﬁeld as
+calculated from U , and then L, R are calculated from V , (ii) V                                ( · B)i, j = 4, x (Bx )i, j + 4, y(By )i, j ,            (31)
+is converted to Q in each stencil through Qi + s = Li · Vi + s ,
+where s = -r , ¼, r covers the stencil, (iii) the characteristic                     where 4, x and 4, y stand for the fourth-order difference
+                                  L           R                                      (Equation (14)) in the x and y directions. It is obvious that the
+variables at the midpoints, Q˜ i + 1 2 , Q˜ i - 1 2 , are interpolated
+                                                               L
+                                                                                     above  · B is preserved in a discretized manner when the
+from Qi + s , and (iv) Q is converted to V through V˜i + 1 2 =                       magnetic ﬁeld is updated through
+        L         R                 R
+Ri · Q˜ i + 1 2 , V˜i - 1 2 = Ri · Q˜ i - 1 2 , and then V to U .                                   dBx, i + 1 2, j
+                                                                                                                       = - 4, y(Ez )i + 1 2, j ,           (32)
+                                                                                                         dt
+                          2.4. Riemann Solver
+                                                                                                     dBy, i, j + 1 2
+   The physical variables are prepared at the midpoints to                                                              = 4, x (Ez )i, j + 1 2 .           (33)
+                                                                                                           dt
+evaluate the numerical ﬂuxes. A common strategy for the
+calculation of the numerical ﬂux in hyperbolic conservation                          This is an explicit formula and is essentially same as the
+                                            L, R
+laws is to solve the Riemann problem for U˜i + 1 2 as the initial                    method used in Del Zanna et al. (2007). On the other hand, the
+left and right states. A number of linearized and nonlinear                          ﬁnite difference scheme in Londrillo & Del Zanna (2004)
+
+                                                                                 7
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                                              Minoshima, Miyoshi, & Matsumoto
+
+
+
+
+Figure 4. (a) Two-dimensional grid spacing for the present ﬁnite difference scheme. Fluid variables are deﬁned at integer circle points (i, j), numerical ﬂuxes and the
+in-plane magnetic ﬁelds at half-integer triangle points (i + 1/2, j) and (i, j + 1/2), and the out-of-plane electric ﬁeld at staggered star points (i + 1/2, j + 1/2).
+                                                                                                                                          B             Bx
+(b) Position of the numerical ﬂux to calculate the electric ﬁeld at staggered grid points. The numerical ﬂuxes at half-integer points, ̃ 1 y2,0 and ̄ 0,1 2 , are interpolated
+in the orthogonal direction (indicated by arrows).
+
+solves the induction equation for the “primary” magnetic ﬁeld                                    Substituting Equation (35) into Equation (34), one obtains
+B̂, not B itself, which approximates the ﬁrst derivative as a
+two-point difference irrespective of the order of accuracy.                                         E˜¯z , i + 1 2, j + 1 2
+                                                                                                                B               B                    B                B
+Because they are related implicitly, their scheme needs a matrix                                             ¯ i, jx+ 1 2 + ¯ i +x 1, j + 1 2 - ˜ i +y 1 2, j - ˜ i +y 1 2, j + 1
+inversion to obtain B from B̂. See their Appendix A for details.                                        =
+                                                                                                                                             4
+   A critical issue is how to calculate the staggered electric ﬁeld                                                 By            By                       B               B
+Ez, i + 1 2, j + 1 2 to be consistent with the solution of the Riemann                                            Fi + 1 2, j + Fi + 1 2, j + 1
+                                                                                                                  ˜             ˜                       G¯ i, jx+ 1 2 + G¯ i +x 1, j + 1 2
+                                                                                                            -                                      +                                         .
+problem. A straightforward strategy is to approximate it from                                                                   4                                       4
+the solutions of the one-dimensional Riemann problem at the                                                                                                                                  (36)
+neighboring midpoints. The one-dimensional procedure
+(Sections 2.2–2.4) returns the numerical ﬂuxes in the x and y                                    A solution of one-dimensional problems in two dimensions
+directions, F˜i + 1 2, j and G¯ i, j + 1 2 , where the tilde (bar) notation                      using the above two-dimensional method is not equivalent to
+means that a variable is interpolated in the x (y) direction. A                                  one using the base one-dimensional scheme. Following
+simple calculation method for the staggered electric ﬁeld is the                                 Gardiner & Stone (2005), let us consider a one-dimensional
+arithmetic average proposed by Balsara & Spicer (1999),                                          problem aligned in the x direction that ignores j-dependence,
+                                                                                                    Bx                       By
+termed the FluxCT method. A second-order accurate solution is                                    ¯ i, j + 1 2 = iBx
+                                                                                                                   , j = - Fi, j , and the numerical diffusion in the y
+                                                                                                 direction, G¯ Bx = 0 . Using a piecewise-constant approximation,
+    E˜¯z , i + 1 2, j + 1 2                                                                      e.g., ˜ y
+                                                                                                              B          B         B
+                                                                                                                   = (Fi y + F y ) 2, Equation (36) becomes
+                                                                                                          i+1 2                       i+1
+                B               Bx                 B              B
+            G¯ i, jx+ 1 2 + G¯ i + 1, j + 1 2 - F˜i +y1 2, j - F˜i +y1 2, j + 1                                      ⎡⎛
+      =                                                                           ,   (34)                        1 ⎢⎜ B y ˜ iB+y 1 2 ⎞ ⎛ B
+                                                                                                                           F                       ˜ iB+y 1 2 ⎞ ⎤
+                                                                                                                                                   F
+                                             4                                                    Ez , i + 1 2 = - ⎜Fi +
+                                                                                                  ˜                                   ⎟  ⎜
+                                                                                                                                        + Fi + 1 +
+                                                                                                                                              y               ⎟ ⎥. (37)
+                                                                                                                  2 ⎢⎣⎝         2 ⎟⎠ ⎜⎝                 2 ⎟⎠ ⎥⎦
+where F˜ By and G¯ Bx stand for the numerical ﬂuxes of By and Bx
+in the x and y directions, respectively. A high-order extension                                  Owing to the arithmetic average in Equation (34), the upwind-
+of the FluxCT method is provided by Lee & Deane (2009).                                          correction terms in Equation (37) are halved from the base
+   The numerical ﬂuxes obtained from the Riemann solver, F                                       numerical ﬂux in Equation (35). The reduction of upwind
+and G, can be expressed as a sum of the nondissipative terms                                     property might lead to a more oscillatory solution.
+,  , and the upwind-correction terms Φ, Γ in the x and y                                          Variants of the FluxCT method have been proposed to take
+directions that contain numerical diffusion to stabilize a                                       into account the full upwind property. Balsara & Spicer (1999)
+simulation,                                                                                      considered directional biasing with respect to the gas pressure
+                                                                                                 gradient rather than the arithmetic average in Equation (34).
+                    ⎧ ˜ By               B                                                       Gardiner & Stone (2005) modiﬁed Equation (34) by introdu-
+                    ⎪ Fi + 1 2, j = ˜ i +y 1 2, j + F˜ iB+y 1 2, j ,
+                    ⎨                                                                 (35)       cing the ﬁrst-order derivative of the electric ﬁeld. With proper
+                    ⎪    Bx             Bx              Bx
+                    ⎩G¯ i, j + 1 2 = ¯ i, j + 1 2 + G¯ i, j + 1 2.
+                                                                                                 approximation of the derivative, their scheme reduces to the
+                                                                                                 base one-dimensional scheme for one-dimensional problems.
+
+                                                                                             8
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                                                                    Minoshima, Miyoshi, & Matsumoto
+
+Lee (2013) incorporated upwind biasing with respect to the                                                           Lee (2013) pointed out that a simple arithmetic average for
+entropy mode into the high-order FluxCT method.                                                                   the staggered electric ﬁeld might lead to spurious oscillations
+   In this paper, we present a simple modiﬁcation of the high-                                                    around discontinuous regions, even though the proper amount
+order FluxCT method to be consistent with the base one-                                                           of numerical diffusion is recovered, as in Equation (40). This is
+dimensional scheme. We explicitly calculate the nondissipative                                                    observed, for example, when a two-dimensional object ﬂows
+terms in the numerical ﬂux of the magnetic ﬁeld                                                                   along the direction that is almost parallel to one of the
+(Equation (35)) through a linear interpolation,                                                                   coordinate axes. In order to deal with this problem, we modify
+                                                                                                                  Equation (40) by taking a direction-biased average with respect
+  (By u)iL+ 1 2, j , (By u)iR- 1 2, j ¬ (By u)i - r , j , ¼, (By u)i + r , j ,                                    to the Alfvén mode,
+       viL+ 1 2, j , viR- 1 2, j ¬ vi - r , j, ¼, vi + r , j ,                                                                                                             Bx, L                   Bx, R
+                                                                                                                                                                       ¯˜ i + 1 2, j + 1 2 + ¯˜ i + 1 2, j + 1 2
+   (Bx v)iB, j + 1 2 , (Bx v)Ti, j - 1 2 ¬ (Bx v)i, j - r , ¼, (Bx v)i, j + r ,                                     ¯
+                                                                                                                    Ez , i + 1 2, j + 1 2 = Qi + 1 2, j + 1 2
+                                                                                                                    ˜
+                                                                                                                                                                                             2
+       uiB, j + 1 2 , uiT, j - 1 2 ¬ ui, j - r , ¼, ui, j + r ,                                                                                                 B y, B                      B y, T
+                                                                                                                                                              ¯                           ¯
+                                                                                                                                                              i + 1 2, j + 1 2 +  i + 1 2, j + 1 2
+                                                                                                                                                              ˜                           ˜
+          B                 (By u)iL+ 1 2, j + (By u)iR+ 1 2, j                                                      - (1 - Qi + 1 2, j + 1 2 )
+       ˜ i +y 1 2, j =                                                                                                                                                               2
+                                                 2                                                                            ¯ B y, B                ¯  B y, T
+                                             (viL+ 1 2, j + viR+ 1 2, j )                                                   Fi + 1 2, j + 1 2 + Fi + 1 2, j + 1 2
+                                                                                                                              ˜                       ˜
+                          - Bx, i + 1 2, j                                  ,                                        -
+                                                    2                                                                                             2
+                                                                                                                                B ,L                    B ,R
+                           (Bx v)iB, j + 1 2 + (Bx v)Ti, j + 1 2                                                            ¯G˜ i +x 1 2, j + 1 2 + G¯˜ i +x 1 2, j + 1 2
+          B
+       ¯ i, jx+ 1 2 =                                                                                               +                                                        ,
+                                               2                                                                                                  2
+                                             (uiB, j + 1 2 + uiT, j + 1 2 )                                                                                                                                          (41)
+                          - By, i, j + 1 2                                      ,                 (38)
+                                                            2                                                     where
+where the superscripts B, T denote the bottom and top sides at
+                                                                                                                                                     ∣u∣ + ∣Bx∣           r +d
+the midpoint, and the left arrow stands for the linear                                                                        Q=                                                                   ,                 (42)
+interpolation method (e.g., Equation (20)) with the same order                                                                          ∣u∣ + ∣v∣ + (∣Bx ∣ + ∣By∣)                    r + 2d
+of accuracy as the nonlinear interpolation method used before.
+The upwind-correction terms are readily obtained from                                                             and δ=10−6 is a small positive number to avoid the denominator
+Equation (35). Subsequently, we interpolate the nondissipative                                                    becoming zero. We take a second-order arithmetic average for the
+and upwind-correction terms toward the edge along the                                                             primitive variables to calculate Equation (42) at the edge for simp-
+orthogonal direction (shown in Figure 4(b)),                                                                      licity, e.g., ri + 1 2, j + 1 2 = (ri, j + ri + 1, j + ri, j + 1 + ri + 1, j + 1) 4.
+                                                                                                                     The present method has two main differences from the CT
+     Bx, L                 Bx, R
+ ˜¯ i + 1 2, j + 1 2, ˜¯ i - 1 2, j + 1 2, ¬ ¯ i -x r , j + 1 2, ¼, ¯ i +x r , j + 1 2,
+                                                  B                       B                                       variants previously proposed by Gardiner & Stone (2005) and
+                                                                                                                  Lee (2013): the method is able to extend to an arbitrarily high
+     Bx, L                  Bx, R
+ G˜¯ i + 1 2, j + 1 2 , G˜¯ i - 1 2, j + 1 2 , ¬ G¯ i -x r , j + 1 2, ¼, G¯ i +x r , j + 1 2 ,
+                                                    B                       B                                     order of accuracy whereas the order of accuracy is limited to
+                                                                                                                  two in Gardiner & Stone (2005; see also Felker & Stone 2018),
+     B y, B                B y, T
+ ¯˜ i + 1 2, j + 1 2, ¯˜ i + 1 2, j - 1 2 ¬ ˜ i +y 1 2, j - r, ¼, ˜ i +y 1 2, j + r ,
+                                                 B                      B
+                                                                                                                  and the method reduces to the base one-dimensional scheme
+                                                                                                                  for one-dimensional problems whereas it is not always satisﬁed
+  ¯˜ By, B
+  F                     ¯˜ By, T            ˜ By                 ˜ By
+     i + 1 2, j + 1 2 , Fi + 1 2, j - 1 2 ¬ Fi + 1 2, j - r , ¼, Fi + 1 2, j + r ,                                in Lee (2013). Hereafter, we refer to Equation (41) as the
+                                                                                                  (39)            central upwind CT (CUCT) method.
+
+where the interpolation method is the same as that used in                                                                       2.6. Summary of the Numerical Procedure
+Equation (38). The staggered electric ﬁeld is calculated through                                                     Here, we summarize the numerical procedure for the present
+their arithmetic average,                                                                                         scheme. Initially, we deﬁne the ﬂuid conservative variables (ρ,
+                                                                                                                  ρu, ρv, ρw, e) at each node (i, j, k), and the staggered magnetic
+ E˜¯z, i + 1 2, j + 1 2
+                                                                                                                  ﬁeld at the midpoint (Bx, i + 1 2, j, k , By, i, j + 1 2, k , Bz, i, j, k + 1 2 ) as a
+           Bx, L                  Bx, R                  B y, B                 B y, T
+       ˜¯ i + 1 2, j + 1 2 + ˜¯ i + 1 2, j + 1 2 - ¯˜ i + 1 2, j + 1 2 - ¯˜ i + 1 2, j + 1 2                  pointwise representation. The magnetic ﬁeld satisﬁes the
+   =                                                                                                              divergence-free condition in a discretized manner, ( · B) =
+                                                    4
+            ¯˜ By, B              ¯˜ By, T                      Bx, L                  Bx, R                      4, x (Bx ) + 4, y (By ) + 4, z (Bz ) = 0 . The magnetic ﬁeld is
+            F  i + 1 2, j + 1 2 + F  i + 1 2, j + 1 2       G¯˜ i + 1 2, j + 1 2 + G¯˜ i + 1 2, j + 1 2           calculated at the node from the midpoints via central
+       -                                                +                                                 .
+                                 2                                                  2                             interpolation with the same order of accuracy as the scheme.
+                                                                                                  (40)            For example, the fourth-order interpolation gives (e.g.,
+                                                                                                                  Lele 1992)
+The ﬁrst term on the right-hand side of Equation (40)
+corresponds to the nondissipative approximation of the electric                                                    Bx, i = [9 (Bx, i - 1 2 + Bx, i + 1 2) - (Bx, i - 3 2 + Bx, i + 3 2)] 16,
+ﬁeld. The second and third terms are the upwind-correction                                                                                                                                (43)
+terms in the x and y directions, which are twice as large as the
+FluxCT method in Equation (36) and thus give the same                                                             which can improve the accuracy of Bx,i against the two-point
+amount of numerical diffusion as the base numerical ﬂux in                                                        average. Then, we perform the following steps in each substep
+Equation (35).                                                                                                    of the third-order SSPRK time integration (Equation (11)):
+
+                                                                                                              9
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                    Minoshima, Miyoshi, & Matsumoto
+
+   1. Primitive variables V = (r, u , v, w, Bx , By , Bz , P )T are                  with 0  x < 1 cos a and 0  y < 1 sin a, where α=30°
+      calculated from the conservative variables U at                                is the wave propagation angle relative to the x axis. The domain
+      each node.                                                                     is resolved by N×N grid points, and the grid number
+   2. Characteristic variables Qi, j, k are converted from the                       increases as N=16, 32, 64, 128, 256, 512. The initial
+      primitive variables in the stencil (i - r , ..., i + r )                       condition is
+      along the x direction (Section 2.3). They are interpolated
+      to the left and right sides at the right and left midpoints by                                   ⎡ r ⎤ ⎡⎢       1        ⎤
+                                                                                                                               ⎥
+                                                                                                       ⎢ u ⎥ ⎢       0
+                                                                                                       ⎢ u^ ⎥ ⎢ dV sin (2px) ⎥⎥
+                                                          L
+      the selected method (Section 2.2), Q˜ i + 1 2, j, k and
+           R
+      Q˜ i - 1 2, j, k , and then are converted to the primitive                                       ⎢w⎥ ⎢
+                                                                                                       ⎢ ⎥ = ⎢dV cos (2px)⎥⎥ ,                     (44)
+      variables.                                                                                       ⎢ B⎥ ⎢        1
+   3. The approximate HLLD Riemann solver calculates the                                               ⎢ B^ ⎥ ⎢ dB sin (2px) ⎥⎥
+      numerical ﬂux in the x direction, F˜i + 1 2, j, k (Section 2.4).                                 ⎢B ⎥ ⎢
+   4. The above one-dimensional procedure (Step 2–3) is                                                ⎢ z ⎥ ⎢ dB cos (2px) ⎥⎥
+      performed along the y and z directions.                                                          ⎣P⎦ ⎣                   ⎦
+                                                                                                                    0.05
+   5. The staggered electric ﬁeld Ez, i + 1 2, j + 1 2, k is calculated
+      via the selected CT method (Section 2.5). The x and y                          where the subscripts P, ⊥ stand for the parallel and perpendicular
+      components, Ex, i, j + 1 2, k + 1 2 and Ey, i + 1 2, j, k + 1 2, are           directions relative to the wave propagation. They are related to
+      obtained in the same manner.                                                   the variables in an original coordinate system through x =
+   6. The ﬂux derivative is approximated by the fourth-order                         x cos a + y sin a, (u , Bx ) = (u, B) cos a - (u^, B^) sin a and
+      central difference (Equation (14)), and then the ﬂuid                          (v, By ) = (u, B) sin a + (u^, B^) cos a. The wave amplitude is
+      conservative variables are updated in divergence form                          δV=δB=0.01 so that the wave propagates in the negative
+      (Equations (1), (2), (4)). The staggered magnetic ﬁeld is                      direction with the Alfvén speed VA = B r = 1. The simula-
+      updated in curl form (Equation (3)), and then it is                            tions are conducted using ﬁve schemes with different interpola-
+      interpolated to the node using Equation (43).                                  tion methods, the ﬁrst order, MUSCL-MC, W3I4D3, W4I4D5,
+   A higher order interpolation method tends to make a solution                      and W5I4D4. The ﬁrst-order Euler time integration is employed
+more oscillatory, which might lead to negative density or                            for the ﬁrst-order scheme, the second-order SSPRK time
+pressure, and crash a simulation run. In order to suppress the                       integration for the MUSCL-MC scheme, and the third-order
+numerical oscillation around shocks, we employ a lower order                         SSPRK time integration for the remaining schemes. In order to
+method (e.g., the third-order method in Equations (24) and (25)                      assess the numerical error attributed to the spatial discretization,
+as opposed to the ﬁfth-order method in Equations (26)
+                                                                                     the CFL number is changed as CFL = 16 3 5N (Δt∝Δx2)
+and (27)) to the left- and right-state interpolations at the right
+                               L                   R                                 so that the temporal discretization errors in the ﬁve schemes are
+and left midpoints (e.g., Q˜ i + 1 2, j, k and Q¯ i - 1 2, j, k ) when a node
+                                                                                     negligible compared to the spatial discretization errors.
+(i, j, k) is judged to be a shocked node based on                                       We measure the numerical errors of the in-plane and out-of-
+( · u)i, j, k < 0 . We apply this hybrid method to the Orszag–                      plane magnetic ﬁelds, B⊥ and Bz, at t=2. Table 1 summarizes
+Tang vortex problem in Section 3.3 and a blast wave problem                          the L1 errors and the orders in parentheses. Except for the
+in Section 3.5.                                                                      W3I4D3 scheme, the four schemes converge at the designed
+                                                                                     order of accuracy. The W3I4D3 scheme is slightly better than
+                          3. Numerical Tests                                         the MUSCL-MC scheme, but it does not achieve the optimal
+   This section presents numerical simulation results of MHD                         third-order accuracy even with the ﬁnest grid points. The
+test problems including propagation, shock, and fundamental                          nonlinear weight for this scheme (Equation (25)) may not
+plasma phenomena to discuss the capability of the present                            converge to the optimal weight, even though the unit
+scheme. In the following benchmark tests, we employ the                              wavelength is resolved by 512 grid points. The W3I4D3
+W4I4D5 scheme in Equations (26) and (27), the HLLD                                   scheme requires 1.5 times longer computational time (due to
+Riemann solver, and the CUCT method in Equation (41) for                             the order of the Runge–Kutta method) and a larger stencil than
+the divergence-free treatment as a ﬁducial scheme, referred to                       the MUSCL-MC scheme.
+as the W4I4D5-HLLD-CUCT scheme. In Sections 3.6 and 3.8,                                The errors in the W4I4D5 and W5I4D4 schemes are
+we also use the CUCT-AA method that adopts the arithmetic                            remarkably improved from the three lower order schemes.
+average in Equation (40) as opposed to the direction-biased                          The W4I4D5 scheme achieves ﬁfth-order accuracy in the out-
+average in Equation (41). We solve two- or three-dimensional                         of-plane (Bz) case, whereas the W5I4D4 scheme converges at
+ideal MHD equations with a speciﬁc heat ratio γ=5/3 and a                          fourth order in both the in-plane (B⊥) and out-of-plane cases,
+CFL number of 0.4 unless otherwise stated.                                           because the W4I4D5 scheme is designed to satisfy the ﬁfth
+                                                                                     order for the linear advection problem (Equation (21)). In the
+                                                                                     in-plane case, the scheme calculates the staggered electric ﬁeld
+              3.1. Circularly Polarized Alfvén Waves
+                                                                                     by averaging the fourth-order accurate solutions of the one-
+  The circularly polarized Alfvén wave is utilized to check the                      dimensional Riemann solver in the two-dimensional plane
+accuracy of the designed code as the wave is an analytic                             (Equation (41)). This limits the order of accuracy of the
+solution for the MHD equations. Improving the accuracy of the                        W4I4D5 scheme to be four in the in-plane case (and in a three-
+Alfvén wave solution is of great importance to tackle with                           dimensional case as well). Nevertheless, the error in the
+MHD turbulent ﬂows. We test a problem similar to Tóth                                W4I4D5 scheme is slightly smaller than that in the W5I4D4
+(2000). The two-dimensional computational domain is periodic                         scheme, at least in this problem. The computational times of the
+
+
+                                                                                10
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                   Minoshima, Miyoshi, & Matsumoto
+
+                                                                         Table 1
+                                               L1 Errors (Orders) of the Alfvén Wave Propagation Problem
+
+B⊥                    N=16                 32                       64                       128                      256                     512
+First               4.80e−03 (–)      4.44e−03 (0.11)          3.27e−03 (0.44)           2.06e−03 (0.67)          1.17e−03 (0.82)         6.27e−04 (0.90)
+MUSCL               4.76e−03 (–)      3.95e−04 (3.59)          1.07e−04 (1.88)           2.85e−05 (1.91)          7.27e−06 (1.97)         1.82e−06 (2.00)
+W3I4D3              1.57e−03 (–)      5.55e−04 (1.50)          1.26e−04 (2.14)           2.67e−05 (2.23)          5.32e−06 (2.33)         1.05e−06 (2.34)
+W4I4D5              1.84e−04 (–)      4.85e−06 (5.24)          1.39e−07 (5.12)           5.51e−09 (4.66)          2.90e−10 (4.25)         1.74e−11 (4.06)
+W5I4D4              1.79e−04 (–)      5.01e−06 (5.16)          1.69e−07 (4.89)           8.30e−09 (4.35)          4.86e−10 (4.09)         3.00e−11 (4.02)
+
+Bz                    N=16                 32                       64                       128                      256                     512
+
+First               2.48e−03 (–)      3.32e−03 (−0.42)         2.48e−03 (0.42)           1.54e−03 (0.68)          8.68e−04 (0.83)         4.61e−04 (0.91)
+MUSCL               1.78e−03 (–)      4.05e−04 (2.14)          1.05e−04 (1.94)           2.46e−05 (2.10)          5.30e−06 (2.21)         1.22e−06 (2.12)
+W3I4D3              1.20e−03 (–)      4.32e−04 (1.48)          9.15e−05 (2.24)           1.76e−05 (2.38)          3.23e−06 (2.45)         5.83e−07 (2.47)
+W4I4D5              1.59e−04 (–)      3.83e−06 (5.37)          9.48e−08 (5.34)           2.57e−09 (5.21)          7.41e−11 (5.12)         2.23e−12 (5.05)
+W5I4D4              1.55e−04 (–)      3.76e−06 (5.36)          9.79e−08 (5.26)           3.29e−09 (4.90)          1.54e−10 (4.42)         8.82e−12 (4.12)
+
+
+two schemes are almost equal and about two times longer than
+the MUSCL-MC scheme.
+
+                    3.2. Kelvin–Helmholtz Instability
+   The boundary layer is a common feature in a variety of
+plasma environments. For example, the magnetopause in the
+planetary magnetosphere is a boundary between the magneto-
+spheric and solar wind plasmas. The Kelvin–Helmholtz
+instability is thought to contribute to the transport of the
+tailward-ﬂowing solar wind plasma into Earth’s magnetosphere
+(e.g., Hasegawa et al. 2004). We simulate the linear growth of
+the Kelvin–Helmholtz instability to assess the capability of
+resolving a shear ﬂow. The two-dimensional computational
+domain with range 0x<L and −L/2y<L/2 (L = 14.0)
+is resolved by N×N grid points. The boundary condition is
+periodic and symmetric in the x and y directions. The initial
+condition has a velocity shear, u = -(V0 2) tanh ( y l ); uniform                Figure 5. Time proﬁle of the fastest growing mode in the Kelvin–Helmholtz
+density and pressure ρ=ρ0=1.0, P=P0=500; and a                           instability solved with the MUSCL-MC and the W4I4D5 schemes with
+uniform out-of-plane magnetic ﬁeld Bz=B0=1.0, where                          N=32, 64, 128. The dashed line indicates the solution obtained from the
+λ=1.0 and V0=1.0 is normalized by the Alfvén speed. We                       linear theory.
+use γ=2.0. The system is essentially hydrodynamic because
+the in-plane magnetic ﬁeld is kept zero. To initiate the instability,            N=128 for convergence. The computational time of the
+we impose a small (1%) perturbation to the y component of                        W4I4D5 scheme with N=64 is about four times faster than
+the velocity around the boundary with a wavelength equal                         the MUSCL-MC scheme with N=128. This problem
+to L, which corresponds to the fastest growing mode under                        demonstrates that the present high-order scheme is highly cost
+the adopted initial condition (Miura & Pritchett 1982). The                      effective versus the low-order scheme for the shear ﬂow.
+simulations are conducted using the MUSCL-MC and the
+W4I4D5 schemes.                                                                                       3.3. Orszag–Tang Vortex
+   Figure 5 shows the linear growth of the fastest growing
+mode from the simulations and theory. The theoretical growth                       We conduct the so-called Orszag–Tang vortex problem, which
+rate, wi = 0.095V0 l , is obtained by numerically solving the                   is a well-known two-dimensional MHD test, to verify the
+linearized equations for the velocity and the total pressure                    capability of capturing multiple interactions of shock waves and
+Pt = P + Bz2 2 as an eigenvalue problem,                                        vortices (Orszag & Tang 1979). The periodic computational
+                                                                                domain with 0<x<2π and 0<y<2π is resolved by N×N
+                  V0      ⎛y⎞              V0           ik                      grid points. The initial condition is (r, u , v, w, Bx , By , Bz , P )=
+     wi u = - ikx    tanh ⎜ ⎟ u -                 v - x Pt ,
+                   2      ⎝ l ⎠    2 cosh ( y l)
+                                             2          r0                      (g 2, -sin ( y), sin (x ), 0, -sin ( y), sin (2x ), 0, g ). We solve the
+                                                                                problem with the MUSCL-MC scheme, the hybrid W3I4D3-
+                  V0      ⎛y⎞      1   ¶ P
+     wi v = - ikx tanh ⎜ ⎟ v -             t
+                                              ,                                 W4I4D5 scheme (see Section 2.6), and the W4I4D5 scheme at the
+                   2      ⎝l ⎠     r 0 ¶y                                       resolution of N=100, 200, 400, and 800. The solution with the
+                  V       ⎛y⎞            ⎛        ¶v ⎞                          W4I4D5 scheme at N=1600 is employed as a reference.
+     wi Pt = - ikx 0 tanh ⎜ ⎟ Pt - 2Pt 0 ⎜ikx u +    ⎟,            (45)            Figures 6(a)–(d) compares the two-dimensional proﬁle of the
+                   2      ⎝l ⎠           ⎝        ¶y ⎠                          temperature T=2P/ρ at t=π obtained from the three
+                                                                                schemes with N=200 and the reference solution. The overall
+where Pt0 = P0 + B02 2 = 500.5, kx=2π/L, and i is the                         structure, such as cold and hot regions and the positions of
+imaginary unit. The W4I4D5 scheme converges to the theory at                    discontinuities, agrees well with previous works (e.g.,
+resolutions N 64, while the MUSCL-MC scheme requires                          Figure12 in Miyoshi & Kusano 2005). The three schemes
+
+                                                                           11
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                  Minoshima, Miyoshi, & Matsumoto
+
+
+
+
+Figure 6. Temperature proﬁle in the Orszag–Tang vortex problem. (a)–(d) Two-dimensional proﬁle solved with the MUSCL-HLLD-CUCT scheme, the HYBRID-
+HLLD-CUCT scheme, and the W4I4D5-HLLD-CUCT scheme with N=200, and the reference with N=1600. The left half of the domain is shown. (e)–(f) One-
+dimensional proﬁle at y=0.64π and y=π solved with the W4I4D5-HLLD-CUCT scheme with N=100 (green), 200 (cyan), 400 (purple), 800 (red), and 1600, the
+reference (solid line).
+
+
+give almost identical solutions at this period, implying that the               the ﬂow is compressible in 38% of the domain at this period,
+spatial order of accuracy is degraded and the quality of solution               which would limit the overall convergence. To increase the
+depends less on the designed optimal order of accuracy when                     sophistication of the method, for example, we can modify
+the discontinuities become dominant. Panels (e) and (f)                         the criterion based on the strength of shocks. When the
+compare the one-dimensional proﬁles at y=0.64π and                            discontinuities are dominant at t=π in Figure 6, their relative
+y=π among different resolutions with the W4I4D5 scheme.                       differences are close, and the convergence rate drops to less
+Compared to the reference, the proﬁle at N=100 (green cross)                  than two.
+is degraded especially around spike regions (e.g., (x, y)=(0.4,
+0.64π) in panel (e)) and shows a spurious oscillation around
+                                                                                                         3.4. Oblique Shock
+(x, y)=(0, π) in panel (f). These errors are found also in the
+MUSCL-MC and hybrid W3I4D3-W4I4D5 schemes, and are                                 The shock tube problem is a standard test for hydrodynamic
+largely improved at resolutions N 200.                                        simulations to examine the accuracy and robustness for
+   We measure the relative differences of the temperature                       discontinuities and rarefaction waves. In addition, divergence-
+proﬁle at different resolutions from the reference one, Tref,                   free preservation is a critical issue for multidimensional MHD
+deﬁned as dT = å∣T - Tref ∣ å Tref . Table 2 summarizes the                     shocks as it tends to be violated especially at shocks in non-
+relative difference and the rate of convergence in parentheses at               divergence-free schemes. We test the familiar Brio–Wu shock
+two different periods, t=0.2π and t=π. The MUSCL-MC                         tube problem (Brio & Wu 1988) in two dimensions. The initial
+and W4I4D5 schemes converge at the designed order of                            left and right states are [ρ, uP, u⊥, w, B⊥, Bz, P]=[1, 0, 0, 0, 1,
+accuracy when the proﬁle is smooth at t=0.2π. In contrast,                    0, 1] and [0.125, 0, 0, 0, −1, 0, 0.1], where the subscripts have
+the rate of convergence of the hybrid W3I4D3-W4I4D5                             the same meaning as in Section 3.1. We use BP=0.75 and
+scheme is worse than the optimal fourth order at t=0.2π.                      γ=2.0. The shock tube is tilted by angles a = tan-1(1 2) =
+As presented in Section 2.6, this hybrid method adopts the low-                 26 . 6 and 45° relative to the x axis to assess the divergence-free
+order interpolation when the ﬂow is divergent irrespective of                   condition. The domain of the shock tube, 0  x < cos a and
+the degree of compressibility: this is a crude criterion. Actually,             0  y < sin a, is resolved by N×N/4 (for α = 26°. 6) and
+
+                                                                           12
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                         Minoshima, Miyoshi, & Matsumoto
+
+                                                                          Table 2
+                          Relative Differences (Convergence Rates) of the Orszag–Tang Vortex Problem from the Reference Solution
+
+t=0.2π                         N=100                                200                                      400                                   800
+MUSCL                          1.17e−03 (–)                       2.65e−04 (2.15)                         6.05e−05 (2.13)                        1.43e−05 (2.08)
+HYBRID                         7.74e−04 (–)                       1.52e−04 (2.34)                         2.87e−05 (2.41)                        5.28e−06 (2.44)
+W4I4D5                         1.25e−04 (–)                       8.14e−06 (3.94)                         5.35e−07 (3.93)                        3.71e−08 (3.85)
+
+t=π                            N=100                                200                                      400                                   800
+
+MUSCL                          3.42e−02 (–)                       1.65e−02 (1.05)                         7.80e−03 (1.08)                        3.23e−03 (1.27)
+HYBRID                         3.17e−02 (–)                       1.49e−02 (1.09)                         6.68e−03 (1.16)                        2.52e−03 (1.41)
+W4I4D5                         3.01e−02 (–)                       1.38e−02 (1.12)                         6.19e−03 (1.16)                        2.25e−03 (1.46)
+
+Note. The solution is smooth at t=0.2π, but becomes discontinuous at t=π.
+
+N×N (for α = 45°) grid points where N=200. In order to                           comes from the equation of the parallel magnetic ﬁeld,
+apply the periodic boundary condition, the computational
+domain is extended to 0  x < 2 cos a and 0  y <                                      ¶ B  ¶ Bx         ¶ By
+                                                                                              =   cos a +      sin a
+2 sin a, and the whole domain is resolved by mN×mN grid                               ¶t    ¶t           ¶t
+points, where m=2.5 for α=26°. 6, and m = 4 for α=45°                                  ⎛ ¶E       ¶y ⎞         ⎛ ¶ Ez   ¶y ⎞
+(Kawai 2013). The initial condition is set to be the left state in                         = ⎜- z -        ⎟ cos a + ⎜      -    ⎟ sin a.                    (48)
+                                                                                             ⎝ ¶y       ¶x ⎠         ⎝ ¶x     ¶y ⎠
+0xP<0.5, 1.5xP<2.5, 3.5xP<4 ( x = x cos a +
+y sin a), and the right state otherwise. The initial jump                            The scalar variable ψ may have a ﬁnite value at  · B ¹ 0 .
+condition is given as a hyperbolic tangent function with a                           Because the grid spacing (Dx , Dy) = (2 mN cos a, 2 mN sin a)
+ﬁnite thickness of 0.5Dx cos a.                                                      is set so that the shock surface is uniform and parallel to
+   Figure 7 shows the primitive variables at angles of α=26°. 6
+                                                                                     the diagonal axis in the cell [xi - 1 2 , xi + 1 2] ´ [ yj - 1 2 , yj + 1 2],
+(blue) and 45° (red) solved with the HLLD-CUCT scheme at
+t=0.1. Both cases capture the expected discontinuities and                         the variables are the left state at (i - 1 2, j), (i, j - 1 2)
+rarefaction waves without numerical instabilities (from left to                      and the right state at (i + 1 2, j), (i, j + 1 2). Therefore,
+right: the fast rarefaction wave, the slow compound wave, the                        Equation (48) is discretized as
+contact discontinuity, the slow shock, and the fast rarefaction                                       ⎛EL - ER
+wave), and agree well with the one-dimensional reference                                       ¶ B              yL - yR ⎞
+                                                                                                     =⎜ z    z
+                                                                                                               +         ⎟ cos a
+solution with 2000 grid points (black). Note that the two-                                        ¶t  ⎝ Dy         Dx ⎠
+dimensional scheme for α=0° reduces to the base one-                                                  ⎛ER - EL   yL - yR ⎞
+dimensional scheme. The bottom left panel shows the deviation                                         +⎜ z     z
+                                                                                                                 +          ⎟ sin a
+of the parallel magnetic ﬁeld component from the initial value,                                         ⎝ Dx         Dy ⎠
+ΔBP. The parallel magnetic ﬁeld is preserved extremely well                                           = mN (y L - y R).                                      (49)
+within an error of ∼10−8 at this period. We ﬁnd that the  · B
+error is preserved within an error of ∼10−11 (not shown here).                       It may be ﬁnite around discontinuities. In Appendix B, we
+   In order to compare the divergence-free and the non-                              examine the dependence of the solution on the parameter in the
+divergence-free schemes, we combine the HLLD scheme with                             hyperbolic divergence-cleaning method (ch and cp).
+the hyperbolic divergence-cleaning method (GLM; Dedner
+et al. 2002). This scheme introduces a scalar variable ψ to                                   3.5. Blast Wave in Strongly Magnetized Medium
+diminish the  · B error from a simulation domain through
+propagation and diffusion. The in-plane magnetic ﬁeld and ψ                             This test problem treats the propagation of strong MHD
+obey the following equations,                                                        shocks in a two-dimensional strongly magnetized medium so
+                                                                                     as to assess the robustness of a scheme. Many similar problems
+                  ¶B                                                                 have been tested as a simple example of astrophysical
+                     +  ´ E + y = 0,                                (46)           phenomena (Londrillo & Del Zanna 2000; Balsara &
+                  ¶t                                                                 Kim 2004; Mignone et al. 2007; Stone et al. 2008). The
+                                                                                     periodic computational domain with −2<x<2 and
+                   ¶y                c2                                              −2<y<2 is resolved by 1024×1024 grid points. We
+                      + ch2  · B = - h2 y,                           (47)           adopt the initial conditions used in Londrillo & Del Zanna
+                   ¶t                cp
+                                                                                     (2000): the ambient medium (r, u , v, w, Bx , By , Bz , P )=
+                                                                                     (1, 0, 0, 0, B0 sin (q ), B0 cos (q ), 0, 1) where B0=10, θ=
+where ch is the propagation speed of the additional eigenmode                        45°, and then a high-pressure cylinder imposed at the center
+and cp2 is the diffusion coefﬁcient. In Figure 8, this scheme also                   of the domain, P=100 for x 2 + y 2 < 0.125. The plasma
+captures discontinuities and rarefaction waves like the HLLD-                        beta in the ambient medium is very low, b = 2P ∣B∣2 = 0.02,
+CUCT scheme. The main difference is the parallel magnetic                            thus this is a stringent condition for conservative schemes.
+ﬁeld (bottom left panel) with an error of ∼1×10−2 mainly at                        We compare the CUCT method with the GLM method
+the front of the compound shock and the slow shock. The error                        (Equations (46) and (47)) and the high-order FluxCT method
+
+
+
+                                                                                13
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                 Minoshima, Miyoshi, & Matsumoto
+
+
+
+
+Figure 7. Brio–Wu rotated shock tube problem at t=0.1 solved with the W4I4D5-HLLD-CUCT scheme with N=200. The blue and red symbols correspond to the
+cases with propagation angles of α=26°. 6 and 45°, respectively. The black line is the one-dimensional reference solution with 2000 grid points.
+
+
+(Equation (40), replacing the denominator in the second and                    complex shocks and rarefaction waves without numerical
+third terms on the right-hand side by 4) to examine the effects                instabilities, and they are in good agreement with previous
+of the ﬁnite  · B error and the amount of numerical diffusion                 work (Figure13 in Londrillo & Del Zanna 2000), indicating
+for the CT method on the quality of the numerical solution in                  that the present schemes preserve well the axial symmetry even
+the presence of strong low-β shocks. We use the hybrid                         though the ambient magnetic ﬁeld is oblique relative to the
+W3I4D3-W4I4D5 scheme (Section 2.6), because the W4I4D5                         coordinate axis. At this period, the three schemes give similar
+scheme is found not to be enough to suppress the numerical                     results.
+oscillation in this stringent problem irrespective of the                         The difference among the schemes becomes prominent as
+divergence-free treatment.                                                     the system evolves. Figures 9(d)–(f) shows the gas pressure
+   Figures 9(a)–(c) shows the proﬁle of the magnetic energy                    proﬁle at t=0.1 for the three schemes. The gas pressure is
+∣B∣2 2 at t=0.02 for the HLLD-GLM, the HLLD-FluxCT,                          susceptible to a numerical error in the magnetic ﬁeld especially
+and the HLLD-CUCT schemes. The three schemes capture                           at low-β shock regions, because the present schemes calculate
+
+                                                                          14
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                           Minoshima, Miyoshi, & Matsumoto
+
+
+
+
+                                   Figure 8. Same as Figure 7, but solved with the W4I4D5-HLLD-GLM scheme.
+
+
+it by subtracting the magnetic energy from the total energy                  CT methods are better suited for low-β shocks than the GLM
+density (Equation (6)). The HLLD-GLM scheme (d) shows                        method.
+spurious proﬁles at fast shock fronts. In panel (g), we check the               The HLLD-FluxCT scheme in Figure 9(e) shows spurious
+one-dimensional proﬁle along the outermost fast shock front                  proﬁles at the slow shock front (along the dotted–dashed line).
+(denoted by dashed lines in panels (d)–(f)). The HLLD-GLM                    In Figure 9(h), we check the one-dimensional proﬁle along this
+scheme suffers from oscillation in both the downstream and                   shock front. The HLLD-FluxCT scheme suffers from an
+upstream regions of the shock, at which a  · B error of O(1) is             intolerable level of numerical oscillation that leads to a negative
+observed. The oscillatory proﬁle in the gas pressure is                      pressure and ﬁnally crashes the simulation. The HLLD-CUCT
+attributed to the ﬁnite  · B production at the shock and its                scheme largely suppresses this oscillation, due to the recovery
+propagation through the GLM method. The oscillation is also                  of the proper amount of numerical diffusion for the induction
+seen at the downstream region in the two CT schemes, but its                 equation against the HLLD-FluxCT scheme. The  · B error
+amplitude is reduced especially in the HLLD-CUCT scheme                      in the HLLD-GLM scheme is relatively small, O(10−1),
+compared to the HLLD-GLM scheme. We then suggest that the                    compared to that at the fast shock, thus it would give a less
+
+                                                                        15
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                         Minoshima, Miyoshi, & Matsumoto
+
+
+
+
+Figure 9. Blast wave problem. (a)–(c) Two-dimensional magnetic energy proﬁle at t=0.02 solved with the HLLD-GLM, the HLLD-FluxCT, and the HLLD-CUCT
+schemes. (d)–(f) Two-dimensional gas pressure proﬁle at t=0.1 solved with the three schemes. (g) One-dimensional proﬁle along the fast shock front denoted by
+dashed lines in panels (d)–(f). The green, light blue, and red lines correspond to the GLM, the FluxCT, and the CUCT schemes. (h) One-dimensional proﬁle along the
+slow shock front denoted by dotted–dashed lines in panels (d)–(f).
+
+
+oscillatory solution than the HLLD-FluxCT scheme. This                              is resolved by 256×128 grid points. The initial condition is
+problem demonstrates that the CUCT method can improve the
+robustness of the divergence-free MHD scheme for low-                                 ⎡ r ⎤ ⎡⎢         1     ⎤
+β ﬂows.                                                                               ⎢ u ⎥ ⎢ v0 cos q ⎥⎥
+                                                                                      ⎢ v ⎥ ⎢ v0 sin q ⎥
+                                                                                      ⎢w⎥ ⎢           v0     ⎥                  ⎧ A (R - r ) for r  R ,
+                      3.6. Field Loop Advection                                       ⎢ Bx ⎥ = ⎢             ⎥,        A (r ) = ⎨ 0
+                                                                                      ⎢B ⎥ ⎢     ¶A ( r ) ¶y                    ⎩ 0 otherwise,
+  We solve a stringent problem of the advection of a weakly                           ⎢ ⎥ ⎢-¶A (r ) ¶x ⎥⎥
+                                                                                          y
+magnetized loop proposed by Gardiner & Stone (2005) to                                ⎢ Bz ⎥ ⎢
+                                                                                      ⎢⎣ P ⎥⎦ ⎢        0     ⎥
+assess the capability of capturing a tangential discontinuity in a
+                                                                                               ⎣      P0     ⎦⎥
+multidimensional ﬂow. The two-dimensional computational
+domain is periodic with −1x<1 and −0.5y<0.5, and                                                                                                  (50)
+
+
+                                                                               16
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                  Minoshima, Miyoshi, & Matsumoto
+
+
+
+
+Figure 10. (a)–(c) Magnetic pressure (linear scale) in the ﬁeld loop advection problem over eight periods solved with the W4I4D5-HLLD-GLM, the W4I4D5-HLL-
+CUCT, and the W4I4D5-HLLD-CUCT schemes. The ambient gas pressure is 1. (d) One-dimensional proﬁle of the magnetic pressure at x=0.2.
+
+
+where v0 = 5 , A0 = 10-3, R = 0.3, r = x 2 + y 2 . The in-                         The problem is more stringent for the higher plasma beta
+plane magnetic ﬁeld is initialized by numerically calculating                   (weaker compressibility) case. Figure 11 shows the case of
+the curl of the vector potential through Equation (14) so as to                 P0=104 so that the in-plane ﬂow is subsonic (v0=cs = 130).
+satisfy  · B = 0 in a discretized form (Equation (31)). The                    The loop structure is seriously distorted in the HLLD-GLM and
+ambient gas pressure P0 is set to be much higher than the                       the HLL-CUCT schemes owing to the overestimation of the
+                                                                                amount of numerical diffusion. The timescale of the numerical
+magnetic pressure in the loop so that the loop behaves almost
+                                                                                diffusion is proportional to the transit time of the fast mode
+like a passive scalar. The loop ﬂows toward the positive                        wave in the HLL-CUCT scheme (Minoshima et al. 2015).
+direction with an angle q = tan-1(1 2) relative to the x axis.                  Therefore, the magnetic loop quickly diffuses outward and
+The simulations are conducted using three different choices                     inward throughout the course of the ﬂow, and the inward
+of the Riemann solver and the divergence-free treatment, the                    diffusion leads to the cancellation of the antiparallel ﬁeld at the
+HLLD-GLM, the HLL-CUCT, and the HLLD-CUCT schemes.                              center of the loop. As a result, the dilute ring-shaped proﬁle is
+   Figure 10 shows the magnetic pressure ∣B∣2 2 for the case                    observed in the HLL-CUCT scheme (Figure 11(b)).
+of P0=1 at t=8. The in-plane ﬂow is supersonic,                                The unphysical solution in the HLLD-GLM scheme
+v0 > cs = gP r = 1.3. All schemes successfully preserve                         (Figure 11(a)) is attributed to the numerical ﬂux from the
+the initial symmetric loop structure. Numerical errors are                      additional equations (Equations (46) and (47)), which is
+mainly observed around the leading edge of the loop at                          evaluated by the Lax–Friedrichs ﬂux-splitting method
+(x, y)=(0.2, 0.2). The one-dimensional proﬁle at x=0.2 in                   (Equation (42) in Dedner et al. 2002). The method introduces
+panel (d) shows that the HLLD-CUCT scheme slightly distorts                     the numerical diffusion of Bx (By) in the x (y) direction, and its
+the proﬁle at y=0.15. The thickness of the leading edge is                    coefﬁcient is proportional to ch. The propagation speed ch is
+nearly equal among the three schemes, but it is broadened at the                determined from the CFL condition so as to quickly diminish
+side edge of the loop, (x, y)=(0.2, −0.2), in the HLLD-GLM                    the  · B error, and thus it is much faster than the ﬂow speed
+scheme.                                                                         in this problem that leads to the rapid numerical diffusion of Bx
+   Gardiner & Stone (2008) and Lee & Deane (2009) argued                        in the x direction observed as the horizontal structure.
+that the in-plane geometry could be distorted by the  · B error                Similarly, the vertical structure corresponds to the numerical
+through ¶Bz ¶t µ w  · B. The HLL-CUCT and HLLD-                                diffusion of By in the y direction. To avoid this unphysical
+CUCT schemes keep  · B within ∼10−14 and the amplitude                         solution, one has to carefully switch the Lax–Friedrichs ﬂux
+of the out-of-plane magnetic ﬁeld within ∼10−10. On the other                   splitting to a simple average so that the spatial derivatives in
+hand, the  · B error and the amplitude of the out-of-plane                     Equations (46) and (47) reduce to the central difference.
+magnetic ﬁeld are around 1×10−4 and 2×10−5 (2% of the                          In contrast to the above two schemes, the HLLD-CUCT
+in-plane magnetic ﬁeld) at t=32, and continue to increase in                  scheme (Figure 11(c)) can preserve the symmetric loop
+the HLLD-GLM scheme.                                                            structure. The thickness of the discontinuity is nearly
+
+                                                                           17
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                     Minoshima, Miyoshi, & Matsumoto
+
+
+
+
+                 Figure 11. Same as Figure 10, but with an ambient gas pressure of 104. The color images are shown in the logarithmic scale.
+
+unchanged from the former case with P0=1 (see panel (d) in                      y–z planes that arise at the side edge of the loop and then
+Figures 10 and 11). Although the solutions of the HLLD-GLM                        propagate inward. As pointed out by Lee (2013), this is because
+and the HLL-CUCT schemes are slightly better in the                               the scheme takes the electric ﬁeld average across the
+supersonic case (Figure 10), the HLLD-CUCT scheme has                             discontinuity in the y direction (ﬁrst term in Equation (40)),
+the capability to capture the tangential discontinuity in the                     even though the numerical diffusion is biased in the ﬂow
+multidimensional ﬂow irrespective of the plasma beta (com-
+                                                                                  direction (x or z). The oscillation is largely suppressed by the
+pressibility) by virtue of the combination of the multistate
+Riemann solver and the divergence-free method.                                    HLLD-CUCT scheme, because the scheme biases the electric
+   Additionally, we conduct a small-angle advection problem                       ﬁeld with respect to the direction of the Alfvén mode in each
+for a three-dimensional loop proposed by Lee (2013). The                          two-dimensional plane.
+three-dimensional periodic computational domain with −0.5
+x<0.5, −0.5y<0.5, and −1z<1 is resolved by
+                                                                                                  3.7. Richtmyer–Meshkov Instability
+100×100×200 grid points. We adopt the initial condition of
+the magnetic ﬁeld used in Gardiner & Stone (2008): the loop                          The impact of a shock against a corrugated contact
+is tilted around the y axis by an angle of w = tan-1(1 2), and                    discontinuity can induce a shear ﬂow at the interface and drive
+its magnetic ﬁeld components are described by the curl of                         the so-called Richtmyer–Meshkov instability (RMI; Richtmyer
+the vector potential in the coordinate system (x1, x2 , x3) =                     1960; Meshkov 1972). Such a situation is expected in
+(x cos w + z sin w, y, -x sin w + z cos w ),                                      astrophysical environments, for example, in the propagation
+                                                                                  of a supernova shock in inhomogeneous ISM. The RMI in
+               ¶ A (r )          ¶ A (r )
+          B1 =          , B2 = -          , B3 = 0,                               magnetized plasmas has the potential to amplify the magnetic
+                ¶x2               ¶x1                                             ﬁeld beyond the compression by a single shock, and thus it is
+          Bx = B1 cos w - B3 sin w , By = B2 ,                                    of great interest in astrophysics. Sano et al. (2012, 2013)
+          Bz = B1 sin w + B3 cos w ,                                 (51)         conducted two-dimensional MHD simulations and argued that
+                                                                                  the RMI can be a powerful candidate for the mechanism of the
+where r = x12 + x22 . For ﬂuid variables, we set ρ=P=1,                       magnetic ﬁeld ampliﬁcation at supernova remnants, at which
+                                                                                  strong ﬁeld regions are localized and their maximum strength
+(u , v, w ) = (cos q, sin q, 2), and q = tan-1(0.01) so that the
+                                                                                  reaches a value 100 times larger than the typical one in the
+loop ﬂows almost in the x–z plane. Figure 12 compares
+                                                                                  ISM. For practical application of the present scheme, we
+the result at t=1.0 with two different CUCT methods: (a) the                    simulate the nonlinear evolution of the RMI. The two-
+arithmetic average (Equation (40), the HLLD-CUCT-AA                               dimensional computational domain is taken in the rest frame
+scheme) and (b) the direction-biased average (Equation (41),                      of a shock at y=0. The initial state in the upstream region
+the HLLD-CUCT scheme). Obviously, the HLLD-CUCT-AA                                y>0 is (ρ, u, v, w, Bx, By, Bz, P)=(1.0, 0, −1.0, 0,
+scheme suffers from the numerical oscillations in the x–y and                     0.00034641, 0, 0, 0.006) so that the Mach number
+
+                                                                             18
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                       Minoshima, Miyoshi, & Matsumoto
+
+
+
+
+Figure 12. Magnetic pressure (linear scale) in the three-dimensional small-angle advection problem over one period using the CUCT method with (a) the arithmetic
+average (Equation (40)) and (b) the direction-biased average (Equation (41)).
+
+
+M = ∣u∣ cs = 10 and the plasma beta b = 2P ∣B∣2 = 10 5.                            and mean components, uR , uC , uM . They satisfy
+The initial state in the downstream region y<0 is calculated
+from the Rankine–Hugoniot condition for perpendicular MHD                                                ⎧ uR + uC + uM = u,
+                                                                                                         ⎪
+                                                                                                         ⎪  · uR = 0,
+shocks, (ρ, u, v, w, Bx, By, Bz, P)=(3.8835, 0, −0.25750, 0,                                           ⎨                                                 (52)
+0.0013453, 0, 0, 0.74850). A corrugated contact discontinuity                                            ⎪  ´ uC = 0,
+is imposed in the upstream region, ycd = Y0 + y0 cos (2px l ),                                           ⎪
+                                                                                                         ⎩ uR = uC = 0,
+where Y0=1.0, ψ0=0.1 is a corrugation amplitude, and
+λ=1.0 is the wavelength. We consider the density to decrease                     where an overline means spatial averaging. The mushroom-
+to ρ=0.01 behind the contact discontinuity y>ycd (see                          shaped spike develops with a height of 20 times the initial
+Figure 13(a)). The domain is extended in the y direction to                        corrugation amplitude. The primary vortex in 9.5<y<11
+ignore the boundary effect, 0x<λ and −80λy<80λ,                          forms the spike, and its velocity is approximately 10%–20% of
+and is resolved by N×160N grid points. We use N=64 for a                       the upstream velocity. In addition, the secondary vortex and the
+ﬁducial run. The boundary condition is periodic in the x                           associated ring-shaped proﬁle are visible in 10<y<10.5.
+direction and is ﬁxed to be the initial state in the y direction.                  The rotational ﬂow is observed only around the spike.
+   The contact discontinuity ﬂows in the negative y direction                      Compared to the rotation, the compressible ﬂow does not
+and strikes the shock at t=1. Then, a transmitted shock and a                    show a signiﬁcant feature around the spike, and its velocity is
+reﬂected rarefaction wave propagate in the positive and                            approximately 10 times slower than the rotational one (not
+negative y directions. Due to the corrugation of the contact                       shown here).
+discontinuity, the surfaces of these waves are also rippled,                          The magnetic ﬁeld can be ampliﬁed by stretching and
+inducing shear ﬂow at the interface. Subsequently, the RMI                         compression (Sano et al. 2012). Figure 13(c) shows the proﬁle
+grows, and the interface develops nonlinearly. Figure 13(b)                        of the magnetic ﬁeld strength ∣B∣ normalized by the upstream
+shows the density proﬁle at t=20. Arrows represent the                           ﬁeld strength. The strong ﬁeld regions are observed as
+direction of the rotational velocity, which is obtained by                         ﬁlamentary structures along the interface, e.g., y=0.2,0.8,
+decomposing the velocity ﬁeld into rotational, compressible,                       and the ﬁeld strength reaches 90 times the upstream value.
+
+                                                                              19
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                            Minoshima, Miyoshi, & Matsumoto
+
+
+
+
+Figure 13. Richtmyer–Meshkov instability solved with the W4I4D5-HLLD-CUCT scheme with N=64. (a)–(b) Density at t=0 and 20, and (c) the magnetic ﬁeld
+strength at t=20. Arrows represent the direction of the rotational velocity uR in Equation (52). (d) Time proﬁle of the magnetic energy increased by the instability
+(solid line) and the rotational energy (dashed line).
+
+
+They correlate well with the rotational ﬂow, indicating that the                      increased by the RMI ∣B∣2 2 - ∣Bref ∣2 2 integrated over space,
+ﬁeld is ampliﬁed mainly by the stretching. The compression                            where Bref is obtained from the run without the corrugation.
+would contribute less to the ﬁeld ampliﬁcation because the                            Just after the impact of the shock against the contact
+compressible velocity is much slower than the rotational                              discontinuity, the rotational energy increases impulsively,
+velocity around the spike. Figure 13(d) shows the time proﬁle                         followed by the gradual decrease of the rotational energy and
+of the rotational energy r∣uR ∣2 2 and the magnetic energy                            increase of the magnetic energy. The magnetic ﬁeld behaves
+
+                                                                                 20
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                               Minoshima, Miyoshi, & Matsumoto
+
+
+
+
+Figure 14. Time proﬁle of the maximum of the magnetic ﬁeld strength ∣B∣max in the Richtmyer–Meshkov instability with N=32, 64, 128. The W4I4D5-HLLD-
+CUCT scheme is compared with (a) the MUSCL-HLLD-CUCT scheme, (b) the W4I4D5-HLL-CUCT scheme, and (c) the W4I4D5-HLLD-GLM scheme. Because the
+value is normalized by the upstream magnetic ﬁeld strength, the initial ∣B∣max is equal to the compression ratio for the perpendicular MHD shock.
+
+
+passively and is continuously ampliﬁed as long as its energy                  obtains a solution comparable to the HLL scheme with half
+density is much smaller than the kinetic energy density.                      grid size in terms of ﬁeld ampliﬁcation. The low saturation
+However, the magnetic energy saturates and then begins to                     level in the HLL scheme is due to the overestimation of the
+decrease after it exceeds the rotational energy at t=36, which              amount of numerical diffusion in the high-beta plasma
+can be interpreted as the suppression by the ampliﬁed magnetic                (mentioned in Section 3.6). The plasma beta value at the
+ﬁeld itself when the Lorentz force becomes strong enough to                   maximum ﬁeld region is ∼102 in this run. However, the value
+prevent the ﬂow (Cao et al. 2008).                                            is decreased to ∼10 and the discrepancy of the saturation level
+   In order to examine the resolution dependence of the RMI,                  between the HLL and HLLD schemes is reduced in the run
+we conduct simulation runs with different interpolation                       with an initial plasma beta of 103 (not shown here).
+methods (MUSCL-MC and W4I4D5), different Riemann
+solvers (HLL and HLLD), and different divergence-free
+                                                                                                  3.8. Magnetic Reconnection
+treatments (GLM and CUCT) at different resolutions
+(N = 32, 64, 128). Figure 14 compares the time proﬁle of                         Magnetic reconnection is a fundamental energy release
+the maximum of the magnetic ﬁeld strength ∣B∣max among                        process in space and terrestrial environments such as the solar
+different runs. Both the growth speed and the saturation level                corona and the planetary magnetosphere. Because it intrinsi-
+increase with increasing resolution, as reported by Sano et al.               cally contains a hierarchical structure, a variety of models have
+(2012) for weak initial ﬁeld cases. The maximum ﬁeld strength                 been utilized so as to understand its nature from the fully
+exceeds 100 times the upstream value in the high-resolution                   kinetic scale to the MHD scale (Birn et al. 2001 and
+run. The W4I4D5-HLLD-CUCT scheme exhibits higher                              collaboration papers). Among them, resistive MHD is fre-
+saturation levels than the other schemes, indicating better                   quently adopted to model the macroscopic dynamics of the
+accuracy of the solution. In particular, the HLLD scheme                      reconnection and its associated phenomena far beyond the
+
+
+                                                                         21
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                Minoshima, Miyoshi, & Matsumoto
+
+
+
+
+Figure 15. Out-of-plane current density in the magnetic reconnection at t=100, 300, and 500 solved with the W4I4D5-HLL-CUCT scheme with N=8192. The
+contour lines represent the magnetic ﬁeld lines. The ﬁgures are enlarged by a factor of 5 in the y direction for better illustration.
+
+
+kinetic scale. Using the ideal (not resistive) MHD equations, we               sheet evolves in a Y-shape structure, and large-scale plasmoids
+simulate the evolution of an antiparallel magnetic ﬁeld                        are attached there in the HLL-CUCT scheme (Figure 15). In
+conﬁguration that is subject to reconnect numerically to examine               contrast, the HLLD-CUCT-AA scheme shows the uniform
+the effect of numerical diffusion and the robustness of a scheme               current sheet elongated in the x direction. In the current sheet,
+similar to Gardiner & Stone (2005) and Lee & Deane (2009).                     multiple plasmoids grow and then merge with each other
+The two-dimensional computational domain with −Lx/2x<                      (Figure 16). The HLLD-CUCT scheme also shows an elongated
+Lx/2 (Lx = 512) and −Ly/2yLy/2 (Ly = 16) is resolved                     current sheet, but the subsequent plasmoid formation is modest
+by N×N/32 grid points. The boundary condition is periodic                    compared to the HLLD-CUCT-AA scheme (Figure 17). The
+and symmetric in the x and y directions. The initial condition                 growth of the plasmoid is considerably suppressed with the
+is a Harris current-sheet conﬁguration, r = r0 , u = 0, B =                    resolution decreasing to N=4096 in the HLLD-CUCT(-AA)
+                                                                               schemes (not shown here).
+B0 tanh ( y l ) ex , and P = [(1 + b ) B02 - ∣B∣2 ] 2, where ρ0=
+                                                                                  Figure 18 shows the time proﬁle of the spatially integrated
+B0=1.0, λ=1.0 is the current-sheet thickness, and β=0.2
+                                                                               magnetic energy for the three schemes at N=4096, 8192. The
+is the plasma beta in the upstream region, respectively. We                    rate of dissipation of the magnetic energy is fastest in the HLL-
+impose a localized perturbation to the ﬂux function                            CUCT scheme and slowest in the HLLD-CUCT scheme. The
+dAz = 0.05l exp [-(x 2 + y 2) (2l )2 ] and a small (1%) uni-                   magnetic energy dissipates faster in the higher resolution run
+form random perturbation to v inside the current sheet. The                    with the HLLD-CUCT-AA scheme, implying that the plasmoid
+localized perturbation transfers magnetic ﬂux toward the                       dynamics dominates the dissipation of the current sheet.
+positive and negative x directions and then forms a thin                       Because the HLLD Riemann solver exactly captures an
+current sheet. The resistivity plays a critical role for the                   isolated and stationary tangential discontinuity without num-
+reconnection that is imposed numerically in this problem. The                  erical diffusion (Miyoshi & Kusano 2005), the rate of
+simulations are conducted using the HLL-CUCT, the HLLD-                        dissipation remains slow in the low-resolution run when the
+CUCT-AA, and the HLLD-CUCT schemes.                                            plasmoid is absent, and hence the current sheet is approxi-
+   Figures 15 through 17 show the time evolution of the out-of-                mately static. The aspect ratio of the current sheet (length/
+plane current density solved with the three schemes at                         thickness) increases with increasing resolution, which would
+N=8192. After the passage of the initial perturbation, the                   increase the number of plasmoids as demonstrated in the
+current sheet gets thin down to the grid scale until t∼100.                  resistive MHD (Loureiro et al. 2007; Bhattacharjee et al. 2009).
+Subsequently, the numerical resistivity switches on, and the                   The HLLD-CUCT scheme shows a similar tendency to the
+system evolves differently depending on the scheme. The current                HLLD-CUCT-AA scheme, although the rate of dissipation is
+
+                                                                          22
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                           Minoshima, Miyoshi, & Matsumoto
+
+
+
+
+                                Figure 16. Same as Figure 15, but solved with the W4I4D5-HLLD-CUCT-AA scheme.
+
+
+slower owing to the weaker plasmoid activity. In contrast to the             HLL-CUCT scheme, and consequently, it increases the gas
+HLLD-CUCT(-AA) schemes, the rate of dissipation is faster in                 pressure because we use the conservative scheme. The
+the lower resolution run with the HLL-CUCT scheme.                           increased gas pressure helps open the jet, and in turn, localize
+   The overall dynamics is quite different between the HLL-                  the diffusion region. This numerical artifact is not observed in
+CUCT and the HLLD-CUCT(-AA) schemes. The difference is                       the HLLD-CUCT(-AA) schemes because the HLLD Riemann
+already found at an early stage of the simulation run.                       solver is designed to capture a tangential discontinuity. The
+Figures 19(a)–(b) compare the x-component of the velocity at                 plasma beta is nearly uniform in the current sheet.
+t=100 with the HLL-CUCT and the HLLD-CUCT schemes.                            The different plasmoid evolution between the HLLD-CUCT-
+The HLLD-CUCT-AA scheme obtains an almost identical                          AA and the HLLD-CUCT schemes (Figures 16 and 17) may be
+result to the HLLD-CUCT scheme until this period, thus it is                 attributed to the difference in the numerical Lundquist number
+not shown here. The outﬂow jet driven by the initial                         that is proportional to the length of the current sheet. The
+perturbation propagates rightward. The width of the outﬂow                   current sheet is elongated to ∣x∣ = 30 in the HLLD-CUCT-AA
+jet is unchanged from the center to the edge of the perturbation             scheme, but it is shortened to ∣x∣ = 10 in the HLLD-CUCT
+(x = 8) in the HLLD-CUCT scheme. On the other hand, the                      scheme at t=300 (middle panel in Figures 16 and 17). This
+outﬂow jet broadens toward the downstream and forms a crab-                  discrepancy must be owing to the difference in the calculation
+claw structure in the HLL-CUCT scheme, and the maximum jet                   of the electric ﬁeld. While the CUCT-AA method takes the
+velocity u=0.7 is much faster than that in the HLLD-CUCT                   arithmetic average in Equation (40), the CUCT method takes
+scheme, u=0.13. This structure, along with the Y-shaped                    the directional biasing with respect to the Alfvén mode in
+structure in Figure 15, resembles the Petscheck-type reconnec-               Equation (41), and its nonlinear coefﬁcient Θ depends on the
+tion triggered by an ad hoc localized resistivity (Zenitani &                position (Equation (42)). This nonlinear effect may impose a
+Miyoshi 2011; Zenitani 2015). This implies that the HLL-                     numerical resistivity varying with the x position, and
+CUCT scheme tends to artiﬁcially localize the diffusion region               eventually, it may discourage the elongation of the current
+under the adopted initial condition. Figure 19(c) compares                   sheet. The nonlinearity of the numerical resistivity in the
+the plasma beta value averaged over the current sheet                        CUCT-AA method would be relatively weak, and it results in
+(−1<y<1) between the two schemes. The HLL-CUCT                           the elongated current sheet and the subsequent plasmoid
+scheme shows that the plasma beta gradually increases to ∼100                formation that resemble the tearing instability for uniform
+over the course of the ﬂow from the center to x=9.                         resistivity (Biskamp 1986). In order to test this hypothesis, we
+As discussed in Section 3.6, rapid numerical diffusion of                    apply the schemes to the viscoresistive MHD equations
+the magnetic ﬁeld occurs in the high-beta region with the                    (Minoshima et al. 2016) and solve the same problem. Kinematic
+
+                                                                        23
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                       Minoshima, Miyoshi, & Matsumoto
+
+
+
+
+                                         Figure 17. Same as Figure 15, but solved with the W4I4D5-HLLD-CUCT scheme.
+
+                                                                                                                   4. Summary
+                                                                                             We have designed a conservative ﬁnite difference scheme
+                                                                                          for ideal MHD simulations based on the WCNS (Deng &
+                                                                                          Zhang 2000; Zhang et al. 2008) for which it is easier to
+                                                                                          increase the order of accuracy in multiple dimensions than with
+                                                                                          ﬁnite volume schemes. The scheme reconstructs a high-order-
+                                                                                          accurate numerical ﬂux and approximates its spatial derivative
+                                                                                          by a high-order linear central difference. We have proposed the
+                                                                                          fourth-order upwind-biased nonlinear interpolation method
+                                                                                          (Equations (26) and (27)) to combine with the fourth-order
+                                                                                          central difference (Equation (14)), which achieves the optimal
+                                                                                          ﬁfth-order accuracy for linear problems. The scheme can use
+                                                                                          the physical variables for the high-order interpolation and the
+                                                                                          calculation of the numerical ﬂux at the midpoint, allowing us to
+                                                                                          employ a multistate Riemann solver for MHD. Speciﬁcally, the
+                                                                                          scheme employs the HLLD Riemann solver in order to robustly
+                                                                                          capture rotational, tangential, and contact discontinuities as
+Figure 18. Time proﬁle of the spatially integrated magnetic energy in the magnetic
+reconnection solved with the W4I4D5-HLL-CUCT, the W4I4D5-HLLD-CUCT-
+                                                                                          well as fast mode shocks (Miyoshi & Kusano 2005). We have
+AA, and the W4I4D5-HLLD-CUCT schemes with N=4096, 8192.                                 proposed a new and simple variant of the CT method, termed
+                                                                                          the CUCT method (Equation (41)), which is consistent with the
+                                                                                          base one-dimensional scheme, attains a designed order of
+                                                                                          accuracy in a multidimensional ﬂow, and preserves the
+viscosity and resistivity coefﬁcients, ν and η, are assumed constant                      divergence-free condition of the magnetic ﬁeld as designed
+and uniform, and the corresponding kinetic and magnetic                                   by high-order ﬁnite difference representation. Furthermore, this
+Reynolds numbers are VAλ/ν=VAλ/η=103. The coefﬁcients                                 method implements a two-dimensional directional biasing to
+employed here are larger than the numerical ones in this problem.                         avoid the numerical oscillation in a speciﬁc coordinate axis
+Figure 20 conﬁrms the formation of multiple plasmoids and their                           pointed out by Lee (2013).
+nonlinear evolution in the viscoresistive MHD simulation with the                            The performance of the present scheme has been measured
+HLLD-CUCT scheme (and a similar result is obtained with the                               through linear and nonlinear problems. The scheme achieves the
+HLLD-CUCT-AA scheme).                                                                     designed order of accuracy, and it is more cost effective
+
+                                                                                     24
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                            Minoshima, Miyoshi, & Matsumoto
+
+
+
+
+Figure 19. (a)–(b) The x-component of the velocity in the magnetic reconnection at the early period t=100 solved with the W4I4D5-HLL-CUCT and the W4I4D5-
+HLLD-CUCT schemes. The contour lines represent the magnetic ﬁeld lines. The ﬁgures are enlarged by a factor of 2 in the y direction for better illustration. (c) Plasma
+beta value in the current sheet at t=100 solved with the HLL-CUCT (dashed line) and the HLLD-CUCT (solid line) schemes.
+
+
+than lower order schemes in multidimensional problems                                  elongated current sheet and subsequent multiple plasmoids. The
+(Sections 3.1–3.2). MHD shocks and discontinuities, smooth                             evolution of the plasmoid differs considerably between the
+ﬂows, and their interactions are resolved without generating                           arithmetic average (Equation (40)) and the direction-biased
+unphysical divergence errors (Sections 3.3–3.5). These problems                        average (Equation (41)). On the other hand, the HLL-CUCT
+clearly demonstrate that the CUCT method can improve the                               scheme tends to localize the current density and trigger the
+robustness of the MHD scheme for strong shocks. The HLLD-                              magnetic reconnection there.
+CUCT scheme correctly captures the tangential discontinuity in                            Jiang & Wu (1999) pointed out that ideal MHD simulations
+the multidimensional ﬂow irrespective of the plasma beta by                            with different Godunov-type schemes may not lead to identical or
+virtue of the combination of the multistate Riemann solver and                         convergent results in the presence of magnetic ﬁeld rotation,
+the divergence-free method (Section 3.6). One has to be cautious                       because the amount of numerical diffusion for the velocity,
+when using a single-state Riemann solver for high-beta plasmas,                        magnetic ﬁeld, and temperature varies according to a scheme
+in which the transit time of the fastest mode may be much faster                       design. Minoshima et al. (2015) reported that the saturation level
+than a dynamical timescale, that seriously overestimates the                           of the magnetorotational instability is susceptible to the numerical
+amount of numerical diffusion. The scheme successfully                                 magnetic Prandtl number, which relies on the choice of the
+resolves the magnetic ﬁeld ampliﬁcation associated with the                            Riemann solver and the treatment for the divergence-free
+Richtmyer–Meshkov instability (Section 3.7). The saturation                            condition. It would be preferable to involve explicit diffusion
+level of the maximum ﬁeld strength depends on the scheme                               terms, viscosity, resistivity, and thermal conductivity for practical
+design as well as grid resolution: a high saturation level is                          MHD simulations rather than the ideal approximation. Highly
+obtained by a high-resolution run and/or a highly accurate                             accurate schemes allow us to use small diffusion coefﬁcients for
+scheme. The evolution of the current sheet turns out to be                             application to space and astrophysical plasma phenomena.
+susceptible to the calculation method of the electric ﬁeld                                The CUCT method (Equation (41)) has upwind-correction
+(Section 3.8). The HLLD-CUCT scheme tends to form an                                   terms twice as large as the baseline FluxCT method
+
+                                                                                 25
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                  Minoshima, Miyoshi, & Matsumoto
+
+
+
+
+               Figure 20. Same as Figure 15, but obtained from the viscoresistive MHD simulation with the W4I4D5-HLLD-CUCT scheme.
+
+(Equation (36)), thus it would give a more robust solution as                  MHD simulations of global space and astrophysical objects,
+demonstrated in Section 3.5. We also test the magnetic                         such as the planetary magnetosphere, heliosphere, and accre-
+reconnection problem in Section 3.8 with the W4I4D5-                           tion disks. They contain a wide variety of waves, shocks, and
+HLLD-FluxCT method, but the numerical oscillation grows                        magnetic ﬁeld inhomogeneities that would be faithfully
+to an intolerable level at an early stage and prevents the system              resolved by the high-order, shock-capturing, and divergence-
+from evolving. We then adopt the CUCT method rather than                       free scheme.
+the FluxCT method to combine with the WCNS scheme and
+the HLLD Riemann solver. In contrast, Tóth (2000) conducted                      We thank the anonymous referee for carefully reviewing our
+various benchmark tests and concluded that the FluxCT                          manuscript and giving insightful comments that greatly
+method is superior to other selected CT methods, one of which                  improved the manuscript. This research is supported by JSPS
+recovers the proper amount of numerical diffusion against the                  KAKENHI grant Nos. JP15K05369 (T. Minoshima) and
+FluxCT method (Ryu et al. 1998). The difference between this                   JP15K04756 (T. Miyoshi). Numerical simulations were carried
+paper and Tóth (2000) might be partly owing to the order of                    out in part on Cray XC30 at the Center for Computational
+accuracy in space: the reduction of the upwind property in the                 Astrophysics, National Astronomical Observatory of Japan.
+FluxCT method could be more problematic for higher order
+schemes. The CUCT method would be applicable to radiation
+and relativistic MHD equations because they solve the same                                            Appendix A
+Ohm’s law. The combination of the high-order WCNS scheme,                          Sixth- and Seventh-order Finite Difference Schemes
+the HLLD Riemann solver, and the CUCT method possesses                            The sixth-order linear central difference can be written as
+
+                                   2250 (U˜i + 1 2 - U˜i - 1 2) - 125 (U˜i + 3 2 - U˜i - 3 2) + 9 (U˜i + 5 2 - U˜i - 5 2 )
+                       D6 (U˜ )i =
+                                                                       1920Dx
+                                   ¶U            5 ¶7U
+                                 =        +                    Dx 6 + O (Dx 8) + O (Dx p).                                                       (53)
+                                   ¶x i        7168 ¶x 7 i
+
+good capabilities in accuracy, robustness, and computation                     If we apply the seventh-order left-side biased interpolation
+cost. We expect that the present scheme is useful for practical                to Ũ ,
+
+
+                                                                          26
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                           Minoshima, Miyoshi, & Matsumoto
+
+
+                                    L        - 5Ui - 3 + 42Ui - 2 - 175Ui - 1 + 700Ui + 525Ui + 1 - 70Ui + 2 + 7Ui + 3
+                                 U˜i + 1 2 =
+                                                                               1024
+                                                          5 ¶U 7
+                                           = Ui + 1 2 +              Dx 7 + O (Dx 8) ,                                                                    (54)
+                                                        2048 ¶x 7 i
+
+the resulting scheme has the sixth-order dispersion as a leading                                                   Appendix B
+error,                                                                                        Parameter Dependence of the Rotated Shock Tube Problem
+                                                                                                  with the Hyperbolic Divergence-cleaning Method
+                   ¶U                 5 ¶7U                         5 ¶8U                        The hyperbolic divergence-cleaning method (Equations (46)
+   D6 (U˜ L )i =                 +                       Dx 6 +
+                   ¶x    i           7168 ¶x 7   i                2048 ¶x 8   i               and (47)) has two free parameters, ch and cp, to diminish the
+                   ´ Dx 7 + O (Dx 8).                                                          · B error through propagation and diffusion. In Figure 21,
+                                                                                  (55)        we examine the ch dependence of  · B and density in the
+                                                                                              Brio–Wu rotated shock tube problem (Section 3.4) solved with
+                                                                                              the W4I4D5-HLLD-GLM scheme. The shock tube is tilted by
+Similar to Equation (20), we derive the following sixth-order
+                                                                                              an angle of 45° relative to the x axis. The value of ch is set to
+left-side biased interpolation that is appropriate to Equation (53),
+                                                                                              the corresponding CFL numbers CFL(ch)=chΔt/Δx=0.4,
+
+                            L        - 10Ui - 3 + 81Ui - 2 - 325Ui - 1 + 1250Ui + 900Ui + 1 - 115Ui + 2 + 11Ui + 3
+                         U˜i + 1 2 =
+                                                                          1792
+                                                 5 ¶U  6                5 ¶7U
+                                   = Ui + 1 2 -              Dx 6 +               Dx 7 + O (Dx 8).                                                        (56)
+                                                7168 ¶x i6            2048 ¶x 7 i
+
+Substituting Equation (56) into Equation (53) cancels the                                     0.5, 0.6, 0.7, and 0.8 (note that the CFL number for the MHD
+O(Δx6) error, and the resulting scheme has the seventh-order                                  part is ﬁxed to be 0.4). The value of cp is ﬁxed to be an optimal
+dissipation as a leading error,                                                               parameter proposed by Dedner et al. (2002), cp2 = 0.18ch . A
+                                                                                               · B error of ∼2 is generated at the slow compound wave and
+                    ¶U                 5 ¶8U                                                  the slow shock irrespective of the value of ch. Subsequently,
+   D6 (U˜ L )i =                 +                       Dx 7 + O (Dx 8).         (57)        the error propagates and diffuses toward the upstream and
+                    ¶x       i       1792 ¶x 8       i
+                                                                                              downstream directions. Grid-scale oscillations seen in
+                                                                                              CFL(ch)0.5 is largely reduced for CFL(ch) 0.6. Although
+Comparing Equations (55) and (57), one expects that the seventh-
+                                                                                              the density proﬁle in panel (b) is in good agreement with the
+order scheme improves the dispersion error but the amount of                                  W4I4D5-HLLD-CUCT scheme for CFL(ch)0.5, it gets
+numerical dissipation is increased by a factor of 2048/                                       worse for CFL(ch) 0.6, and this makes it hard to conclude
+1792=1.14 against the sixth-order scheme. This is readily                                   that a solution with higher ch is always better than with lower
+conﬁrmed from the Fourier analysis performed in Section 2.2.                                  ch. The solution becomes more diffusive around the slow
+
+
+
+
+                                                                                         27
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                    Minoshima, Miyoshi, & Matsumoto
+
+
+
+
+Figure 21. ch dependence of (a)  · B and (b) density in the Brio–Wu rotated shock tube problem solved with the W4I4D5-HLLD-GLM scheme. The propagation
+angle is 45°.
+
+
+compound wave, the contact discontinuity, and the slow shock                   Büchmuller, P., & Helzel, C. 2014, JSCom, 61, 343
+for higher ch value. The thickness of the slow shock for                       Cao, J., Wu, Z., Ren, H., & Li, D. 2008, PhPl, 15, 042102
+CFL(ch)=0.8 is 2.5 times broader toward upstream than for                    Chen, Y., Tóth, G., & Gombosi, T. I. 2016, JCoPh, 305, 604
+                                                                               Christlieb, A. J., Rossmanith, J. A., & Tang, Q. 2014, JCoPh, 268, 302
+CFL(ch)=0.4. The solution is almost equivalent to one using                  Crockett, R. K., Colella, P., Fisher, R. T., Klein, R. I., & McKee, C. F. 2005,
+half a CFL number for the MHD part, and the error is also                         JCoPh, 203, 422
+observed with a tilt angle of 26°. 6, indicating the acceptable                Dai, W., & Woodward, P. R. 1998, ApJ, 494, 317
+upper limit of ch.                                                             Dedner, A., Kemm, F., Kröner, D., et al. 2002, JCoPh, 175, 645
+                                                                               Del Zanna, L., Zanotti, O., Bucciantini, N., & Londrillo, P. 2007, A&A, 473, 11
+                                                                               Deng, X., & Zhang, H. 2000, JCoPh, 165, 22
+                             References                                        Evans, C. R., & Hawley, J. F. 1988, ApJ, 332, 659
+                                                                               Fan, P., Shen, Y., Tian, B., & Yang, C. 2014, JCoPh, 269, 329
+Amano, T. 2015, JCoPh, 299, 863                                                Felker, K. G., & Stone, J. M. 2018, JCoPh, 375, 1365
+Balsara, D. S. 1998, ApJS, 116, 119                                            Fromang, S., Hennebelle, P., & Teyssier, R. 2006, A&A, 457, 371
+Balsara, D. S. 2001, JCoPh, 174, 614                                           Gardiner, T. A., & Stone, J. M. 2005, JCoPh, 205, 509
+Balsara, D. S. 2010, JCoPh, 229, 1970                                          Gardiner, T. A., & Stone, J. M. 2008, JCoPh, 227, 4123
+Balsara, D. S. 2012, JCoPh, 231, 7476                                          Godunov, S. K. 1959, Matematicheskii Sbornik, 47, 271, http://mi.mathnet.
+Balsara, D. S., & Kim, J. 2004, ApJ, 602, 1079                                    ru/eng/msb4873
+Balsara, D. S., Rumpf, T., Dumbser, M., & Munz, C.-D. 2009, JCoPh,             Gottlieb, S., & Shu, C. W. 1998, MaCom, 67, 73
+   228, 2480                                                                   Ha, Y., Ho Kim, C., Ju Lee, Y., & Yoon, J. 2013, JCoPh, 232, 68
+Balsara, D. S., & Shu, C.-W. 2000, JCoPh, 160, 405                             Harten, A., Lax, P., & van Leer, B. 1983, SIAMR, 35, 35
+Balsara, D. S., & Spicer, D. S. 1999, JCoPh, 149, 270                          Hasegawa, H., Fujimoto, M., Phan, T.-D., et al. 2004, Natur, 430, 755
+Bhattacharjee, A., Huang, Y.-M., Yang, H., & Rogers, B. 2009, PhPl, 16,        Hawley, J. F., & Stone, J. M. 1995, CoPhC, 89, 127
+   112102                                                                      Henrick, A. K., Aslam, T. D., & Powers, J. M. 2005, JCoPh, 207, 542
+Birn, J., Drake, J. F., Shay, M. A., et al. 2001, JGR, 106, 3715               Jiang, G., & Shu, C. 1996, JCoPh, 126, 202
+Biskamp, D. 1986, PhFl, 29, 1520                                               Jiang, G.-S., & Wu, C.-c. 1999, JCoPh, 150, 561
+Borges, R., Carmona, M., Costa, B., & Don, W. S. 2008, JCoPh, 227, 3191        Kawai, S. 2013, JCoPh, 251, 292
+Brackbill, J. U., & Barnes, D. C. 1980, JCoPh, 35, 426                         Kritsuk, A. G., Nordlund, Å., Collins, D., et al. 2011, ApJ, 737, 13
+Brio, M., & Wu, C. C. 1988, JCoPh, 75, 400                                     Lee, D. 2013, JCoPh, 243, 269
+
+                                                                          28
+The Astrophysical Journal Supplement Series, 242:14 (29pp), 2019 June                                                        Minoshima, Miyoshi, & Matsumoto
+
+Lee, D., & Deane, A. E. 2009, JCoPh, 228, 952                                       Orszag, S. A., & Tang, C.-M. 1979, JFM, 90, 129
+Lee, D., Faller, H., & Reyes, A. 2017, JCoPh, 341, 230                              Powell, K. G., Roe, P. L., Linde, T. J., Gombosi, T. I., & De Zeeuw, D. L.
+Lele, S. K. 1992, JCoPh, 103, 16                                                       1999, JCoPh, 154, 284
+Li, S. 2005, JCoPh, 203, 344                                                        Qiu, J., & Shu, C.-W. 2002, JCoPh, 183, 187
+Li, S. 2010, JCoPh, 229, 7893                                                       Richtmyer, R. D. 1960, CPAM, 13, 297
+Liu, X.-D., Osher, S., & Chan, T. 1994, JCoPh, 115, 200                             Ryu, D., Jones, T. W., & Frank, A. 1995, ApJ, 452, 785
+Londrillo, P., & Del Zanna, L. 2000, ApJ, 530, 508                                  Ryu, D., Miniati, F., Jones, T. W., & Frank, A. 1998, ApJ, 509, 244
+Londrillo, P., & Del Zanna, L. 2004, JCoPh, 195, 17                                 Sano, T., Inoue, T., & Nishihara, K. 2013, PhRvL, 111, 205001
+Loureiro, N. F., Schekochihin, A. A., & Cowley, S. C. 2007, PhPl, 14, 100703        Sano, T., Nishihara, K., Matsuoka, C., & Inoue, T. 2012, ApJ, 758, 126
+Matsumoto, T. 2007, PASJ, 59, 905                                                   Shu, C., & Osher, S. 1988, JCoPh, 77, 439
+Matsumoto, Y., Asahina, Y., Kudoh, Y., et al. 2016, arXiv:1611.01775                Shu, C.-W. 2009, SIAMR, 51, 82
+Matsumoto, Y., & Seki, K. 2008, CoPhC, 179, 289                                     Steger, J. L., & Warming, R. F. 1981, JCoPh, 40, 263
+Meshkov, E. E. 1972, FlDy, 4, 101                                                   Stone, J. M., Gardiner, T. A., Teuben, P., Hawley, J. F., & Simon, J. B. 2008,
+Mignone, A., Bodo, G., Massaglia, S., et al. 2007, ApJS, 170, 228                      ApJS, 178, 137
+Mignone, A., & Tzeferacos, P. 2010, JCoPh, 229, 2117                                Suresh, A., & Huynh, H. T. 1997, JCoPh, 136, 83
+Mignone, A., Tzeferacos, P., & Bodo, G. 2010, JCoPh, 229, 5896                      Tóth, G. 2000, JCoPh, 161, 605
+Mignone, A., Zanni, C., Tzeferacos, P., et al. 2012, ApJS, 198, 7                   van Leer, B. 1979, JCoPh, 32, 101
+Minoshima, T., Hirose, S., & Sano, T. 2015, ApJ, 808, 54                            Yamaleev, N. K., & Carpenter, M. H. 2009, JCoPh, 228, 3025
+Minoshima, T., Miyoshi, T., & Imada, S. 2016, PhPl, 23, 072122                      Zenitani, S. 2015, PhPl, 22, 032114
+Miura, A., & Pritchett, P. L. 1982, JGR, 87, 7431                                   Zenitani, S., & Miyoshi, T. 2011, PhPl, 18, 022105
+Miyoshi, T., & Kusano, K. 2005, JCoPh, 208, 315                                     Zhang, R., Zhang, M., & Shu, C.-W. 2011, CCoPh, 9, 807
+Miyoshi, T., & Kusano, K. 2011, PFR, 6, 2401124                                     Zhang, S., Jiang, S., & Shu, C.-W. 2008, JCoPh, 227, 7294
+Nonomura, T., & Fujii, K. 2013, CF, 85, 8                                           Ziegler, U. 2008, CoPhC, 179, 227
+
+
+
+
+                                                                               29
+
