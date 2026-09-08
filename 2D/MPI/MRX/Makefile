@@ -3,41 +3,35 @@ include $(DIR0)/Makefile.inc
 DIRI = $(DIR0)/common
 DIRM = $(DIR0)/mpi
 DIRL = $(DIR0)
-INCDIR  = -I$(DIRI) -I$(DIRM)
-LDFLAGS = -L$(DIRL)
-LIBS = -lm -l$(LIBNAME) -l$(LIBMPI)
-LIBRARY = $(DIRL)/lib$(LIBNAME).a $(DIRL)/lib$(LIBMPI).a 
-BASECLASS = $(DIRI)/mhd_class.hpp $(DIRM)/mympi_class.hpp
+CPPFLAGS += -I$(DIRI) -I$(DIRM)
+LDFLAGS += -L$(DIRL)
+LDLIBS += -lm -l$(LIBNAME) -l$(LIBMPI)
+LIBRARIES = $(DIRL)/lib$(LIBNAME).a $(DIRL)/lib$(LIBMPI).a
 TARGET = a.out
 OBJS = main.o dmhd2d_class.o dmhd2d_init_.o dmhd2d_solve.o mhd2d_class.o mhd2d_paras.o mhd2d_solve.o
+DEPS = $(OBJS:.o=.d)
 DATADIR = dat
 
-.PHONY : all
-.PHONY : clean
+.PHONY: all clean cdata
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
-	$(MPICC) $^ $(CFLAGS) $(LIBS) $(LDFLAGS) $(INCDIR) -o $@
+$(TARGET): $(OBJS) $(LIBRARIES)
+	$(MPICXX) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $@
 
-%.o: %.c
-	$(MPICC) -c $< $(CFLAGS) $(LIBS) $(LDFLAGS) $(INCDIR) -o $@
 %.o: %.cpp
-	$(MPICC) -c $< $(CFLAGS) $(LIBS) $(LDFLAGS) $(INCDIR) -o $@
+	$(MPICXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-$(LIBRARY):
-	cd $(DIRL); make
+$(DIRL)/lib$(LIBNAME).a:
+	$(MAKE) -C $(DIRL)/common
+
+$(DIRL)/lib$(LIBMPI).a:
+	$(MAKE) -C $(DIRL)/mpi
 
 clean:
-	rm -f $(TARGET) $(OBJS)
+	$(RM) $(TARGET) $(OBJS) $(DEPS)
 
 cdata:
-	rm -f $(DATADIR)/*.dat
+	$(RM) $(DATADIR)/*.dat
 
-main.o: $(LIBRARY) $(BASECLASS) dmhd2d_class.o dmhd2d_init_.o dmhd2d_solve.o mhd2d_class.o mhd2d_paras.o mhd2d_solve.o dmhd2d_class.hpp mhd2d_class.hpp mymacros.hpp
-dmhd2d_class.o: $(LIBRARY) $(BASECLASS) mhd2d_class.o dmhd2d_class.hpp mhd2d_class.hpp mymacros.hpp
-dmhd2d_init_.o: $(LIBRARY) $(BASECLASS) dmhd2d_class.o mhd2d_class.o dmhd2d_class.hpp mhd2d_class.hpp mymacros.hpp
-dmhd2d_solve.o: $(LIBRARY) $(BASECLASS) dmhd2d_class.o mhd2d_class.o dmhd2d_class.hpp mhd2d_class.hpp mymacros.hpp
-mhd2d_class.o: $(LIBRARY) $(BASECLASS) mhd2d_class.hpp mymacros.hpp
-mhd2d_paras.o: $(BASECLASS) mhd2d_class.o mhd2d_class.hpp mymacros.hpp
-mhd2d_solve.o: $(LIBRARY) $(BASECLASS) mhd2d_class.o mhd2d_class.hpp mymacros.hpp
+-include $(DEPS)
