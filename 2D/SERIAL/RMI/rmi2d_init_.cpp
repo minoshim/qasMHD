@@ -38,8 +38,8 @@ void RMI2D::init_()
   double a=2.0*(2.0-gam)/beta;
   double b=gam*(gm1*ma_u*ma_u+2.0/beta+2.0);
   double c=-gam*gp1*ma_u*ma_u;
-  // Compression ratio
-  double r=(-b+sqrt(b*b-4.0*a*c))/(2.0*a);
+  // Compression ratio: avoid cancellation for weak fields and division by a at gam=2.
+  double r=-2.0*c/(b+sqrt(b*b-4.0*a*c));
   // Pr2/Pr1
   double rr=gam*ma_u*ma_u*(1.0-1.0/r)-(r*r-1.0)/beta+1.0;
 #else
