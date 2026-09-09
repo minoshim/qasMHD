@@ -1,8 +1,8 @@
-#include "mhd2d_class.hpp"
+#include "rmi2d_class.hpp"
 
 int main(){
 
-  MHD2D mhd2d;
+  RMI2D mhd2d;
   mhd2d.paras();		// Set parameters
   mhd2d.init_();		// Set initial condition
   mhd2d.setdt(1);		// Set time step to satisfy CFL (if flag=1). 

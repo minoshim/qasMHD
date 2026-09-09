@@ -15,7 +15,7 @@
 
 #define MAGNET (1)		// Flag for finite B-field (0 for hydro shock)
 
-// Flag for random perturbation (see mhd2d_init_.cpp)
+// Flag for random perturbation (see rmi2d_init_.cpp)
 #define RANDOM (0)
 
 #endif

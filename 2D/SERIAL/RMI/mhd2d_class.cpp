@@ -50,9 +50,6 @@ void MHD2D::bound(double *val[], int nm, const int stxs[], const int dnxs[], con
   for (int m=0;m<nm;m++){
     bc2d(val[m],nx,ny,xoff,yoff,stxs[m],dnxs[m],stys[m],dnys[m]);
   }
-
-  // Injection @ upper boundary
-  MHD2D::init_();
 }
 
 void MHD2D::setdt(int flg)
