@@ -26,7 +26,7 @@ void DMHD2D::exec_(int flg)
 
     double dcmax=setdc();
     if (dcmax > 1e-15){
-      int nc,ncmax=1+(int)(4*(dcmax*dt_step)/(dr*dr));
+      int nc,ncmax=1+(int)(6*(dcmax*dt_step)/(dr*dr));
       for (nc=0;nc<ncmax;nc++){	// sub-cycling
 	bound(val,nm,stxs,dnxs,stys,dnys);
 	dsptv(dt_step/ncmax);
