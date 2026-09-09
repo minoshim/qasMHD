@@ -1,4 +1,5 @@
 ## qasMHD/1D/SERIAL
+
 Serial codes for the following one-dimensional problems are available:
 
 - `shock`... standard shock tube problems[^1];
@@ -8,36 +9,65 @@ Serial codes for the following one-dimensional problems are available:
 
 ### Project structure
 
-- `common/` contains the MHD1D and HMHD1D class and solver implementations shared by all problems;
-- `python/` contains shared visualization and spectrum-analysis scripts linked from each problem directory;
-- `shock/`, `wave/`, `h-shock/`, and `h-wave/` contain the problem-specific initial conditions, parameters, macros, and build files.
+- `common/` contains the shared `MHD1D` and Hall-MHD `HMHD1D` classes and solvers, plus the build rules in `common/case.mk`;
+- each problem directory retains its driver (`main.cpp`), initial conditions, parameters, macros, and a small `Makefile`;
+- `python/` contains visualization and spectrum-analysis scripts linked from each problem directory.
 
-The sources under `common/` are compiled separately for each problem so that its local macro settings are applied.
+The sources in this directory's `common/` are compiled separately for each problem, using that problem's `mymacros.hpp`. They are not a precompiled class library. The repository-level `common/` supplies the numerical kernels in `libqasmhd.a`.
 
-Users may edit the following files contained in each directory:
+| Problem | Class | Initial-condition source |
+| --- | --- | --- |
+| shock, wave | `MHD1D` | `mhd1d_init_.cpp` |
+| h-shock, h-wave | `HMHD1D` | `mhd1d_init_.cpp` |
 
-- `mhd1d_init_.cpp` defines the initial condition;
-- `mhd1d_paras.cpp` (`hmhd1d_paras.cpp` in the Hall-MHD directories) defines the simulation parameters (spatial domain and boundary condition);
-- `mymacros.hpp` defines macros about simulation space, time, and the solver design (Riemann solver, spatial and temporal accuracies).
+The Hall-MHD problems select their additional shared sources with `HALL := 1` in their Makefiles.
+
+### Configuring a problem
+
+- Edit the initial-condition source listed above for the physical setup.
+- Edit `mhd1d_paras.cpp` (`hmhd1d_paras.cpp` for Hall-MHD) for the domain and boundary conditions. `setup_grid(xmin, xmax)` takes physical domain bounds excluding ghost cells and sets the cell-centered coordinates, mesh spacing, and initial timestep.
+- The output directory defaults to `./dat/`. To change it, assign `fildir` in `paras()` and create the directory before running.
+- Edit `mymacros.hpp` for mesh size, output intervals, CFL, and solver choices. `RMN` (0–3), `ODR` (1–4), and `R_K` (1–3) are checked by `static_assert` in the shared class header.
+
+The wave and h-wave problems use `rand_noise_mt()` with a local `std::mt19937` during initialization. Their seed is fixed at `10` in `mhd1d_init_.cpp`; edit that assignment and rebuild to change it. Sequences differ from the legacy `rand_noise()` generator even for the same seed.
 
 ### How to run the simulation
-```
->cd shock/
->make
->./a.out
+
+From `1D/SERIAL/`:
+
+```sh
+cd shock/
+make -C ../../../common
+make
+mkdir -p dat
+OMP_NUM_THREADS=2 ./a.out
 ```
 
-The executable is created as `a.out`, while object and dependency files are stored under `build/`.
-The result is stored in `dat/`.
+Use the C++ compiler and flags configured in the repository's `Makefile.inc`. This is a single-process program with OpenMP support; no MPI launcher is needed. `OMP_NUM_THREADS=1` runs with one thread.
 
-Users may run `>make clean` to delete `a.out` and the files generated under `build/`, and `>make cdata` to delete the result stored in `dat/`.
+The executable is `a.out`; object and dependency files are stored in each problem's `build/`. Results are written to `dat/`. Local macro and shared-header edits are tracked by dependency files: rerun `make` after editing. Rebuild the repository-level library after changing its sources; after changing compiler flags, clean and rebuild both the library objects and the case objects.
+
+`make clean` removes `a.out` and the current build's object/dependency files, but preserves results. `make cdata` deletes `dat/*.dat`; use it deliberately. A new simulation can overwrite existing output files, so preserve previous results first.
 
 ### How to check the result
-Execute the python script `batch.py` or `batch_a.py`.
+
+From the problem directory, start Python 3 with NumPy and Matplotlib installed:
+
+```sh
+python
 ```
->python
->>>exec(open("batch.py").read())
+
+Then execute the linked script in the interactive session:
+
+```pycon
+>>> exec(open("batch.py").read())
 ```
+
+Enter `dat` when prompted for the data directory, then select an output index. The `batch.py` and `python/` links let these commands run directly from each problem directory. Keeping the Python session open allows further inspection of the loaded data and figures.
+
+To load all output times, execute `exec(open("python/batch_a.py").read())` instead.
+
+For wave spectra, see the scripts and examples in the wave and h-wave problem directories.
 
 ## License
 

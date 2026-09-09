@@ -16,7 +16,7 @@ Serial codes for the following two-dimensional problems are available:
 - each problem directory retains its driver (`main.cpp`), initial conditions, parameters, macros, and a small `Makefile`;
 - `python/` contains visualization scripts linked from each problem directory.
 
-The sources in `2D/SERIAL/common/` are compiled separately for each problem, using that problem's `mymacros.hpp`. They are not a precompiled class library. The repository-level `common/` supplies the numerical kernels in `libqasmhd.a`.
+The sources in this directory's `common/` are compiled separately for each problem, using that problem's `mymacros.hpp`. They are not a precompiled class library. The repository-level `common/` supplies the numerical kernels in `libqasmhd.a`.
 
 | Problem | Class | Initial-condition source |
 | --- | --- | --- |
@@ -56,13 +56,23 @@ The executable is `a.out`; object and dependency files are stored in each proble
 
 ### How to check the result
 
-From the problem directory, run the linked script with Python 3, NumPy, and Matplotlib:
+From the problem directory, start Python 3 with NumPy and Matplotlib installed:
 
 ```sh
-python batch.py
+python
 ```
 
-Enter `dat` when prompted for the data directory, then select an output index. The `batch.py` and `python/` links let this command run directly from each problem directory. Both `batch.py` and `batch_a.py` automatically subtract `rho*phi_g` when `g_potential.dat` is present in the selected data directory; without it, they use the ordinary MHD pressure formula. Keep each output set with its matching potential file, and do not leave a stale potential file in a non-gravitating run's directory. See [RTI/README.md](RTI/README.md) for the file format.
+Then execute the linked script in the interactive session:
+
+```pycon
+>>> exec(open("batch.py").read())
+```
+
+Enter `dat` when prompted for the data directory, then select an output index. The `batch.py` and `python/` links let these commands run directly from each problem directory. Keeping the Python session open allows further inspection of the loaded data and figures.
+
+To load all output times, execute `exec(open("python/batch_a.py").read())` instead.
+
+Both `batch.py` and `batch_a.py` automatically subtract `rho*phi_g` when `g_potential.dat` is present in the selected data directory; without it, they use the ordinary MHD pressure formula. Keep each output set with its matching potential file, and do not leave a stale potential file in a non-gravitating run's directory. See [RTI/README.md](RTI/README.md) for the file format.
 
 ## License
 
