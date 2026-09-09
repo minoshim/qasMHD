@@ -90,6 +90,14 @@ protected:
     vlcty(i);
     pr[i]=mhd_ieos(ro[i],vx[i],vy[i],vz[i],cx[i],cy[i],cz[i],en[i],gam);
   }
+  void prmtv_gravity(int i)
+  {
+    // Requires initialized phi_g and cell-center B, with en including ro*phi_g.
+    // Conservative => primitive without modifying the stored total energy.
+    vlcty(i);
+    const double energy=en[i]-ro[i]*phi_g[i];
+    pr[i]=mhd_ieos(ro[i],vx[i],vy[i],vz[i],cx[i],cy[i],cz[i],energy,gam);
+  }
   double bcell(const double* b_ct, int offset, double (*fcen)(const double *f))
   {
     // B @ cell center from cell edge
