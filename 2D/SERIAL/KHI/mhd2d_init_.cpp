@@ -1,5 +1,8 @@
 #include "mhd2d_class.hpp"
 
+#include <random>
+#include <vector>
+
 void MHD2D::init_()
 {
   // KH instability
@@ -19,13 +22,17 @@ void MHD2D::init_()
   const double pr0=0.5*beta*b0*b0; // Pressure
   const double dv=0.01;		// Perturbation amplitude
 
-  double *dvy=new double[nx];
+  std::vector<double> dvy(nx);
+#if (RANDOM)
+  // Use a fixed seed (e.g. 10) for reproducible perturbations.
   unsigned seed=(unsigned)time(NULL);
+  std::mt19937 engine(seed);
+#endif
   for (i=0;i<nx;i++){
     dvy[i]=0.0;
 #if (RANDOM)
     double dvpara[2]={0,dv};
-    dvy[i]+=rand_noise(dvpara,seed); // Multiple mode perturbation
+    dvy[i]+=rand_noise_mt(dvpara,engine); // Multiple mode perturbation
 #else
     dvy[i]+=dv*sin(2*M_PI*x[i]/wlen); // Single mode perturbation
 #endif    
@@ -64,6 +71,4 @@ void MHD2D::init_()
   // Boundary condition
   bound(val,nm,stxs,dnxs,stys,dnys);
 
-  delete[] dvy;
 }
-

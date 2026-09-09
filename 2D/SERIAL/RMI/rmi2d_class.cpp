@@ -71,8 +71,9 @@ void RMI2D::apply_inflow(bool refresh_inflow)
   const std::size_t required_size=static_cast<std::size_t>(nx)*yoff;
   if (refresh_inflow){
     if (inflow_ro.size() != required_size) inflow_ro.resize(required_size);
+    const double density_params[2]={inflow.rho,inflow.rho_noise};
     for (std::size_t s=0;s<required_size;s++){
-      inflow_ro[s]=inflow.rho+inflow.rho_noise*((double)random()/RAND_MAX-0.5)*2.0;
+      inflow_ro[s]=rand_noise_mt(density_params,noise_engine);
     }
   } else if (inflow_ro.size() != required_size){
     throw std::logic_error("RMI2D inflow is not initialized; call init_() first");

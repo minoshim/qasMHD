@@ -44,6 +44,22 @@ void close_output(std::FILE *outfil, const std::string& path)
 
 }
 
+void MHD2D::setup_grid(double xmin_value, double xmax_value,
+                       double ymin_value, double ymax_value,
+                       double xshift, double yshift)
+{
+  xmin=xmin_value;
+  xmax=xmax_value;
+  ymin=ymin_value;
+  ymax=ymax_value;
+  dx=(xmax-xmin)/XMESH;
+  dy=(ymax-ymin)/YMESH;
+  dr=min(dx,dy);
+  dt=cfl*dr; // Recalculated later by setdt().
+  for (int i=0;i<nx;i++) x[i]=(i-xoff+xshift)*dx+xmin;
+  for (int j=0;j<ny;j++) y[j]=(j-yoff+yshift)*dy+ymin;
+}
+
 void MHD2D::bound(double *val[], int nm, const int stxs[], const int dnxs[], const int stys[], const int dnys[])
 {
   // Boundary condition

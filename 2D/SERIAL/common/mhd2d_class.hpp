@@ -44,13 +44,18 @@ public:
   
 protected:
   double xmin,xmax,dx,ymin,ymax,dy,dr,dt; // Left/rightmost x and y values, grid size, time step
-  std::string fildir;		// Directory for output
+  std::string fildir="./dat/";	// Directory for output
   int cnt=0,n=0;		// Counters
   bool dt_initialized=false;	// Whether output intervals have been initialized
   int nrec=1;			// Steps per output for fixed dt (initialized in setdt)
   int nmax=nout;		// Maximum step for fixed dt (initialized in setdt)
   double tim=0.0;		// Simulation time
   double trec=dtrec;		// Time for next record
+  // Physical domain bounds exclude ghost cells; shifts are measured in cell widths.
+  // Use 0.5 for cell-centered coordinates, or 0.0 for the existing OTvortex grid.
+  void setup_grid(double xmin_value, double xmax_value,
+                  double ymin_value, double ymax_value,
+                  double xshift=0.5, double yshift=0.5);
   virtual void bound(double *val[], int nm,
 	     const int stxs[], const int dnxs[], const int stys[], const int dnys[]); // Set boundary condition
   virtual void ideal(double);	// ideal MHD solver

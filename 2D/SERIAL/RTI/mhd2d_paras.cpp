@@ -3,11 +3,13 @@
 void MHD2D::paras()
 {
   // Simulation parameters
-  xmin=0.0;
-  xmax=20.0;
-  ymin=-0.5*(xmax-xmin)*(double)YMESH/XMESH;
-  ymax=+0.5*(xmax-xmin)*(double)YMESH/XMESH;
-  fildir="./dat/";
+  const double xmin_value=0.0;
+  const double xmax_value=20.0;
+  const double ymin_value=-0.5*(xmax_value-xmin_value)*(double)YMESH/XMESH;
+  const double ymax_value=+0.5*(xmax_value-xmin_value)*(double)YMESH/XMESH;
+  // Physical domain bounds (xmin, xmax, ymin, ymax), excluding ghost cells.
+  // Coordinates use the default half-cell shifts (0.5, 0.5).
+  setup_grid(xmin_value,xmax_value,ymin_value,ymax_value);
   
   // Boundary condition flag for ro,mx,my,mz,bx,by,bz,en
   // 0: periodic, +1: Neumann, -1: Dirichlet, +2: Open, -2: Zero fixed
@@ -28,12 +30,5 @@ void MHD2D::paras()
   dnys[5]=+2;			// by
   dnys[6]=+2;			// bz
   dnys[7]=+2;			// en
-  
-  dx=(xmax-xmin)/XMESH;
-  dy=(ymax-ymin)/YMESH;
-  dr=min(dx,dy);
-  dt=cfl*dr;			// dt will be re-calculated later
-  for (int i=0;i<nx;i++) x[i]=(i-xoff+0.5)*dx+xmin;
-  for (int j=0;j<ny;j++) y[j]=(j-yoff+0.5)*dy+ymin;
 
 }

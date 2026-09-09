@@ -10,14 +10,11 @@ void MHD2D::ideal(double dt)
   static const double rk_fac[3][2]={{0.0,1.0},{0.5+(R_K-2)*0.25,0.5-(R_K-2)*0.25},{1./3.,2./3.}};
   const int nxy=nx*ny;
   const double dtdx=dt/dx,dtdy=dt/dy;
-  void (*func_flux)(double, double, double, double, double, double, double,
-		    double, double, double, double, double, double, double,
-		    double, double, const double*,
-		    double*, double*, double*, double*, double*, double*, double*)=riemann[RMN];
-  void (*lfun_lr)(const double *f, double *fl, double *fr)=l_interp[ODR-1];
-  void (*func_lr)(const double *f, double *fl, double *fr)=interpol[ODR-1];
-  double (*func_bc)(const double *f)=fcen[ODR-1];
-  double (*func_df)(const double *f)=df1[ODR-1];
+  const auto func_flux=riemann[RMN];
+  const auto lfun_lr=l_interp[ODR-1];
+  const auto func_lr=interpol[ODR-1];
+  const auto func_bc=fcen[ODR-1];
+  const auto func_df=df1[ODR-1];
 
   const std::size_t cell_size=static_cast<std::size_t>(nxy);
   const std::size_t work_size=static_cast<std::size_t>(nm)*cell_size;

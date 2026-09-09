@@ -2,6 +2,7 @@
 #define QASMHD_RMI2D_CLASS_HPP
 
 #include "mhd2d_class.hpp"
+#include <random>
 #include <vector>
 
 class RMI2D : public MHD2D{
@@ -18,6 +19,8 @@ protected:
     double bx,by,bz;
   };
   InflowParameters inflow={};
+  // Seed once in init_(); continue the same per-instance stream for inflow updates.
+  std::mt19937 noise_engine;
   std::vector<double> inflow_ro; // Upper ghost-cell densities, held through all RK stages
 
   void bound(double *values[], int nvars,

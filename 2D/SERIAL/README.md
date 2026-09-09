@@ -1,5 +1,7 @@
 ## qasMHD/2D/SERIAL
+
 Serial codes for the following two-dimensional problems are available:
+
 - `KHI`... Kelvin-Helmholtz instability[^1][^2];
 - `MRX`... Magnetic reconnection[^3];
 - `OTvortex` ... Orszag-Tang vortex problem[^1][^3];
@@ -8,28 +10,59 @@ Serial codes for the following two-dimensional problems are available:
 - `blast` ... blast wave propagation problem[^1][^3];
 - `loop` ... field loop advection problem[^3].
 
-Users may edit the following files contained in each directory:
-- `mhd2d_init_.cpp` defines the initial condition;
-- `mhd2d_paras.cpp` defines the simulation parameters (spatial domain and boundary condition);
-- `mymacros.hpp` defines macros about simulation space, time, and the solver design (Riemann solver, spatial and temporal accuracies, and the multidimensional upwinding for the Constrained Transport method[^3]).
+### Project structure
+
+- `common/` contains the shared `MHD2D`, dissipative `DMHD2D`, and gravity-aware `GMHD2D` classes and solvers, plus the build rules in `common/case.mk`;
+- each problem directory retains its driver (`main.cpp`), initial conditions, parameters, macros, and a small `Makefile`;
+- `python/` contains visualization scripts linked from each problem directory.
+
+The sources in `2D/SERIAL/common/` are compiled separately for each problem, using that problem's `mymacros.hpp`. They are not a precompiled class library. The repository-level `common/` supplies the numerical kernels in `libqasmhd.a`.
+
+| Problem | Class | Initial-condition source |
+| --- | --- | --- |
+| KHI, OTvortex, blast, loop | `MHD2D` | `mhd2d_init_.cpp` |
+| MRX | `DMHD2D` | `dmhd2d_init_.cpp` (also defines `setdc()`) |
+| RMI | Local derived class `RMI2D` | `rmi2d_init_.cpp` |
+| RTI | `GMHD2D` | `gmhd2d_init_.cpp` (also defines the RTI-specific `bound()`) |
+
+RMI keeps `rmi2d_class.hpp/.cpp` locally for its inflow boundary. MRX and RTI select their additional shared sources with `DISSIPATION := 1` and `GRAVITY := 1`, respectively, in their Makefiles.
+
+### Configuring a problem
+
+- Edit the initial-condition source listed above for the physical setup.
+- Edit `mhd2d_paras.cpp` for the domain and boundary conditions. `setup_grid(xmin, xmax, ymin, ymax)` takes physical domain bounds excluding ghost cells and sets the coordinates, mesh spacings, and initial timestep. Optional `xshift, yshift` arguments specify offsets in cell widths: both default to `0.5`; OTvortex explicitly uses `0.0, 0.0` to preserve its original coordinates.
+- The output directory defaults to `./dat/`. To change it, assign `fildir` in `paras()` and create the directory before running.
+- Edit `mymacros.hpp` for mesh size, output intervals, CFL, and solver choices. `RMN` (0–3), `ODR` (1–4), and `R_K` (1–3) are checked by `static_assert` in the shared class header. `CTW` controls multidimensional CT upwinding[^3].
+
+KHI, MRX, RMI, and RTI use `rand_noise_mt()` with `std::mt19937` when random perturbations are enabled by `RANDOM`. Their seed is currently time-based. For reproducible runs, replace the seed assignment in the case's initial-condition source with a fixed value such as `unsigned seed=10;`, then rebuild. RMI retains its generator between inflow updates; other cases use it only during initialization. Sequences differ from the legacy `rand_noise()` generator even for the same seed.
 
 ### How to run the simulation
-```
->cd OTvortex/
->make
->./a.out
+
+From `2D/SERIAL/`:
+
+```sh
+cd OTvortex/
+make -C ../../../common
+make
+mkdir -p dat
+OMP_NUM_THREADS=2 ./a.out
 ```
 
-The result is stored in `dat/`.
+Use the C++ compiler and flags configured in the repository's `Makefile.inc`. This is a single-process program with OpenMP support; no MPI launcher is needed. `OMP_NUM_THREADS=1` runs with one thread.
 
-Users may run `>make clean` to delete object files, and `>make cdata` to delete the result stored in `dat/`.
+The executable is `a.out`; object and dependency files are stored in each problem's `build/`. Results are written to `dat/`. Local macro and shared-header edits are tracked by dependency files: rerun `make` after editing. Rebuild the repository-level library after changing its sources; after changing compiler flags, clean and rebuild both the library objects and the case objects.
+
+`make clean` removes `a.out` and the current build's object/dependency files, but preserves results. `make cdata` deletes `dat/*.dat`; use it deliberately. A new simulation can overwrite existing output files, so preserve previous results first.
 
 ### How to check the result
-Execute the python script `batch.py`.
+
+From the problem directory, run the linked script with Python 3, NumPy, and Matplotlib:
+
+```sh
+python batch.py
 ```
->python
->>>exec(open("batch.py").read())
-```
+
+Enter `dat` when prompted for the data directory, then select an output index. The `batch.py` and `python/` links let this command run directly from each problem directory. Both `batch.py` and `batch_a.py` automatically subtract `rho*phi_g` when `g_potential.dat` is present in the selected data directory; without it, they use the ordinary MHD pressure formula. Keep each output set with its matching potential file, and do not leave a stale potential file in a non-gravitating run's directory. See [RTI/README.md](RTI/README.md) for the file format.
 
 ## License
 

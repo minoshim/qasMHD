@@ -1,5 +1,7 @@
 #include "mhd2d_class.hpp"
 
+#include <vector>
+
 void MHD2D::init_()
 {
   // Magnetic loop advection in high beta plasma
@@ -16,9 +18,7 @@ void MHD2D::init_()
   const double a0=1e-3;		// Amplitude of magnetic loop
   const double rad=0.3;		// Radius of magnetic loop
 
-  double *azp,*azc;
-  azp=new double[nd];
-  azc=new double[nd];
+  std::vector<double> azp(nd),azc(nd);
   // Vector potential
   for (j=0;j<ny;j++){
     for (i=0;i<nx;i++){
@@ -63,7 +63,4 @@ void MHD2D::init_()
   // Boundary condition
   bound(val,nm,stxs,dnxs,stys,dnys);
 
-  delete[] azp;
-  delete[] azc;
 }
-

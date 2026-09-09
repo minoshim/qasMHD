@@ -1,23 +1,20 @@
-#include "mhd2d_class.hpp"
+#include "gmhd2d_class.hpp"
 
 #include <cstddef>
 #include <vector>
 
-void MHD2D::ideal(double dt)
+void GMHD2D::ideal(double dt)
 {
-  // 2D ideal MHD simulation
+  // 2D ideal MHD simulation with gravity
   int i,j,ss,rk;
   static const double rk_fac[3][2]={{0.0,1.0},{0.5+(R_K-2)*0.25,0.5-(R_K-2)*0.25},{1./3.,2./3.}};
   const int nxy=nx*ny;
   const double dtdx=dt/dx,dtdy=dt/dy;
-  void (*func_flux)(double, double, double, double, double, double, double,
-		    double, double, double, double, double, double, double,
-		    double, double, const double*,
-		    double*, double*, double*, double*, double*, double*, double*)=riemann[RMN];
-  void (*lfun_lr)(const double *f, double *fl, double *fr)=l_interp[ODR-1];
-  void (*func_lr)(const double *f, double *fl, double *fr)=interpol[ODR-1];
-  double (*func_bc)(const double *f)=fcen[ODR-1];
-  double (*func_df)(const double *f)=df1[ODR-1];
+  const auto func_flux=riemann[RMN];
+  const auto lfun_lr=l_interp[ODR-1];
+  const auto func_lr=interpol[ODR-1];
+  const auto func_bc=fcen[ODR-1];
+  const auto func_df=df1[ODR-1];
 
   const std::size_t cell_size=static_cast<std::size_t>(nxy);
   const std::size_t work_size=static_cast<std::size_t>(nm)*cell_size;
@@ -41,7 +38,7 @@ void MHD2D::ideal(double dt)
 
   // Bz @ cell center
   cz=bz;
-  
+
   /* Copy current data */
   for (i=0;i<nm;i++){
     cpy_array(&ut[i*nxy],val[i],nxy);
@@ -49,7 +46,7 @@ void MHD2D::ideal(double dt)
 
   /* Runge-Kutta stage */
   for (rk=0;rk<R_K;rk++){
-    
+
 #ifdef _OPENMP
 #pragma omp parallel private(i,j,ss)
 #endif
@@ -94,7 +91,7 @@ void MHD2D::ideal(double dt)
 #pragma omp for
 #endif
       for (ss=0;ss<nxy;ss++){
-	prmtv(ss);
+	GMHD2D::prmtv(ss);
 	ez[ss]=0.0;		/* Necessary initialize at cell corner */
 	ct[ss]=0.5;
       }
@@ -114,7 +111,7 @@ void MHD2D::ideal(double dt)
 	}
       }
 #endif
-      
+
       /* dvx and dvy at cell center for shock detection */
 #ifdef _OPENMP
 #pragma omp for
@@ -202,7 +199,7 @@ void MHD2D::ideal(double dt)
 		    ur[nm*ss+0],ur[nm*ss+1],ur[nm*ss+2],ur[nm*ss+3],ur[nm*ss+5],ur[nm*ss+6],ur[nm*ss+7],
 		    bn,gam,dvsd,
 		    &flux[0],&flux[1],&flux[2],&flux[3],&flux[5],&flux[6],&flux[7]);
-	  
+
 	  fx[nm*ss+0]=flux[0];	/* ro */
 	  fx[nm*ss+1]=flux[1];	/* mx */
 	  fx[nm*ss+2]=flux[2];	/* my */
@@ -211,6 +208,7 @@ void MHD2D::ideal(double dt)
 	  fx[nm*ss+5]=flux[5];	/* by */
 	  fx[nm*ss+6]=flux[6];	/* bz */
 	  fx[nm*ss+7]=flux[7];	/* en */
+	  fx[nm*ss+7]+=flux[0]*0.5*(phi_g[ss- 1]+phi_g[ss]); /* Work done by gravity */
 	  /* Split central and upwind parts in numerical flux of By */
 	  fc[ss]=0.5*(ql[ss]+qr[ss]); /* Central part */
 	  fx[nm*ss+5]-=fc[ss];	      /* Upwind part */
@@ -326,6 +324,7 @@ void MHD2D::ideal(double dt)
 	  fy[nm*ss+6]=flux[5];	/* bz */
 	  fy[nm*ss+4]=flux[6];	/* bx */
 	  fy[nm*ss+7]=flux[7];	/* en */
+	  fy[nm*ss+7]+=flux[0]*0.5*(phi_g[ss-nx]+phi_g[ss]); /* Work done by gravity */
 	  /* Split central and upwind parts in numerical flux of Bx */
 	  fc[ss]=0.5*(ql[ss]+qr[ss]); /* Central part */
 	  fy[nm*ss+4]-=fc[ss];	      /* Upwind part */
@@ -381,12 +380,15 @@ void MHD2D::ideal(double dt)
 	  ss=nx*j+i;
 	  double *val1[]={val[0]+ss,val[1]+ss,val[2]+ss,val[3]+ss,val[4]+ss,val[5]+ss,val[6]+ss,val[7]+ss};
 	  double val0[]={ut[0*nxy+ss],ut[1*nxy+ss],ut[2*nxy+ss],ut[3*nxy+ss],ut[4*nxy+ss],ut[5*nxy+ss],ut[6*nxy+ss],ut[7*nxy+ss]};
+	  const double ro_stage=ro[ss]; // Density at the start of this RK stage for gravity
 	  mhd_updt2d(val1[0],val0[0],&fx[nm*ss+0],&fy[nm*ss+0],dtdx,dtdy,rk_fac[rk],nm,nm*nx,func_df); // ro
 	  mhd_updt2d(val1[1],val0[1],&fx[nm*ss+1],&fy[nm*ss+1],dtdx,dtdy,rk_fac[rk],nm,nm*nx,func_df); // mx
 	  mhd_updt2d(val1[2],val0[2],&fx[nm*ss+2],&fy[nm*ss+2],dtdx,dtdy,rk_fac[rk],nm,nm*nx,func_df); // my
 	  mhd_updt2d(val1[3],val0[3],&fx[nm*ss+3],&fy[nm*ss+3],dtdx,dtdy,rk_fac[rk],nm,nm*nx,func_df); // mz
 	  mhd_updt2d(val1[6],val0[6],&fx[nm*ss+6],&fy[nm*ss+6],dtdx,dtdy,rk_fac[rk],nm,nm*nx,func_df); // bz
 	  mhd_updt2d(val1[7],val0[7],&fx[nm*ss+7],&fy[nm*ss+7],dtdx,dtdy,rk_fac[rk],nm,nm*nx,func_df); // en
+	  mx[ss]+=-rk_fac[rk][1]*ro_stage*0.5*(phi_g[ss+ 1]-phi_g[ss- 1])*dtdx; /* Work done by gravity */
+	  my[ss]+=-rk_fac[rk][1]*ro_stage*0.5*(phi_g[ss+nx]-phi_g[ss-nx])*dtdy; /* Work done by gravity */
 	}
       }
       /* Update CT Bx */

@@ -1,4 +1,3 @@
-*.o
-*.d
 *.out
+build/
 dat/*.dat

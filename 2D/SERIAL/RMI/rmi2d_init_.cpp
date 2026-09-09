@@ -1,5 +1,7 @@
 #include "rmi2d_class.hpp"
 
+#include <vector>
+
 void RMI2D::init_()
 {
   // RM instability: initialize the full domain and the inflow state.
@@ -63,9 +65,10 @@ void RMI2D::init_()
   }
 
   // Position of contact discon.
+  // Use a fixed seed (e.g. 10) for reproducible perturbations.
   unsigned seed=(unsigned)time(NULL);
-  srandom(seed);
-  double ypos[nx];
+  noise_engine.seed(seed);
+  std::vector<double> ypos(nx);
   for (i=0;i<nx;i++){
     ypos[i]=1.0+psi*cos(2*M_PI*x[i]/lambda); // Single mode
   }
@@ -74,13 +77,14 @@ void RMI2D::init_()
   double para[2]={M_PI,M_PI};
   for (int m=2;m<=mmax;m++){
     double xphase;
-    xphase=rand_noise(para,seed);
+    xphase=rand_noise_mt(para,noise_engine);
     for (i=0;i<nx;i++){
 	ypos[i]+=(psi/m)*cos(2*M_PI*m*(x[i]-xphase)/lambda);
     }
   }
 #endif
 
+  const double density_params[2]={ro_3,dro3};
   for (j=0;j<ny;j++){
     double sfunc=0.5*(1.0+tanh(y[j]/dw)); // 0 (y<0), 1 (y>0)
     for (i=0;i<nx;i++){
@@ -88,7 +92,7 @@ void RMI2D::init_()
 
 	ro[ss]=ro_2+(ro_1-ro_2)*sfunc;
 	// Contact discon
-	double rocd=ro_3+dro3*((double)random()/RAND_MAX-0.5)*2.0; // Random perturbation
+	double rocd=rand_noise_mt(density_params,noise_engine); // Random perturbation
 	ro[ss]+=(rocd-ro_1)*0.5*(1.0+tanh((y[j]-ypos[i])/dw));
 
 	vx[ss]=vx_1;

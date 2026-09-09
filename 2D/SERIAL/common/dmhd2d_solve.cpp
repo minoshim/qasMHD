@@ -11,8 +11,8 @@ void DMHD2D::dsptv(double dt)
   const int nxy=nx*ny;
   const double idx=1.0/dx,idy=1.0/dy;
   const double dtdx=dt*idx,dtdy=dt*idy;
-  double (*func_fc)(const double *f)=fcen[ODR-1];
-  double (*func_df)(const double *f)=df1[ODR-1];
+  const auto func_fc=fcen[ODR-1];
+  const auto func_df=df1[ODR-1];
 
   const std::size_t cell_size=static_cast<std::size_t>(nxy);
   const std::size_t work_size=static_cast<std::size_t>(nm)*cell_size;
