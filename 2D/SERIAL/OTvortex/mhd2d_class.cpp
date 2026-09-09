@@ -27,7 +27,11 @@ void MHD2D::setdt(int flg)
     dt=cfl*dr/vmax;
   }
   if (nflg == 0){
-    nmax=(int)(tmax/dt+0.5);
+    // nmax=(int)(tmax/dt+0.5);
+    int nrec=ceil(dtrec/dt);
+    if (nrec < 1) nrec=1;
+    dt=dtrec/nrec;
+    nmax=nrec*nout;
     nflg=1;
   }
 }
