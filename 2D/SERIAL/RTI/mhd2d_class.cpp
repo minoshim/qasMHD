@@ -50,30 +50,6 @@ void MHD2D::bound(double *val[], int nm, const int stxs[], const int dnxs[], con
   for (int m=0;m<nm;m++){
     bc2d(val[m],nx,ny,xoff,yoff,stxs[m],dnxs[m],stys[m],dnys[m]);
   }
-
-  // With finite gravity along Y, Y boundary for energy needs special care
-  if (nm == 8){
-    int i,j,ss,sb;
-    double fac=(2.0-gam)/(gam-1.0);
-    {
-      for (j=0;j<yoff;j++){
-	for (i=0;i<nx;i++){
-	  ss=nx*j+i;
-	  sb=nx*yoff+i;
-	  en[ss]=en[sb]-fac*ro[sb]*(phi_g[ss]-phi_g[sb]);
-	}
-      }
-    }
-    {
-      for (j=ny-yoff;j<ny;j++){
-	for (i=0;i<nx;i++){
-	  ss=nx*j+i;
-	  sb=nx*(ny-yoff-1)+i;
-	  en[ss]=en[sb]-fac*ro[sb]*(phi_g[ss]-phi_g[sb]);
-	}
-      }
-    }
-  }
 }
 
 void MHD2D::setdt(int flg)
@@ -86,9 +62,7 @@ void MHD2D::setdt(int flg)
 	int ss=nx*j+i;
 	cx[ss]=0.5*(bx[ss]+bx[nx*j+(i+stxs[4])]);
 	cy[ss]=0.5*(by[ss]+by[nx*(j+stys[5])+i]);
-	en[ss]-=ro[ss]*phi_g[ss]; // Subtract G-potential before calling prmtv()
 	prmtv(ss);
-	en[ss]+=ro[ss]*phi_g[ss]; // Return G-potential after calling prmtv()
 	vtmp=sqrt(vx[ss]*vx[ss]+vy[ss]*vy[ss])+vfast(ss);
 	if (vtmp > vmax) vmax=vtmp;
       }
@@ -173,13 +147,6 @@ void MHD2D::dout_(int msg)
       if (std::fprintf(outfil,"%.12f\n",y[i]) < 0) output_error("fprintf",path);
     }
     close_output(outfil,path);
-
-    path=output_path(fildir,"g_potential.dat");
-    outfil=open_output(path,"wb");
-    if (std::fwrite(phi_g,sizeof(*phi_g),output_size,outfil) != output_size){
-      output_error("fwrite",path);
-    }
-    close_output(outfil,path);
   } else{
     const std::string path=output_path(fildir,"t.dat");
     std::FILE *outfil=open_output(path,"a");
@@ -223,8 +190,6 @@ MHD2D::MHD2D()
   cy=new double[nd];
   // In 2D, cell center Bz is identical to cell edge Bz.
   cz=bz;
-  // Gravitational potential
-  phi_g=new double[nd];
   // Array of pointers for MHD variables.
   val[0]=ro;
   val[1]=mx;
@@ -273,5 +238,4 @@ MHD2D::~MHD2D()
   delete[] pr;
   delete[] cx;
   delete[] cy;
-  delete[] phi_g;
 }

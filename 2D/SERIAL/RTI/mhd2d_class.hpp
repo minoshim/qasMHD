@@ -23,7 +23,7 @@ public:
   const double dtrec=DTREC;	// Time step for output
   const double tmax=dtrec*nout;	// Maximum simulation time
   const double cfl=CFL;		// CFL value
-  void setdt(int);		// Set time step dt
+  virtual void setdt(int);	// Set time step dt
   void paras();			// Set parameters
   void init_();			// Set initial condition
   void exec_(int);		// Run simulation
@@ -53,8 +53,8 @@ protected:
   double trec=dtrec;		// Time for next record
   virtual void bound(double *val[], int nm,
 	     const int stxs[], const int dnxs[], const int stys[], const int dnys[]); // Set boundary condition
-  void ideal(double);		// ideal MHD solver
-  void dout_(int);		// Output data
+  virtual void ideal(double);	// ideal MHD solver
+  virtual void dout_(int);	// Output data
 };
 
 #endif

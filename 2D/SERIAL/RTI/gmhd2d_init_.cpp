@@ -1,11 +1,11 @@
-#include "mhd2d_class.hpp"
+#include "gmhd2d_class.hpp"
 
 inline double sqrwave2(double val_u, double val_l, double dx_u, double dx_l);
 inline double g_potential(double z, double g0, double lg, int deriv);
 double cal_pressure(double y0, double y1, double pr0, int n,
 		    double val_u, double val_l, double s0, double lambda, double g0, double lg);
 
-void MHD2D::init_()
+void GMHD2D::init_()
 {
   // RT instability
   int i,j;
@@ -37,14 +37,14 @@ void MHD2D::init_()
     dvy[i]+=rand_noise(dvpara,seed); // Multiple mode perturbation
 #else
     dvy[i]+=dv*cos(2*M_PI*x[i]/wlen); // Single mode perturbation
-#endif    
+#endif
   }
-  
+
   for (j=0;j<ny;j++){
     double angle=sqrwave2(angle_u,angle_l,(y[j]-s0)/lambda,(y[j]+s0)/lambda);
     for (i=0;i<nx;i++){
       int ss=nx*j+i;
-      
+
       ro[ss]=sqrwave2(ro_u,ro_l,(y[j]-s0)/lambda,(y[j]+s0)/lambda);
       vx[ss]=sqrwave2(vamp,-vamp,(y[j]-s0)/lambda,(y[j]+s0)/lambda);
       vy[ss]=dvy[i]*(exp(-((y[j]-s0)*(y[j]-s0))/(4*lambda*lambda))-exp(-((y[j]+s0)*(y[j]+s0))/(4*lambda*lambda)));
@@ -58,7 +58,7 @@ void MHD2D::init_()
       pr[ss]=cal_pressure(0,y[j],pr0,1+(int)(fabs(y[j])/dy+0.5),
 			  ro_u,ro_l,s0,lambda,g0,lg);
       pr[ss]=max(pr[ss],prmin);
-      
+
       if (angle == 90){
 	bx[ss]=0.0;
 	by[ss]=0.0;
@@ -83,6 +83,36 @@ void MHD2D::init_()
   bound(val,nm,stxs,dnxs,stys,dnys);
 
   delete[] dvy;
+}
+
+void GMHD2D::bound(double *values[], int nvars,
+                   const int stxs[], const int dnxs[], const int stys[], const int dnys[])
+{
+  MHD2D::bound(values,nvars,stxs,dnxs,stys,dnys);
+
+  // Special upper/lower energy boundary conditions for this RTI problem.
+  // This is not a general boundary prescription for MHD with gravity.
+  // Only correct the actual conserved state, never auxiliary arrays.
+  if (nvars != nm) return;
+  for (int m=0;m<nm;m++){
+    if (values[m] != val[m]) return;
+  }
+
+  const double fac=(2.0-gam)/(gam-1.0);
+  for (int j=0;j<yoff;j++){
+    for (int i=0;i<nx;i++){
+      const int ss=nx*j+i;
+      const int sb=nx*yoff+i;
+      en[ss]=en[sb]-fac*ro[sb]*(phi_g[ss]-phi_g[sb]);
+    }
+  }
+  for (int j=ny-yoff;j<ny;j++){
+    for (int i=0;i<nx;i++){
+      const int ss=nx*j+i;
+      const int sb=nx*(ny-yoff-1)+i;
+      en[ss]=en[sb]-fac*ro[sb]*(phi_g[ss]-phi_g[sb]);
+    }
+  }
 }
 
 inline double sqrwave2(double val_u, double val_l, double dx_u, double dx_l)
@@ -117,4 +147,3 @@ double cal_pressure(double y0, double y1, double pr0, int n,
   }
   return ans;
 }
-

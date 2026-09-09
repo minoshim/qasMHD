@@ -1,8 +1,8 @@
-#include "mhd2d_class.hpp"
+#include "gmhd2d_class.hpp"
 
 int main(){
 
-  MHD2D mhd2d;
+  GMHD2D mhd2d;
   mhd2d.paras();		// Set parameters
   mhd2d.init_();		// Set initial condition
   mhd2d.setdt(1);		// Set time step to satisfy CFL (if flag=1). 
