@@ -7,7 +7,7 @@ void MHD2D::paras()
   xmax=20.0;
   ymin=-0.5*(xmax-xmin)*(double)YMESH/XMESH;
   ymax=+0.5*(xmax-xmin)*(double)YMESH/XMESH;
-  sprintf(fildir,"./dat/");
+  fildir="./dat/";
   
   // Boundary condition flag for ro,mx,my,mz,bx,by,bz,en
   // 0: periodic, +1: Neumann, -1: Dirichlet, +2: Open, -2: Zero fixed

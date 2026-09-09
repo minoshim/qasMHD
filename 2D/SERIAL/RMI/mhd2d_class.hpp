@@ -1,8 +1,17 @@
 #ifndef _CLASS_MHD2D_
 #define _CLASS_MHD2D_
 
+#include <string>
+
 #include "mhd_class.hpp"
 #include "mymacros.hpp"
+
+static_assert(RMN >= 0 && RMN <= 3,
+	      "RMN must be between 0 and 3");
+static_assert(ODR >= 1 && ODR <= 4,
+	      "ODR must be between 1 and 4");
+static_assert(R_K >= 1 && R_K <= 3,
+	      "R_K must be between 1 and 3");
 
 class MHD2D : public MHD{
 
@@ -35,9 +44,11 @@ public:
   
 protected:
   double xmin,xmax,dx,ymin,ymax,dy,dr,dt; // Left/rightmost x and y values, grid size, time step
-  char fildir[100];		// Directory for output
+  std::string fildir;		// Directory for output
   int cnt=0,n=0;		// Counters
-  int nmax=nout;		// Maximum step (This will be initialized in setdt)
+  bool dt_initialized=false;	// Whether output intervals have been initialized
+  int nrec=1;			// Steps per output for fixed dt (initialized in setdt)
+  int nmax=nout;		// Maximum step for fixed dt (initialized in setdt)
   double tim=0.0;		// Simulation time
   double trec=dtrec;		// Time for next record
   void bound(double *val[], int nm,

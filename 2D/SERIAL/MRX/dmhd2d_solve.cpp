@@ -1,25 +1,32 @@
 #include "dmhd2d_class.hpp"
 
+#include <cstddef>
+#include <vector>
+
 void DMHD2D::dsptv(double dt)
 {
   // 2D visco-resistive code for MHD
   int i,j,ss,rk;
   static const double rk_fac[3][2]={{0.0,1.0},{0.5+(R_K-2)*0.25,0.5-(R_K-2)*0.25},{1./3.,2./3.}};
-  static const int nxy=nx*ny;
+  const int nxy=nx*ny;
   const double idx=1.0/dx,idy=1.0/dy;
   const double dtdx=dt*idx,dtdy=dt*idy;
   double (*func_fc)(const double *f)=fcen[ODR-1];
   double (*func_df)(const double *f)=df1[ODR-1];
 
-  double *ut,*fx,*fy;
-  double *ex,*ey,*ez;
-
-  ut=new double[nm*nxy];
-  fx=new double[nm*nxy];
-  fy=new double[nm*nxy];
-  ex=new double[nxy];
-  ey=new double[nxy];
-  ez=new double[nxy];
+  const std::size_t cell_size=static_cast<std::size_t>(nxy);
+  const std::size_t work_size=static_cast<std::size_t>(nm)*cell_size;
+  const std::size_t required_size=3*work_size+3*cell_size;
+  // Reuse the calling thread's storage; worker threads share the pointers below.
+  // Resize only before entering OpenMP regions. Same-thread reentrant calls are unsupported.
+  static thread_local std::vector<double> work;
+  if (work.size() != required_size) work.resize(required_size);
+  double *ut=work.data();
+  double *fx=ut+work_size;
+  double *fy=fx+work_size;
+  double *ex=fy+work_size;
+  double *ey=ex+cell_size;
+  double *ez=ey+cell_size;
 
   // Bz @ cell center
   cz=bz;
@@ -50,7 +57,9 @@ void DMHD2D::dsptv(double dt)
 #pragma omp for
 #endif
       for (j=2;j<ny-1;j++){
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss)
+#endif
 	for (i=2;i<nx-1;i++){
 	  ss=nx*j+i;
 	  mhd_ct_eres(&bx[ss],&by[ss],&bz[ss],&eta[ss],idx,idy,0.0,1,nx,0,func_df,&ex[ss],&ey[ss],&ez[ss]);
@@ -62,7 +71,9 @@ void DMHD2D::dsptv(double dt)
 #pragma omp for
 #endif
       for (j=2;j<ny-1;j++){
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss)
+#endif
 	for (i=2;i<nx-1;i++){
 	  ss=nx*j+i;
 	  double rnu,flux[2][8]={{0.0},{0.0}};
@@ -100,7 +111,9 @@ void DMHD2D::dsptv(double dt)
 #pragma omp for nowait
 #endif
       for (j=yoff;j<ny-yoff;j++){
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss)
+#endif
 	for (i=xoff;i<nx-xoff;i++){
 	  ss=nx*j+i;
 	  double *val1[]={val[0]+ss,val[1]+ss,val[2]+ss,val[3]+ss,val[4]+ss,val[5]+ss,val[6]+ss,val[7]+ss};
@@ -118,7 +131,9 @@ void DMHD2D::dsptv(double dt)
 #pragma omp for nowait
 #endif
       for (j=yoff;j<ny-yoff;j++){
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss)
+#endif
 	for (i=xoff;i<nx-xoff+1;i++){
 	  ss=nx*j+i;
 	  mhd_updt2d_ctb(&bx[ss],ut[4*nxy+ss],&ez[ss],+dtdy,rk_fac[rk],nx,func_df);
@@ -129,7 +144,9 @@ void DMHD2D::dsptv(double dt)
 #pragma omp for
 #endif
       for (j=yoff;j<ny-yoff+1;j++){
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss)
+#endif
 	for (i=xoff;i<nx-xoff;i++){
 	  ss=nx*j+i;
 	  mhd_updt2d_ctb(&by[ss],ut[5*nxy+ss],&ez[ss],-dtdx,rk_fac[rk], 1,func_df);
@@ -141,11 +158,4 @@ void DMHD2D::dsptv(double dt)
     /* Boundary condition */
     bound(val,nm,stxs,dnxs,stys,dnys);
   }
-  
-  delete[] ut;
-  delete[] fx;
-  delete[] fy;
-  delete[] ex;
-  delete[] ey;
-  delete[] ez;
 }

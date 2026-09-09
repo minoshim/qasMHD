@@ -10,26 +10,34 @@ void DMHD2D::exec_(int flg)
   if (n == 0) dout_(0);
   
   clock_t stim=clock();
-  while(n++ < nmax && tim < tmax){
-    tim+=dt;
+  while(flg ? (tim < tmax) : (n < nmax)){
+    ++n;
+    const double remaining=tmax-tim;
+    const bool last_step=flg && dt >= remaining;
+    const double dt_step=last_step ? remaining : dt;
+    if (flg){
+      tim=last_step ? tmax : tim+dt_step;
+    } else{
+      tim=(n == nmax) ? tmax : n*dt;
+    }
 
     bound(val,nm,stxs,dnxs,stys,dnys);
-    ideal(dt);
+    ideal(dt_step);
 
     double dcmax=setdc();
     if (dcmax > 1e-15){
-      int nc,ncmax=1+(int)(2*(dcmax*dt)/(dr*dr));
+      int nc,ncmax=1+(int)(4*(dcmax*dt_step)/(dr*dr));
       for (nc=0;nc<ncmax;nc++){	// sub-cycling
 	bound(val,nm,stxs,dnxs,stys,dnys);
-	dsptv(dt/ncmax);
+	dsptv(dt_step/ncmax);
       }
     }
     
     setdt(flg*(n % 2 == 0));
     
-    if (tim >= trec){
+    if (flg ? (tim >= trec) : ((n % nrec) == 0)){
       cnt++;
-      trec+=dtrec;
+      trec=(cnt+1)*dtrec;
       dout_(1);
     }
   }

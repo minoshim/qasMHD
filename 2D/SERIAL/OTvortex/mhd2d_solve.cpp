@@ -1,11 +1,14 @@
 #include "mhd2d_class.hpp"
 
+#include <cstddef>
+#include <vector>
+
 void MHD2D::ideal(double dt)
 {
   // 2D ideal MHD simulation
   int i,j,ss,rk;
   static const double rk_fac[3][2]={{0.0,1.0},{0.5+(R_K-2)*0.25,0.5-(R_K-2)*0.25},{1./3.,2./3.}};
-  static const int nxy=nx*ny;
+  const int nxy=nx*ny;
   const double dtdx=dt/dx,dtdy=dt/dy;
   void (*func_flux)(double, double, double, double, double, double, double,
 		    double, double, double, double, double, double, double,
@@ -16,21 +19,25 @@ void MHD2D::ideal(double dt)
   double (*func_bc)(const double *f)=fcen[ODR-1];
   double (*func_df)(const double *f)=df1[ODR-1];
 
-  double *ut,*ul,*ur,*fx,*fy,*ql,*qr,*fc;
-  double *ez,*ct,*dvx,*dvy;
-
-  ut=new double[nm*nxy];
-  ul=new double[nm*nxy];
-  ur=new double[nm*nxy];
-  fx=new double[nm*nxy];
-  fy=new double[nm*nxy];
-  ql=new double[nxy];
-  qr=new double[nxy];
-  fc=new double[nxy];
-  ez=new double[nxy];
-  ct=new double[nxy];
-  dvx=new double[nxy];
-  dvy=new double[nxy];
+  const std::size_t cell_size=static_cast<std::size_t>(nxy);
+  const std::size_t work_size=static_cast<std::size_t>(nm)*cell_size;
+  const std::size_t required_size=5*work_size+7*cell_size;
+  // Reuse the calling thread's storage; worker threads share the pointers below.
+  // Resize only before entering OpenMP regions. Same-thread reentrant calls are unsupported.
+  static thread_local std::vector<double> work;
+  if (work.size() != required_size) work.resize(required_size);
+  double *ut=work.data();
+  double *ul=ut+work_size;
+  double *ur=ul+work_size;
+  double *fx=ur+work_size;
+  double *fy=fx+work_size;
+  double *ql=fy+work_size;
+  double *qr=ql+cell_size;
+  double *fc=qr+cell_size;
+  double *ez=fc+cell_size;
+  double *ct=ez+cell_size;
+  double *dvx=ct+cell_size;
+  double *dvy=dvx+cell_size;
 
   // Bz @ cell center
   cz=bz;
@@ -53,7 +60,9 @@ void MHD2D::ideal(double dt)
 #pragma omp for nowait
 #endif
       for (j=0;j<ny;j++){
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss)
+#endif
 	for (i=1;i<nx-2;i++){
 	  ss=nx*j+i;
 	  cx[ss]=bcell(&bx[ss], 1,func_bc);
@@ -63,7 +72,9 @@ void MHD2D::ideal(double dt)
 #pragma omp for
 #endif
       for (j=1;j<ny-2;j++){
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss)
+#endif
 	for (i=0;i<nx;i++){
 	  ss=nx*j+i;
 	  cy[ss]=bcell(&by[ss],nx,func_bc);
@@ -94,7 +105,9 @@ void MHD2D::ideal(double dt)
 #pragma omp for
 #endif
       for (j=1;j<ny;j++){
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss)
+#endif
 	for (i=1;i<nx;i++){
 	  ss=nx*j+i;
 	  ct[ss]=mhd_cuct_weight(&ro[ss],&vx[ss],&vy[ss],&bx[ss],&by[ss],1,nx);
@@ -107,7 +120,9 @@ void MHD2D::ideal(double dt)
 #pragma omp for
 #endif
       for (j=1;j<ny-1;j++){
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss)
+#endif
 	for (i=1;i<nx-1;i++){
 	  ss=nx*j+i;
 	  dvx[ss]=min((vx[nx*j+(i+1)]-vx[nx*j+i]),(vx[nx*j+i]-vx[nx*j+(i-1)]));
@@ -156,7 +171,9 @@ void MHD2D::ideal(double dt)
 	  ur[nm*sr+6]=vr[5];	/* bz */
 	  ur[nm*sr+7]=vr[6];	/* pr */
 	}
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss,sl,sr)
+#endif
 	for (i=2;i<nx-2;i++){
 	  ss=nx*j+i;
 	  sl=nx*j+(i+1);
@@ -174,7 +191,9 @@ void MHD2D::ideal(double dt)
 #pragma omp for
 #endif
       for (j=0;j<ny;j++){
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss)
+#endif
 	for (i=3;i<nx-2;i++){
 	  ss=nx*j+i;
 	  double flux[8]={0},bn=0.5*(ul[nm*ss+4]+ur[nm*ss+4]);
@@ -204,7 +223,9 @@ void MHD2D::ideal(double dt)
 #endif
       for (j=2;j<ny-2;j++){
 	int sl,sr;
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss,sl,sr)
+#endif
 	for (i=3;i<nx-2;i++){
 	  ss=nx*j+i;
 	  sl=nx*(j+1)+i;
@@ -224,7 +245,9 @@ void MHD2D::ideal(double dt)
 #pragma omp for
 #endif
       for (j=3;j<ny-2;j++){
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss)
+#endif
 	for (i=3;i<nx-2;i++){
 	  ss=nx*j+i;
 	  ez[ss]+=-0.5*((ul[2*ss+0]+ur[2*ss+0])+(1.0-ct[ss])*(ul[2*ss+1]+ur[2*ss+1]));
@@ -263,7 +286,9 @@ void MHD2D::ideal(double dt)
 	  ur[nm*sr+6]=vr[5];	/* bx */
 	  ur[nm*sr+7]=vr[6];	/* pr */
 	}
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss,sl,sr)
+#endif
 	for (i=0;i<nx;i++){
 	  ss=nx*j+i;
 	  sl=nx*(j+1)+i;
@@ -281,7 +306,9 @@ void MHD2D::ideal(double dt)
 #pragma omp for
 #endif
       for (j=3;j<ny-2;j++){
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss)
+#endif
 	for (i=0;i<nx;i++){
 	  ss=nx*j+i;
 	  double flux[8]={0},bn=0.5*(ul[nm*ss+4]+ur[nm*ss+4]);
@@ -311,7 +338,9 @@ void MHD2D::ideal(double dt)
 #endif
       for (j=3;j<ny-2;j++){
 	int sl,sr;
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss,sl,sr)
+#endif
 	for (i=2;i<nx-2;i++){
 	  ss=nx*j+i;
 	  sl=nx*j+(i+1);
@@ -331,7 +360,9 @@ void MHD2D::ideal(double dt)
 #pragma omp for
 #endif
       for (j=3;j<ny-2;j++){
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss)
+#endif
 	for (i=3;i<nx-2;i++){
 	  ss=nx*j+i;
 	  ez[ss]+=+0.5*((ul[2*ss+0]+ur[2*ss+0])+ct[ss]*(ul[2*ss+1]+ur[2*ss+1]));
@@ -343,7 +374,9 @@ void MHD2D::ideal(double dt)
 #pragma omp for nowait
 #endif
       for (j=yoff;j<ny-yoff;j++){
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss)
+#endif
 	for (i=xoff;i<nx-xoff;i++){
 	  ss=nx*j+i;
 	  double *val1[]={val[0]+ss,val[1]+ss,val[2]+ss,val[3]+ss,val[4]+ss,val[5]+ss,val[6]+ss,val[7]+ss};
@@ -361,7 +394,9 @@ void MHD2D::ideal(double dt)
 #pragma omp for nowait
 #endif
       for (j=yoff;j<ny-yoff;j++){
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss)
+#endif
 	for (i=xoff;i<nx-xoff+1;i++){
 	  ss=nx*j+i;
 	  mhd_updt2d_ctb(&bx[ss],ut[4*nxy+ss],&ez[ss],+dtdy,rk_fac[rk],nx,func_df);
@@ -372,7 +407,9 @@ void MHD2D::ideal(double dt)
 #pragma omp for
 #endif
       for (j=yoff;j<ny-yoff+1;j++){
-#pragma simd
+#ifdef _OPENMP
+#pragma omp simd private(ss)
+#endif
 	for (i=xoff;i<nx-xoff;i++){
 	  ss=nx*j+i;
 	  mhd_updt2d_ctb(&by[ss],ut[5*nxy+ss],&ez[ss],-dtdx,rk_fac[rk], 1,func_df);
@@ -384,18 +421,4 @@ void MHD2D::ideal(double dt)
     /* Boundary condition */
     bound(val,nm,stxs,dnxs,stys,dnys);
   }
-  
-  delete[] ut;
-  delete[] ul;
-  delete[] ur;
-  delete[] fx;
-  delete[] fy;
-  delete[] ql;
-  delete[] qr;
-  delete[] fc;
-  delete[] ez;
-  delete[] ct;
-  delete[] dvx;
-  delete[] dvy;
 }
-
