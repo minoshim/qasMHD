@@ -51,7 +51,7 @@ protected:
   int nmax=nout;		// Maximum step for fixed dt (initialized in setdt)
   double tim=0.0;		// Simulation time
   double trec=dtrec;		// Time for next record
-  void bound(double *val[], int nm,
+  virtual void bound(double *val[], int nm,
 	     const int stxs[], const int dnxs[], const int stys[], const int dnys[]); // Set boundary condition
   void ideal(double);		// ideal MHD solver
   void dout_(int);		// Output data
