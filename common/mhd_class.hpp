@@ -118,6 +118,11 @@ protected:
 		     double, double, double, double, double, double, double,
 		     double, double, const double*,
 		     double*, double*, double*, double*, double*, double*, double*)={calc_flux_roe,calc_flux_hlld,calc_flux_lhlld,calc_flux_mlau};
+  // Riemann solvers with RSST
+  void (*rsstrie[4])(double, double, double, double, double, double, double, double,
+		     double, double, double, double, double, double, double, double,
+		     double, double, const double*,
+		     double*, double*, double*, double*, double*, double*, double*)={rsst_flux_hlld,rsst_flux_hlld,rsst_flux_lhlld,rsst_flux_lhlld};
   /* Linear interpolation function to face LR states*/
   void (*l_interp[4])(const double *f, double *fl, double *fr)={cal_flr_1st,cal_flr_2nd,cal_flr_3rd,cal_flr_4th};
   /* Interpolation function to face LR states */

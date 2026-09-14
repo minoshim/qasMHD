@@ -16,6 +16,7 @@ TARGET ?= a.out
 DATADIR ?= dat
 DISSIPATION ?= 0
 GRAVITY ?= 0
+RSST ?= 0
 
 ifneq ($(DISSIPATION),0)
 ifneq ($(DISSIPATION),1)
@@ -27,6 +28,11 @@ ifneq ($(GRAVITY),1)
 $(error GRAVITY must be either 0 or 1)
 endif
 endif
+ifneq ($(RSST),0)
+ifneq ($(RSST),1)
+$(error RSST must be either 0 or 1)
+endif
+endif
 
 COMMON_NAMES := mhd2d_class mhd2d_solve
 ifeq ($(DISSIPATION),1)
@@ -34,6 +40,9 @@ COMMON_NAMES += dmhd2d_class dmhd2d_solve
 endif
 ifeq ($(GRAVITY),1)
 COMMON_NAMES += gmhd2d_class gmhd2d_solve
+endif
+ifeq ($(RSST),1)
+COMMON_NAMES += rsstmhd2d_class rsstmhd2d_solve
 endif
 
 CASE_OBJS := $(addprefix $(OBJDIR)/case_,$(CASE_SRCS:.cpp=.o))
