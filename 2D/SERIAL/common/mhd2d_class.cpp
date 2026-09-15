@@ -1,48 +1,14 @@
 #include "mhd2d_class.hpp"
+#include "mhd2d_io.hpp"
 
-#include <cerrno>
 #include <cmath>
 #include <cstddef>
 #include <cstdio>
-#include <cstdlib>
-#include <cstring>
 #include <iomanip>
 #include <sstream>
 #include <string>
 
-namespace {
-
-[[noreturn]] void output_error(const char *operation, const std::string& path)
-{
-  const int error_number=errno;
-  const char *reason=(error_number != 0)?std::strerror(error_number):"unknown I/O error";
-  std::fprintf(stderr,"Output error: %s failed for '%s': %s\n",
-               operation,path.c_str(),reason);
-  std::exit(EXIT_FAILURE);
-}
-
-std::string output_path(const std::string& directory, const std::string& filename)
-{
-  std::string path(directory);
-  if (!path.empty() && path.back() != '/') path.push_back('/');
-  return path+filename;
-}
-
-std::FILE *open_output(const std::string& path, const char *mode)
-{
-  errno=0;
-  std::FILE *outfil=std::fopen(path.c_str(),mode);
-  if (outfil == nullptr) output_error("fopen",path);
-  return outfil;
-}
-
-void close_output(std::FILE *outfil, const std::string& path)
-{
-  errno=0;
-  if (std::fclose(outfil) != 0) output_error("fclose",path);
-}
-
-}
+using namespace serial2d_io;
 
 void MHD2D::setup_grid(double xmin_value, double xmax_value,
                        double ymin_value, double ymax_value,

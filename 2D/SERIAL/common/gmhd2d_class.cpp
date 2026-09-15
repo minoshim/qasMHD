@@ -1,25 +1,13 @@
 #include "gmhd2d_class.hpp"
+#include "mhd2d_io.hpp"
 
 #include <cerrno>
 #include <cmath>
 #include <cstddef>
 #include <cstdio>
-#include <cstdlib>
-#include <cstring>
 #include <string>
 
-namespace {
-
-[[noreturn]] void output_error(const char *operation, const std::string& path)
-{
-  const int error_number=errno;
-  const char *reason=(error_number != 0)?std::strerror(error_number):"unknown I/O error";
-  std::fprintf(stderr,"Output error: %s failed for '%s': %s\n",
-               operation,path.c_str(),reason);
-  std::exit(EXIT_FAILURE);
-}
-
-}
+using namespace serial2d_io;
 
 GMHD2D::GMHD2D()
 {
@@ -56,17 +44,12 @@ void GMHD2D::dout_(int msg)
   MHD2D::dout_(msg);
   if (n != 0) return;
 
-  std::string path=fildir;
-  if (!path.empty() && path.back() != '/') path.push_back('/');
-  path+="g_potential.dat";
-  errno=0;
-  std::FILE *outfil=std::fopen(path.c_str(),"wb");
-  if (outfil == nullptr) output_error("fopen",path);
+  const std::string path=output_path(fildir,"g_potential.dat");
+  std::FILE *outfil=open_output(path,"wb");
   const std::size_t output_size=static_cast<std::size_t>(nd);
   errno=0;
   if (std::fwrite(phi_g,sizeof(*phi_g),output_size,outfil) != output_size){
     output_error("fwrite",path);
   }
-  errno=0;
-  if (std::fclose(outfil) != 0) output_error("fclose",path);
+  close_output(outfil,path);
 }
