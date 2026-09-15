@@ -46,18 +46,13 @@ void MHD2D::setdt(int flg)
 	cy[ss]=0.5*(by[ss]+by[nx*(j+stys[5])+i]);
 	prmtv(ss);
 	vtmp=sqrt(vx[ss]*vx[ss]+vy[ss]*vy[ss])+vfast(ss);
+	if (!std::isfinite(vtmp)) abort_run("Nonfinite wave speed in setdt().");
 	if (vtmp > vmax) vmax=vtmp;
       }
     }
     dt=cfl*dr/vmax;
   }
-  if (!dt_initialized){
-    nrec=static_cast<int>(std::ceil(dtrec/dt));
-    if (nrec < 1) nrec=1;
-    dt=dtrec/static_cast<double>(nrec);
-    nmax=nrec*nout;
-    dt_initialized=true;
-  }
+  initialize_dt();
 }
 
 void MHD2D::exec_(int flg)
@@ -66,10 +61,12 @@ void MHD2D::exec_(int flg)
   // If flg=0, dt unchanged and output @ constant step
   // If flg=1, dt changed and output @ constant time
 
+  initialize_dt();
   if (n == 0) dout_(0);
   
   clock_t stim=clock();
   while(flg ? (tim < tmax) : (n < nmax)){
+    check_step();
     ++n;
     const double remaining=tmax-tim;
     const bool last_step=flg && dt >= remaining;

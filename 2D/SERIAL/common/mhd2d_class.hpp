@@ -47,8 +47,8 @@ protected:
   std::string fildir="./dat/";	// Directory for output
   int cnt=0,n=0;		// Counters
   bool dt_initialized=false;	// Whether output intervals have been initialized
-  int nrec=1;			// Steps per output for fixed dt (initialized in setdt)
-  int nmax=nout;		// Maximum step for fixed dt (initialized in setdt)
+  int nrec=1;			// Steps per output for fixed dt (initialized in initialize_dt)
+  int nmax=nout;		// Maximum step for fixed dt (initialized in initialize_dt)
   double tim=0.0;		// Simulation time
   double trec=dtrec;		// Time for next record
   // Physical domain bounds exclude ghost cells; shifts are measured in cell widths.
@@ -60,6 +60,9 @@ protected:
 	     const int stxs[], const int dnxs[], const int stys[], const int dnys[]); // Set boundary condition
   virtual void ideal(double);	// ideal MHD solver
   virtual void dout_(int);	// Output data
+  void initialize_dt();      // Initialize output intervals for a new calculation
+  void check_time_parameters() const;
+  void check_step() const;
 };
 
 #endif

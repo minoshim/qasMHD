@@ -1,8 +1,11 @@
 #include "rsstmhd2d_class.hpp"
+#include "mhd2d_io.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+
+using namespace serial2d_io;
 
 void RSSTMHD2D::check_rsst_parameters() const
 {
@@ -43,18 +46,13 @@ void RSSTMHD2D::setdt(int flg)
 	vfas[1]=v_alf(ss);
 	vfas[2]=sqrt(vfas[0]*vfas[0]+vfas[1]*vfas[1]);
 	vtmp=sqrt(vx[ss]*vx[ss]+vy[ss]*vy[ss])+vfas[2];
+	if (!std::isfinite(vtmp)) abort_run("Nonfinite wave speed in setdt().");
 	if (vtmp > vmax) vmax=vtmp;
       }
     }
     dt=cfl*dr/vmax;
   }
-  if (!dt_initialized){
-    nrec=static_cast<int>(std::ceil(dtrec/dt));
-    if (nrec < 1) nrec=1;
-    dt=dtrec/static_cast<double>(nrec);
-    nmax=nrec*nout;
-    dt_initialized=true;
-  }
+  initialize_dt();
 }
 
 RSSTMHD2D::RSSTMHD2D()

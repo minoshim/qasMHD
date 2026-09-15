@@ -30,13 +30,13 @@ void GMHD2D::setdt(int flg)
         cy[ss]=0.5*(by[ss]+by[nx*(j+stys[5])+i]);
 	GMHD2D::prmtv(ss);
         vtmp=sqrt(vx[ss]*vx[ss]+vy[ss]*vy[ss])+vfast(ss);
+        if (!std::isfinite(vtmp)) abort_run("Nonfinite wave speed in setdt().");
         if (vtmp > vmax) vmax=vtmp;
       }
     }
     dt=cfl*dr/vmax;
   }
-  // Reuse output-interval initialization without the ordinary MHD CFL calculation.
-  MHD2D::setdt(0);
+  initialize_dt();
 }
 
 void GMHD2D::dout_(int msg)

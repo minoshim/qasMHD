@@ -46,7 +46,7 @@ COMMON_NAMES += rsstmhd2d_class rsstmhd2d_solve
 endif
 
 CASE_OBJS := $(addprefix $(OBJDIR)/case_,$(CASE_SRCS:.cpp=.o))
-COMMON_OBJS := $(addprefix $(OBJDIR)/common_,$(addsuffix .o,$(COMMON_NAMES)))
+COMMON_OBJS := $(addprefix $(OBJDIR)/common_,$(addsuffix .o,mhd2d_control $(COMMON_NAMES)))
 OBJS := $(CASE_OBJS) $(COMMON_OBJS)
 DEPS := $(OBJS:.o=.d)
 

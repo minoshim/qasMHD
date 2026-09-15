@@ -7,10 +7,12 @@ void DMHD2D::exec_(int flg)
   // If flg=1, dt changed and output @ constant time
   // Dissipation solver called
   
+  initialize_dt();
   if (n == 0) dout_(0);
   
   clock_t stim=clock();
   while(flg ? (tim < tmax) : (n < nmax)){
+    check_step();
     ++n;
     const double remaining=tmax-tim;
     const bool last_step=flg && dt >= remaining;

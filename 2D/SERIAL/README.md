@@ -18,6 +18,8 @@ Serial codes for the following two-dimensional problems are available:
 
 The sources in this directory's `common/` are compiled separately for each problem, using that problem's `mymacros.hpp`. They are not a precompiled class library. The repository-level `common/` supplies the numerical kernels in `libqasmhd.a`.
 
+`common/mhd2d_control.cpp` shares timestep initialization and validation across the ordinary, dissipative, gravity-aware, and RSST classes. It aligns the initial timestep to the output interval and checks invalid time parameters, integer step-count overflow, and floating-point failure to advance time. `common/mhd2d_io.hpp` provides output checks and serial error termination. Unlike MPI, SERIAL does not load or save restart checkpoints.
+
 | Problem | Class | Initial-condition source |
 | --- | --- | --- |
 | KHI, OTvortex, blast, loop | `MHD2D` | `mhd2d_init_.cpp` |

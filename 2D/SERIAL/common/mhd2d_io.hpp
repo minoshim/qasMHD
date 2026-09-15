@@ -9,6 +9,12 @@
 
 namespace serial2d_io {
 
+[[noreturn]] inline void abort_run(const char *message, int error_code=EXIT_FAILURE)
+{
+  std::fprintf(stderr,"%s\n",message);
+  std::exit(error_code);
+}
+
 // Same path/open/close checks as MPI, but failures stop this serial process.
 [[noreturn]] inline void output_error(const char *operation, const std::string& path)
 {
