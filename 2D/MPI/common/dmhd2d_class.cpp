@@ -35,7 +35,7 @@ void DMHD2D::exec_(int flg)
     double dcmax=setdc();
     if (!std::isfinite(dcmax) || dcmax < 0.0) abort_run("Invalid dissipation coefficient.");
     if (dcmax > 1e-15){
-      const double substeps=2*(dcmax*dt_step)/(dr*dr);
+      const double substeps=6*(dcmax*dt_step)/(dr*dr); // Same safety factor as 2D/SERIAL.
       if (!std::isfinite(substeps) || substeps >= std::numeric_limits<int>::max()){
         abort_run("Dissipation substep count exceeds the supported integer range.");
       }

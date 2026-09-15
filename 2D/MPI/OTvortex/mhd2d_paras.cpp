@@ -3,11 +3,9 @@
 void MHD2D::paras()
 {
   // Simulation parameters
-  xmin=0.0;
-  xmax=2.0*M_PI;
-  ymin=0.0;
-  ymax=2.0*M_PI;
-  sprintf(fildir,"./dat/");
+  // Physical domain bounds (xmin, xmax, ymin, ymax), excluding ghost cells.
+  // Shifts 0.0, 0.0 preserve this case's original coordinate convention.
+  setup_grid(0.0,2.0*M_PI,0.0,2.0*M_PI,0.0,0.0);
   
   // Boundary condition flag for ro,mx,my,mz,bx,by,bz,en
   // 0: periodic, +1: Neumann, -1: Dirichlet, +2: Open, -2: Zero fixed
@@ -28,19 +26,5 @@ void MHD2D::paras()
   dnys[5]=+0;			// by
   dnys[6]=+0;			// bz
   dnys[7]=+0;			// en
-  
-  dx=(xmax-xmin)/XMESH;
-  dy=(ymax-ymin)/YMESH;
-  dr=min(dx,dy);
-  dt=cfl*dr;			// dt will be re-calculated later
-  int isum=0,jsum=0,m;
-  for (m=0;m<mpi_ranx;m++){
-    isum+=(XMESH+m)/mpi_numx;
-  }
-  for (m=0;m<mpi_rany;m++){
-    jsum+=(YMESH+m)/mpi_numy;
-  }
-  for (int i=0;i<nx;i++) x[i]=(i-xoff+isum)*dx+xmin;
-  for (int j=0;j<ny;j++) y[j]=(j-yoff+jsum)*dy+ymin;
 
 }

@@ -15,6 +15,14 @@ The large-scale vortex is stable in the out-of-plane field case (left), while th
 
 <img src="../../imgs/KHI/khi_movie_perp.gif" alt="KH instability (out-of-plane B)" width="480px"> <img src="../../imgs/KHI/khi_movie_oblique.gif" alt="KH instability (in-plane B)" width="480px">
 
+### Code organization
+
+The MPI class and ideal solver are in `../common/`. This directory retains the initial conditions, parameters, macros, and driver.
+
+Run `make` in this directory; it compiles shared sources with the local `mymacros.hpp` and stores objects in `build/`. See [the MPI guide](../README.md) for build, execution, and result-merging instructions.
+
+Random velocity perturbations use `rand_noise_mt()` with a common base seed and the X rank coordinate; ranks sharing an X subdomain use the same sequence across Y. The temporary `dvy` array is a checked `std::vector`. See [the MPI guide](../README.md) for fixed-seed runs and reproducibility limits.
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [license](../../../license/COPYING) file for details.
