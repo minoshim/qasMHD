@@ -71,10 +71,39 @@ Backups still overwrite the existing files without retaining generations. This i
 
 ### How to check the result
 
-Since the raw simulation data stored in `dat/` are MPI-decomposed, users firstly merge them by
+Build the standalone C++11 merge utility once (from a problem directory):
+```sh
+make -C ../common
 ```
->./merge.out dat/ dat/
+
+The existing `merge.out` links point to this shared executable. It uses `CXX` and the flags in `Makefile.inc`, not an MPI launcher. Its temporary-file handling uses POSIX functions, as supported on Linux/macOS.
+
+Merge rank-local data using either form:
+```sh
+./merge.out dat             # Read and write in dat (same as: ./merge.out dat dat)
+mkdir -p merged
+./merge.out dat merged      # Read in dat, write in an existing separate directory
 ```
+
+Trailing slashes are optional; quote directory names containing spaces. The utility retains the coordinate formats and the eight-field float32 layout of `merge_outdat_XXXXX.dat`, but fields 4 and 5 (`Bx`, `By`, zero-based) now contain **cell-center** values. Other fields, including total energy, are unchanged. It copies `t.dat` and `params.dat` when necessary. Raw rank files are not modified. Stop the simulation before merging; input files must not change during the merge.
+
+When all rank-local `g_potential_XXXXX.dat` files exist, they are also merged into `merge_g_potential.dat` (float32, global `(ny, nx)`, without ghost cells). Both `batch.py` and `python/batch_a.py` read this optional file and subtract `rho*phi_g` when calculating pressure, without changing stored total energy. Missing potential on only some ranks, invalid/nonfinite potential, and incorrect binary sizes are errors. With no rank potentials, the utility reports that gravity correction is disabled; it cannot distinguish a nongravitating run from a gravitational run whose potential files were all lost. It refuses to proceed if an old merged potential exists in the destination but no input potentials exist; use a clean output directory instead of reusing unrelated results.
+
+Malformed metadata, missing rank data, allocation failures and I/O failures return a nonzero exit status. Each output is written to a temporary file and renamed only after successful close. This is not a transaction across all output files or a power-loss guarantee: a failed/interrupted merge can leave a mixture of old and new complete files. Rerun successfully before plotting, preferably into a separate directory.
+
+For each output index, the merger also writes the original CT face fields:
+
+| File | float32 shape | Location |
+| --- | --- | --- |
+| `merge_outdat_XXXXX.dat` | `(8, ny, nx)` | All fields at cell centers |
+| `merge_bx_face_XXXXX.dat` | `(ny, nx+1)` | X faces, including the global right face |
+| `merge_by_face_XXXXX.dat` | `(ny+1, nx)` | Y faces, including the global top face |
+
+The center values are `Bx[j,i]=(Bx_face[j,i]+Bx_face[j,i+1])/2` and `By[j,i]=(By_face[j,i]+By_face[j+1,i])/2`. Ghost cells in the rank-local data supply the final right/top faces; at least one ghost cell per direction is required. Shared interfaces are taken from the rank on the positive side. Face values are copied without interpolation. The merger does not impose periodic wrapping at physical boundaries. The two CT companion files add approximately 25% to the eight-field merged storage. Two-point interpolation is an output convention and need not reproduce the solver's higher-order interpolation.
+
+In Python, **`bx, by, bz` are cell-center fields** loaded directly from `merge_outdat`, suitable for ordinary plots and pressure evaluation. `bxct, byct` are the separately loaded staggered fields. `divb` is the second-order CT divergence at all cell centers, with shape `(ny,nx)`. `jz` is the CT curl at interior corners, shape `(ny-1,nx-1)`, with coordinates `xjz, yjz`; outer corners are omitted because tangential ghost data are not included. `batch_a.py` adds a leading time dimension to these arrays. The divergence diagnostic is based on float32 output and second-order differences, not necessarily the solver's full-precision/high-order discrete divergence.
+
+Rebuild `merge.out` and rerun it on raw data before using the updated Python scripts. Old merged fields stored face values under the same eight-field layout and are **not interchangeable** with the new center fields. Missing or wrong-size CT companion files cause an error; retain all three files for each time index. For plotting `jz`, use `xjz, yjz`, not the cell-center coordinate arrays.
 
 Subsequently, execute the python script `batch.py`.
 ```
