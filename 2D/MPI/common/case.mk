@@ -29,7 +29,7 @@ $(error GRAVITY must be either 0 or 1)
 endif
 endif
 
-# RMI temporarily selects its local class implementation through CASE_SRCS.
+# Every case uses the shared MHD class and ideal solver.
 COMMON_NAMES ?= mhd2d_class mhd2d_solve
 ifeq ($(DISSIPATION),1)
 COMMON_NAMES += dmhd2d_class dmhd2d_solve

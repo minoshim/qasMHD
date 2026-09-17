@@ -12,25 +12,25 @@ MPI parallel codes for the following two-dimensional problems are available:
 
 ### Project structure
 
-- `common/` contains the shared MPI `MHD2D` and dissipative `DMHD2D` classes and solvers, plus the build rules in `common/case.mk`.
+- `common/` contains the shared MPI `MHD2D`, dissipative `DMHD2D`, and gravity-aware `GMHD2D` classes and solvers, plus the build rules in `common/case.mk`.
 - Each problem directory retains its driver (`main.cpp`), initial conditions, parameters, macros, and a small `Makefile`.
-- RMI temporarily retains its local `mhd2d_class.cpp` for the inflow boundary; RTI retains `mhd2d_class.cpp` and `mhd2d_solve.cpp` for gravity. Both use the shared `mhd2d_class.hpp`.
+- RMI uses the local derived `RMI2D` class for its inflow boundary, as in SERIAL. RTI uses the shared `GMHD2D`; its initial state and special energy boundary conditions are in `RTI/gmhd2d_init_.cpp`.
 - The existing `merge.out`, `batch.py`, and `python/` links remain in each problem directory.
 
 The sources in this directory's `common/` are compiled separately for each problem, using that problem's `mymacros.hpp`. They are not a precompiled class library. The repository-level `common/` and `mpi/` supply the numerical kernels and MPI routines in `libqasmhd.a` and `libmympi.a`.
 
-MRX selects the dissipative sources with `DISSIPATION = 1`. RMI and RTI select their local implementations through `CASE_SRCS` and override `COMMON_NAMES` to avoid duplicate definitions.
+MRX selects the dissipative sources with `DISSIPATION = 1`; RTI selects the gravity sources with `GRAVITY := 1`, as in SERIAL. RMI lists its derived class and initialization sources in `CASE_SRCS`, alongside the shared MHD implementation.
 
 ### Configuring a problem
 
-- Edit `mhd2d_init_.cpp` for initial conditions, or `dmhd2d_init_.cpp` for MRX (also defines `setdc()`).
+- Edit `mhd2d_init_.cpp` for initial conditions, `dmhd2d_init_.cpp` for MRX (also defines `setdc()`), `rmi2d_init_.cpp` for RMI (also sets inflow parameters), or `gmhd2d_init_.cpp` for RTI (also defines its special `bound()`).
 - Edit `mhd2d_paras.cpp` for the domain and boundary conditions. `setup_grid(xmin, xmax, ymin, ymax)` takes **global** physical domain bounds excluding ghost cells; it sets local coordinates, mesh spacings, and the initial timestep using the existing MPI decomposition. Optional `xshift, yshift` arguments specify offsets in cell widths: both default to `0.5`; OTvortex uses `0.0, 0.0`.
 - The output directory defaults to `./dat/`. To change it, assign `fildir` in `paras()` and create the directory before running.
 - Edit `mymacros.hpp` for global mesh size, MPI process counts, output intervals, CFL, and solver choices. `RMN` (0–3), `ODR` (1–4), and `R_K` (1–3) are checked by `static_assert` in the shared class header. `CTW` controls multidimensional CT upwinding[^3].
 
-The case-specific boundary treatments are unchanged. The SERIAL version's RMI/RTI class separation and gravity update fix have not yet been ported. MRX now uses the same diffusion substep safety coefficient of 6 as SERIAL; its time-splitting order is unchanged.
+RMI refreshes inflow density once per time step and keeps it through all RK stages, only at the global upper Y boundary. RTI now follows SERIAL's gravity treatment: primitive conversion does not modify stored energy, and gravity sources use the density at the start of each RK stage. Its special boundary correction only applies to the actual conserved state at global Y boundaries. MRX uses the same diffusion substep safety coefficient of 6 as SERIAL; its time-splitting order is unchanged.
 
-KHI, MRX, RMI, and RTI use `rand_noise_mt()` with `std::mt19937`. Rank 0 broadcasts an unsigned time-based base seed. For reproducible runs, replace `std::time(nullptr)` in the case's initial-condition source with a fixed value such as `10u`, then rebuild. KHI/MRX/RTI seed each generator with `std::seed_seq{seed, mpi_ranx}`, so ranks sharing an X subdomain use identical sequences regardless of their Y coordinate. RMI uses `std::seed_seq{seed, mpi_rank}` for rank-local density noise, and broadcasts interface phases generated on rank 0. RMI retains its generator across the existing inflow calls; the function-local initialization flag and RK-stage inflow timing remain pending the class split. Its generator state is not checkpointed.
+KHI, MRX, RMI, and RTI use `rand_noise_mt()` with `std::mt19937`. Rank 0 broadcasts an unsigned time-based base seed. For reproducible runs, replace `std::time(nullptr)` in the case's initial-condition source with a fixed value such as `10u`, then rebuild. KHI/MRX/RTI seed each generator with `std::seed_seq{seed, mpi_ranx}`, so ranks sharing an X subdomain use identical sequences regardless of their Y coordinate. RMI uses `std::seed_seq{seed, mpi_rank}` for rank-local density noise, and broadcasts interface phases generated on rank 0. RMI retains its per-instance generator across time steps; boundary calls within RK stages reuse the cached inflow density. Its generator state is not checkpointed.
 
 Random sequences differ from the legacy generator. Reproducibility requires the same base seed, decomposition, and execution/call history; changing the MPI layout does not preserve the same global random field. Initial perturbation arrays use `std::vector`, with allocation failures stopping all ranks.
 
