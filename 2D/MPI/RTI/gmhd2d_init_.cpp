@@ -1,11 +1,17 @@
-#include "mhd2d_class.hpp"
+#include "gmhd2d_class.hpp"
+#include "mhd2d_io.hpp"
+
+#include <ctime>
+#include <random>
+#include <vector>
 
 inline double sqrwave2(double val_u, double val_l, double dx_u, double dx_l);
 inline double g_potential(double z, double g0, double lg, int deriv);
 double cal_pressure(double y0, double y1, double pr0, int n,
 		    double val_u, double val_l, double s0, double lambda, double g0, double lg);
 
-void MHD2D::init_()
+void GMHD2D::init_()
+try
 {
   // RT instability
   int i,j;
@@ -28,18 +34,24 @@ void MHD2D::init_()
   const double g0=1.0;		// Gravitational acceleration
   const double lg=8*dy;		// Width of boundary layer around y=0 (for gravity profile)
 
-  double *dvy=new double[nx];
-  unsigned seed;
-  double stim;			// Time at node 0, used for seed of rand_noise
-  if (mpi_rank == 0) stim=MPI_Wtime();
-  MPI_Bcast(&stim,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
-  seed=(unsigned)(stim*(1+mpi_ranx));
+  std::vector<double> dvy;
+  resize_work(dvy,nx); // Allocation failure must stop all ranks.
+#if (RANDOM)
+  // For reproducible runs, replace std::time(nullptr) with a fixed seed.
+  unsigned seed=0;
+  if (mpi_rank == 0) seed=static_cast<unsigned>(std::time(nullptr));
+  mpi2d_io::check_mpi(MPI_Bcast(&seed,1,MPI_UNSIGNED,0,MPI_COMM_WORLD),
+                      "Random seed broadcast failed.");
+  // The same X subdomain uses the same stream, independent of Y rank.
+  std::seed_seq seeds{seed,static_cast<unsigned>(mpi_ranx)};
+  std::mt19937 engine(seeds);
+#endif
   
   for (i=0;i<nx;i++){
     dvy[i]=0.0;
 #if (RANDOM)
     double dvpara[2]={0,dv};
-    dvy[i]+=rand_noise(dvpara,seed); // Multiple mode perturbation
+    dvy[i]+=rand_noise_mt(dvpara,engine); // Multiple mode perturbation
 #else
     dvy[i]+=dv*cos(2*M_PI*x[i]/wlen); // Single mode perturbation
 #endif    
@@ -86,8 +98,42 @@ void MHD2D::init_()
 
   // Boundary condition
   bound(val,nm,stxs,dnxs,stys,dnys);
+} catch (...){
+  mpi2d_io::abort_run("Exception while initializing RTI state or random generator.");
+}
 
-  delete[] dvy;
+void GMHD2D::bound(double *values[], int nvars,
+                   const int stxs[], const int dnxs[], const int stys[], const int dnys[])
+{
+  MHD2D::bound(values,nvars,stxs,dnxs,stys,dnys);
+
+  // Special upper/lower energy boundary conditions for this RTI problem.
+  // This is not a general boundary prescription for MHD with gravity.
+  // Only correct the actual conserved state, never auxiliary arrays.
+  if (nvars != nm) return;
+  for (int m=0;m<nm;m++){
+    if (values[m] != val[m]) return;
+  }
+
+  const double fac=(2.0-gam)/(gam-1.0);
+  if (mpi_rany == 0){
+    for (int j=0;j<yoff;j++){
+      for (int i=0;i<nx;i++){
+        const int ss=nx*j+i;
+        const int sb=nx*yoff+i;
+        en[ss]=en[sb]-fac*ro[sb]*(phi_g[ss]-phi_g[sb]);
+      }
+    }
+  }
+  if (mpi_rany == (mpi_numy-1)){
+    for (int j=ny-yoff;j<ny;j++){
+      for (int i=0;i<nx;i++){
+        const int ss=nx*j+i;
+        const int sb=nx*(ny-yoff-1)+i;
+        en[ss]=en[sb]-fac*ro[sb]*(phi_g[ss]-phi_g[sb]);
+      }
+    }
+  }
 }
 
 inline double sqrwave2(double val_u, double val_l, double dx_u, double dx_l)
@@ -122,4 +168,3 @@ double cal_pressure(double y0, double y1, double pr0, int n,
   }
   return ans;
 }
-

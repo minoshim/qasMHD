@@ -31,7 +31,7 @@ public:
   const double dtrec=DTREC;	// Time step for output
   const double tmax=dtrec*nout;	// Maximum simulation time
   const double cfl=CFL;		// CFL value
-  void setdt(int);		// Set time step dt
+  virtual void setdt(int);	// Set time step dt
   void paras();			// Set parameters
   void init_();			// Set initial condition
   void exec_(int);		// Run simulation
@@ -52,9 +52,9 @@ public:
   
 protected:
   double xmin,xmax,dx,ymin,ymax,dy,dr,dt; // Left/rightmost x and y values, grid size, time step
-  std::string fildir="./dat/";		// Directory for output
+  std::string fildir="./dat/";	// Directory for output
   int cnt=0,n=0;		// Counters
-  bool dt_initialized=false; // Whether output intervals have been initialized
+  bool dt_initialized=false;  // Whether output intervals have been initialized
   int nrec=1;                 // Steps per output for fixed dt
   int nmax=nout;              // Maximum step for fixed dt
   double tim=0.0;		// Simulation time
@@ -80,10 +80,10 @@ protected:
     }
   }
 
-  void bound(double *val[], int nm,
+  virtual void bound(double *val[], int nm,
 	     const int stxs[], const int dnxs[], const int stys[], const int dnys[]); // Set boundary condition
-  void ideal(double);		// ideal MHD solver
-  void dout_(int);		// Output data
+  virtual void ideal(double);	// ideal MHD solver
+  virtual void dout_(int);	// Output data
   int bkup_(int flg);         // Load (0) or save (1); collect status across ranks
   void initialize_dt();      // Initialize output intervals for a new calculation
   void prepare_run(int flg);  // Load and validate a restart, or initialize a new run
