@@ -160,6 +160,46 @@ void mhd_lrstate(const double *ro, const double *vx, const double *vy, const dou
   }
 }
 
+void mhd_lr_prmtv(const double *ro, const double *vx, const double *vy, const double *vz,
+		  const double *by, const double *bz, const double *pr,
+		  double bx, double gamma, int offset,
+		  void (*func_lr)(const double*, double*, double*),
+		  double *vl, double *vr)
+/* Calculate left and right state at the interface  */
+// Primitive variable reconstruction
+/* offset should be 1 (in x), nx (in y), nx*ny (in z) */
+{
+  const int ns=MHD_RECON_STENCIL;	/* Number of stencil */
+  const double eps=1e-12;
+  int sm2,sm1,ss0,sp1,sp2;
+  sm2=-2*offset;
+  sm1=-1*offset;
+  ss0=0;
+  sp1=+1*offset;
+  sp2=+2*offset;
+  /* Primitive variables in the stencil */
+  double ros[ns]={ro[sm2],ro[sm1],ro[ss0],ro[sp1],ro[sp2]};
+  double vxs[ns]={vx[sm2],vx[sm1],vx[ss0],vx[sp1],vx[sp2]};
+  double vys[ns]={vy[sm2],vy[sm1],vy[ss0],vy[sp1],vy[sp2]};
+  double vzs[ns]={vz[sm2],vz[sm1],vz[ss0],vz[sp1],vz[sp2]};
+  double bys[ns]={by[sm2],by[sm1],by[ss0],by[sp1],by[sp2]};
+  double bzs[ns]={bz[sm2],bz[sm1],bz[ss0],bz[sp1],bz[sp2]};
+  double prs[ns]={pr[sm2],pr[sm1],pr[ss0],pr[sp1],pr[sp2]};
+  mhd_reconst(ros,vxs,vys,vzs,bys,bzs,prs,bx,gamma,vl,vr,func_lr);
+
+  /* Positivity preservation */
+  if (vl[0] <= eps || vl[6] <= eps){
+    vl[0]=ros[ns/2];
+    vl[1]=vxs[ns/2];
+    vl[6]=prs[ns/2];
+  }
+  if (vr[0] <= eps || vr[6] <= eps){
+    vr[0]=ros[ns/2];
+    vr[1]=vxs[ns/2];
+    vr[6]=prs[ns/2];
+  }
+}
+
 void mhd_lr_fb(const double *vx, const double *vy, const double *bx, const double *by,
 	       int offset,
 	       void (*func_lr)(const double*, double*, double*),

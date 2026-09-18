@@ -52,6 +52,16 @@ void mhd_lrstate(const double *ro, const double *vx, const double *vy, const dou
 		 void (*func_lr)(const double*, double*, double*),
 		 double *vl, double *vr);
 
+/* MHD left and right states at cell interface */
+// Primitive variable reconstruction
+/* offset should be 1 (in x), nx (in y), nx*ny (in z) */
+/* func_lr = interpolation function */
+void mhd_lr_prmtv(const double *ro, const double *vx, const double *vy, const double *vz,
+		  const double *by, const double *bz, const double *pr,
+		  double bx, double gamma, int offset,
+		  void (*func_lr)(const double*, double*, double*),
+		  double *vl, double *vr);
+
 /* Left and right state of numerical flux of B, by*vx-bx*vy, required for CUCT  */
 /* Bx @ cell face, By @ cell center */
 /* offset should be 1 (in x), nx (in y), nx*ny (in z) */
