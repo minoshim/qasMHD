@@ -913,9 +913,12 @@ void rsst_flux_lhlld(double rol, double vnl, double vtl, double vul, double btl,
   double rslvl=rol*slvl;
   double rsrvr=ror*srvr;
   double drsvi=1.0/(rsrvr-rslvl);
-  double theta=min(1.0,(cmax-min(dv[0],0.0))/(cmax-min(dv[1],0.0))); /* Shock detection */
-  theta*=theta;
-  theta*=theta;
+  double theta=1.0;
+  if (ixi_f2 == 1.0) {
+    theta=min(1.0,(cmax-min(dv[0],0.0))/(cmax-min(dv[1],0.0))); /* Shock detection */
+    theta*=theta;
+    theta*=theta;
+  }
   double vnc=(rsrvr*vnr-rslvl*vnl
 	      -theta*(ptr-ptl)*cf_ratio2)*drsvi;
   double mcc=min(1.0,sqrt(max(ccl2,ccr2))/cmax);
