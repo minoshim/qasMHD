@@ -190,8 +190,16 @@ void RSSTMHD2D::ideal(double dt)
 	  sl=nx*j+(i+1);
 	  sr=nx*j+i;
 	  double vl[7],vr[7];
-	  mhd_lrstate(&ro[ss],&vx[ss],&vy[ss],&vz[ss],&cy[ss],&cz[ss],&pr[ss],
-		      cx[ss],gam,1,func_lr,vl,vr);
+	  // mhd_lrstate(&ro[ss],&vx[ss],&vy[ss],&vz[ss],&cy[ss],&cz[ss],&pr[ss],
+	  // 	      cx[ss],gam,1,func_lr,vl,vr); // Nonlinear reconstruction NOT suitable for RSST-LHLLD
+	  mhd_lr_single(&ro[ss], 1,func_lr,&vl[0],&vr[0]);
+	  mhd_lr_single(&vx[ss], 1,lfun_lr,&vl[1],&vr[1]);
+	  mhd_lr_single(&vy[ss], 1,lfun_lr,&vl[2],&vr[2]);
+	  mhd_lr_single(&vz[ss], 1,lfun_lr,&vl[3],&vr[3]);
+	  mhd_lr_single(&cy[ss], 1,lfun_lr,&vl[4],&vr[4]);
+	  mhd_lr_single(&cz[ss], 1,lfun_lr,&vl[5],&vr[5]);
+	  mhd_lr_single(&pr[ss], 1,lfun_lr,&vl[6],&vr[6]);
+	  
 	  /* Left-face @ i+1/2 */
 	  ul[nm*sl+0]=vl[0];	/* ro */
 	  ul[nm*sl+1]=vl[1];	/* vx */
@@ -305,8 +313,16 @@ void RSSTMHD2D::ideal(double dt)
 	  sl=nx*(j+1)+i;
 	  sr=nx*j+i;
 	  double vl[7],vr[7];
-	  mhd_lrstate(&ro[ss],&vy[ss],&vz[ss],&vx[ss],&cz[ss],&cx[ss],&pr[ss],
-		      cy[ss],gam,nx,func_lr,vl,vr);
+	  // mhd_lrstate(&ro[ss],&vy[ss],&vz[ss],&vx[ss],&cz[ss],&cx[ss],&pr[ss],
+	  // 	      cy[ss],gam,nx,func_lr,vl,vr); // Nonlinear reconstruction NOT suitable for RSST-LHLLD
+	  mhd_lr_single(&ro[ss],nx,func_lr,&vl[0],&vr[0]);
+	  mhd_lr_single(&vy[ss],nx,lfun_lr,&vl[1],&vr[1]);
+	  mhd_lr_single(&vz[ss],nx,lfun_lr,&vl[2],&vr[2]);
+	  mhd_lr_single(&vx[ss],nx,lfun_lr,&vl[3],&vr[3]);
+	  mhd_lr_single(&cz[ss],nx,lfun_lr,&vl[4],&vr[4]);
+	  mhd_lr_single(&cx[ss],nx,lfun_lr,&vl[5],&vr[5]);
+	  mhd_lr_single(&pr[ss],nx,lfun_lr,&vl[6],&vr[6]);
+	  
 	  /* Left-face @ j+1/2 */
 	  ul[nm*sl+0]=vl[0];	/* ro */
 	  ul[nm*sl+1]=vl[1];	/* vy */
