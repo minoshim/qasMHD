@@ -24,7 +24,10 @@ void RSSTMHD2D::rsst_(int i)
   double cs=v_snd(i);		// Sound velocity
   double ca=v_alf(i);		// Alfven velocity
   double vv=sqrt(vx[i]*vx[i]+vy[i]*vy[i]+vz[i]*vz[i]); // |V|
-  double cup=std::max(vv/ma_bnd,std::max(2.0*ca,cs_bnd)); // Empirical safety margin from RSST-HLLD intermediate-state tests.
+  // Wave-order bound for RSST-HLLD with the face-maximum fast-speed ratio.
+  const double g_eff=std::min(gam,2.0);
+  const double alpha=std::sqrt(g_eff/(g_eff-1.0));
+  double cup=std::max(vv/ma_bnd,std::max(alpha*ca,cs_bnd));
   ixi[i]=std::min(cup/cs,1.0);
 }
 

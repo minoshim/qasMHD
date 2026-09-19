@@ -739,9 +739,11 @@ void rsst_flux_hlld(double rol, double vnl, double vtl, double vul, double btl, 
   double car2=bnc2*rori;
   double cbl2=cal2+2.0*pml*roli;
   double cbr2=car2+2.0*pmr*rori;
-  double ibtl=cbl2/cl2;
-  double ibtr=cbr2/cr2;
-  double ibtm=0.5*gamma*max(ibtl,ibtr); // 1/beta
+  /* Fast wave speeds before sound-speed reduction. */
+  double cbl02=cbl2+cl2;
+  double cbr02=cbr2+cr2;
+  double cfl02=0.5*(cbl02+sqrt(fabs(cbl02*cbl02-4.0*cl2*cal2)));
+  double cfr02=0.5*(cbr02+sqrt(fabs(cbr02*cbr02-4.0*cr2*car2)));
   cl2*=ixi_f2;
   cr2*=ixi_f2;
   cbl2+=cl2;
@@ -751,6 +753,8 @@ void rsst_flux_hlld(double rol, double vnl, double vtl, double vul, double btl, 
   double cfl=sqrt(cfl2);
   double cfr=sqrt(cfr2);
   double cmax=max(cfl,cfr);
+  /* Ratio of face-maximum squared fast speeds, not the maximum of side ratios. */
+  double cf_ratio2=max(cfl2,cfr2)/max(cfl02,cfr02);
   double sl=min(0.0,min(vnl,vnr)-cmax);
   double sr=max(0.0,max(vnl,vnr)+cmax);
   /* HLL average of the normal velocity and the total pressure */
@@ -760,7 +764,7 @@ void rsst_flux_hlld(double rol, double vnl, double vtl, double vul, double btl, 
   double rsrvr=ror*srvr;
   double drsvi=1.0/(rsrvr-rslvl);
   double vnc=(rsrvr*vnr-rslvl*vnl
-	      -(ptr-ptl)*(ixi_f2+ibtm)/(1.0+ibtm))*drsvi;
+	      -(ptr-ptl)*cf_ratio2)*drsvi;
   double ptc=(rsrvr*ptl-rslvl*ptr+rsrvr*rslvl*(vnr-vnl))*drsvi;
   /* Variables of the outer sides in the Riemann fan */
   double slvc=sl-vnc;
@@ -883,9 +887,11 @@ void rsst_flux_lhlld(double rol, double vnl, double vtl, double vul, double btl,
   double car2=bnc2*rori;
   double cbl2=cal2+2.0*pml*roli;
   double cbr2=car2+2.0*pmr*rori;
-  double ibtl=cbl2/cl2;
-  double ibtr=cbr2/cr2;
-  double ibtm=0.5*gamma*max(ibtl,ibtr); // 1/beta
+  /* Fast wave speeds before sound-speed reduction. */
+  double cbl02=cbl2+cl2;
+  double cbr02=cbr2+cr2;
+  double cfl02=0.5*(cbl02+sqrt(fabs(cbl02*cbl02-4.0*cl2*cal2)));
+  double cfr02=0.5*(cbr02+sqrt(fabs(cbr02*cbr02-4.0*cr2*car2)));
   cl2*=ixi_f2;
   cr2*=ixi_f2;
   cbl2+=cl2;
@@ -897,6 +903,8 @@ void rsst_flux_lhlld(double rol, double vnl, double vtl, double vul, double btl,
   double ccl2=0.5*(cbl2+sqrt(fabs(cbl2*cbl2-4.0*vl2*cal2))); /* Sound vel => convective vel. */
   double ccr2=0.5*(cbr2+sqrt(fabs(cbr2*cbr2-4.0*vr2*car2))); /* Sound vel => convective vel. */
   double cmax=sqrt(max(cfl2,cfr2));
+  /* Ratio of face-maximum squared fast speeds, not the maximum of side ratios. */
+  double cf_ratio2=max(cfl2,cfr2)/max(cfl02,cfr02);
   double sl=min(0.0,min(vnl,vnr)-cmax);
   double sr=max(0.0,max(vnl,vnr)+cmax);
   /* HLL average of the normal velocity and the total pressure */
@@ -909,7 +917,7 @@ void rsst_flux_lhlld(double rol, double vnl, double vtl, double vul, double btl,
   theta*=theta;
   theta*=theta;
   double vnc=(rsrvr*vnr-rslvl*vnl
-	      -theta*(ptr-ptl)*(ixi_f2+ibtm)/(1.0+ibtm))*drsvi;
+	      -theta*(ptr-ptl)*cf_ratio2)*drsvi;
   double mcc=min(1.0,sqrt(max(ccl2,ccr2))/cmax);
   double ptc=(rsrvr*ptl-rslvl*ptr
 	      +(mcc*(2.0-mcc))*rsrvr*rslvl*(vnr-vnl))*drsvi; /* Quasi-all-speed extension */
