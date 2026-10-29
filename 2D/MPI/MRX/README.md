@@ -11,6 +11,16 @@ Following example is the out-of-plane current with localized resistivity (*&prop
 
 ![MRX](../../imgs/MRX/Figure_1.png)
 
+### Code organization
+
+The MPI `MHD2D` and `DMHD2D` implementations are in `../common/`. This directory retains `dmhd2d_init_.cpp` (including `setdc()`), parameters, macros, and the driver. The Makefile selects the dissipative sources with `DISSIPATION = 1`.
+
+Run `make` in this directory; it compiles shared sources with the local `mymacros.hpp` and stores objects in `build/`. See [the MPI guide](../README.md) for build, execution, and result-merging instructions.
+
+Random velocity perturbations use `rand_noise_mt()` with a common base seed and the X rank coordinate; ranks sharing an X subdomain use the same sequence across Y. The temporary `dvy` array is a checked `std::vector`. See [the MPI guide](../README.md) for fixed-seed runs and reproducibility limits.
+
+The diffusion substep safety coefficient is 6, matching SERIAL. The existing ideal/dissipative splitting order is retained.
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [license](../../../license/COPYING) file for details.

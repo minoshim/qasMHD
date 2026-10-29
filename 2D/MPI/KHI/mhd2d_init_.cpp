@@ -1,6 +1,12 @@
 #include "mhd2d_class.hpp"
+#include "mhd2d_io.hpp"
+
+#include <ctime>
+#include <random>
+#include <vector>
 
 void MHD2D::init_()
+try
 {
   // KH instability
   int i,j;
@@ -19,18 +25,24 @@ void MHD2D::init_()
   const double pr0=0.5*beta*b0*b0; // Pressure
   const double dv=0.01;		// Perturbation amplitude
 
-  double *dvy=new double[nx];
-  unsigned seed;
-  double stim;			// Time at node 0, used for seed of rand_noise
-  if (mpi_rank == 0) stim=MPI_Wtime();
-  MPI_Bcast(&stim,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
-  seed=(unsigned)(stim*(1+mpi_ranx));
+  std::vector<double> dvy;
+  resize_work(dvy,nx); // Allocation failure must stop all ranks.
+#if (RANDOM)
+  // For reproducible runs, replace std::time(nullptr) with a fixed seed.
+  unsigned seed=0;
+  if (mpi_rank == 0) seed=static_cast<unsigned>(std::time(nullptr));
+  mpi2d_io::check_mpi(MPI_Bcast(&seed,1,MPI_UNSIGNED,0,MPI_COMM_WORLD),
+                      "Random seed broadcast failed.");
+  // The same X subdomain uses the same stream, independent of Y rank.
+  std::seed_seq seeds{seed,static_cast<unsigned>(mpi_ranx)};
+  std::mt19937 engine(seeds);
+#endif
   
   for (i=0;i<nx;i++){
     dvy[i]=0.0;
 #if (RANDOM)
     double dvpara[2]={0,dv};
-    dvy[i]+=rand_noise(dvpara,seed); // Multiple mode perturbation
+    dvy[i]+=rand_noise_mt(dvpara,engine); // Multiple mode perturbation
 #else
     dvy[i]+=dv*sin(2*M_PI*x[i]/wlen); // Single mode perturbation
 #endif    
@@ -68,7 +80,6 @@ void MHD2D::init_()
 
   // Boundary condition
   bound(val,nm,stxs,dnxs,stys,dnys);
-
-  delete[] dvy;
+} catch (...){
+  mpi2d_io::abort_run("Exception while initializing KHI state or random generator.");
 }
-

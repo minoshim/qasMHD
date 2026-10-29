@@ -4,13 +4,15 @@ void MHD3D::paras()
 {
   // Simulation parameters
   setgam(2.0);
-  xmin=0.0;
-  xmax=20.0;
-  ymin=0.0;
-  ymax=ymin+(xmax-xmin)*(double)YMESH/XMESH;
-  zmin=0.0;
-  zmax=zmin+(xmax-xmin)*(double)ZMESH/XMESH;
-  sprintf(fildir,"./dat/");
+  const double xmin_value=0.0;
+  const double xmax_value=20.0;
+  const double ymin_value=0.0;
+  const double ymax_value=ymin_value+(xmax_value-xmin_value)*(double)YMESH/XMESH;
+  const double zmin_value=0.0;
+  const double zmax_value=zmin_value+(xmax_value-xmin_value)*(double)ZMESH/XMESH;
+  // Global domain bounds, excluding ghost cells; shifts are in cell widths.
+  setup_grid(xmin_value,xmax_value,ymin_value,ymax_value,zmin_value,zmax_value);
+  fildir="./dat/";
   
   // Boundary condition flag for ro,mx,my,mz,bx,by,bz,en
   // 0: periodic, +1: Neumann, -1: Dirichlet, +2: Open, -2: Zero fixed
@@ -41,23 +43,4 @@ void MHD3D::paras()
   dnzs[6]=+0;			// bz
   dnzs[7]=+0;			// en
   
-  dx=(xmax-xmin)/XMESH;
-  dy=(ymax-ymin)/YMESH;
-  dz=(zmax-zmin)/ZMESH;
-  dr=min(min(dx,dy),dz);
-  dt=cfl*dr;			// dt will be re-calculated later
-  int isum=0,jsum=0,ksum=0,m;
-  for (m=0;m<mpi_ranx;m++){
-    isum+=(XMESH+m)/mpi_numx;
-  }
-  for (m=0;m<mpi_rany;m++){
-    jsum+=(YMESH+m)/mpi_numy;
-  }
-  for (m=0;m<mpi_ranz;m++){
-    ksum+=(ZMESH+m)/mpi_numz;
-  }
-  for (int i=0;i<nx;i++) x[i]=(i-xoff+isum+0.5)*dx+xmin;
-  for (int j=0;j<ny;j++) y[j]=(j-yoff+jsum+0.5)*dy+ymin;
-  for (int k=0;k<nz;k++) z[k]=(k-zoff+ksum+0.5)*dz+zmin;
-
 }

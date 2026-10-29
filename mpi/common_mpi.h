@@ -1,6 +1,11 @@
 #ifndef _COMMON_MPI_H_
 #define _COMMON_MPI_H_
 
+/* Collect a local status and verify that every rank reports the same value. */
+/* Return MPI_SUCCESS on agreement and store the value in global_status. */
+/* Return an MPI error code if the collective fails or statuses disagree. */
+int mpi_sync_status(int local_status, int *global_status);
+
 /* MPI SendRecv for 2D variables */
 /* Set dn=0 for Periodic boundary */
 /* For other condition, call mpi_xbc2d and mpi_ybc2d later */

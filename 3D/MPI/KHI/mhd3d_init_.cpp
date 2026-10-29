@@ -1,6 +1,12 @@
 #include "mhd3d_class.hpp"
+#include "mhd3d_io.hpp"
+
+#include <ctime>
+#include <random>
+#include <vector>
 
 void MHD3D::init_()
+try
 {
   // KH instability
   int i,j,k;
@@ -21,31 +27,37 @@ void MHD3D::init_()
   const double dvparax[2]={0,dv};	// Perturbation parameter for vx
   const double dvparay[2]={0,dv};	// Perturbation paeameter for vy
 
-  double dvy[nz][nx];
-  unsigned seed;
-  double stim;			// Time at node 0, used for seed of rand_noise
-  if (mpi_rank == 0) stim=MPI_Wtime();
-  MPI_Bcast(&stim,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
-  //Random seed depending on x and z, used for vy perturbation
-  seed=(unsigned)(stim*(1+mpi_ranx+(mpi_numx*mpi_ranz)));
+  std::vector<double> dvy;
+  resize_work(dvy,static_cast<std::size_t>(nz)*nx);
+  // For reproducible runs, replace std::time(nullptr) with a fixed seed.
+  unsigned seed=0;
+  if (mpi_rank == 0) seed=static_cast<unsigned>(std::time(nullptr));
+  mpi3d_io::check_mpi(MPI_Bcast(&seed,1,MPI_UNSIGNED,0,MPI_COMM_WORLD),
+                      "Random seed broadcast failed.");
+#if (RANDOM)
+  // The same X/Z subdomain uses the same stream, independent of Y rank.
+  std::seed_seq seeds_vy{seed,static_cast<unsigned>(mpi_ranx),static_cast<unsigned>(mpi_ranz)};
+  std::mt19937 engine_vy(seeds_vy);
+#endif
   
   for (k=0;k<nz;k++){
     for (i=0;i<nx;i++){
-      dvy[k][i]=0.0;
+      dvy[nx*k+i]=0.0;
 #if (RANDOM)
-      dvy[k][i]+=rand_noise(dvparay,seed); // Multiple mode perturbation
+      dvy[nx*k+i]+=rand_noise_mt(dvparay,engine_vy); // Multiple mode perturbation
 #else
-      dvy[k][i]+=dv*sin(2*M_PI*x[i]/wlen); // Single mode perturbation
+      dvy[nx*k+i]+=dv*sin(2*M_PI*x[i]/wlen); // Single mode perturbation
 #endif    
     }
   }
 
-  //Reset random seed depending on z, used for vx perturbation
-  seed=(unsigned)(stim*(1+mpi_ranz));
-  srandom(seed);
+  // A separate Z-only stream preserves the vx perturbation even when RANDOM=0.
+  // The same Z subdomain uses the same stream, independent of X/Y rank.
+  std::seed_seq seeds_vx{seed,static_cast<unsigned>(mpi_ranz)};
+  std::mt19937 engine_vx(seeds_vx);
   
   for (k=0;k<nz;k++){
-    double vampx=vamp+rand_noise(dvparax,seed); // Perturbation to vx is independent of x and y    
+    double vampx=vamp+rand_noise_mt(dvparax,engine_vx); // Perturbation to vx is independent of x and y
     for (j=0;j<ny;j++){
       double angle=0.5*((angle_u+angle_l)+(angle_u-angle_l)*tanh((y[j]-s0)/lambda));
       for (i=0;i<nx;i++){
@@ -53,7 +65,7 @@ void MHD3D::init_()
 
 	ro[ss]=0.5*((ro_u+ro_l)+(ro_u-ro_l)*tanh((y[j]-s0)/lambda));
 	vx[ss]=+vampx*tanh((y[j]-s0)/lambda);
-	vy[ss]=dvy[k][i]*exp(-((y[j]-s0)*(y[j]-s0))/(4*lambda*lambda));
+	vy[ss]=dvy[nx*k+i]*exp(-((y[j]-s0)*(y[j]-s0))/(4*lambda*lambda));
 	vz[ss]=0.0;
 	pr[ss]=pr0;
 	
@@ -77,4 +89,6 @@ void MHD3D::init_()
 
   // Boundary condition
   bound(val,nm,stxs,dnxs,stys,dnys,stzs,dnzs);
+} catch (...){
+  mpi3d_io::abort_run("Exception while initializing KHI state or random generator.");
 }

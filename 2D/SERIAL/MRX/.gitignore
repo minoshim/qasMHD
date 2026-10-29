@@ -1,0 +1,3 @@
+*.out
+build/
+dat/*.dat

@@ -11,6 +11,16 @@ This simulation was performed in a frame moving with *v<sub>y</sub>=-0.6* so tha
 ![RMI1](../../imgs/RMI/Figure_1.png)
 ![RMI3](../../imgs/RMI/Figure_3.png)
 
+### Code organization
+
+The base `MHD2D` class and ideal solver are in `../common/`. As in SERIAL, the local `RMI2D` class (`rmi2d_class.hpp/.cpp`) owns the inflow parameters, density cache, and random generator. Initial conditions are in `rmi2d_init_.cpp`; domain and ordinary boundary settings remain in `mhd2d_paras.cpp`.
+
+Only ranks on the global upper Y boundary apply the inflow. `RMI2D::exec_()` refreshes its density once per time step; the overridden `bound()` retains that realization through all RK stages. Auxiliary magnetic boundary calls do not change the conserved state or consume random numbers. The physical upper `By` face remains CT-evolved.
+
+Run `make` in this directory; it compiles shared sources with the local `mymacros.hpp` and stores objects in `build/`. See [the MPI guide](../README.md) for build, execution, and result-merging instructions.
+
+Random perturbations use `rand_noise_mt()`: density streams are seeded per rank, while interface phases are shared through rank-0 broadcasts. Each instance owns its stream; no function-local initialization flag remains. With `RANDOM=1`, results change from the former implementation that regenerated inflow during RK boundary calls. Generator state is not checkpointed, so random-inflow restarts are not exactly reproducible. See [the MPI guide](../README.md) for fixed-seed runs and reproducibility limits.
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [license](../../../license/COPYING) file for details.

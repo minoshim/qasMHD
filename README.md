@@ -11,7 +11,7 @@ The current version supports 1D-3D space in Cartesian coordinates and hybrid MPI
 ## System requirements
 Following packages are required to be installed on the system:
 - Git to install and update the qasMHD code;
-- C++ compiler (GNU, Intel);
+- C++11 compiler (GNU, Intel);
 - MPI library (MPICH, OpenMPI) to use the MPI parallel code;
 - Make
 - Python 3.X with NumPy and matplotlib for data read and visualization (can be downloaded from [Anaconda](https://www.anaconda.com/products/distribution));
@@ -23,7 +23,7 @@ Above packages (excluding Intel compiler) can be installed by `apt` or `yum` com
 ## Installation
 1. Download the qasMHD code from GitHub by `>git clone https://github.com/minoshim/qasMHD`.
 2. Move to the main directory `qasMHD/`.
-3. Check `Makefile.inc` and edit environment variables `CC`, `CFLAGS`, and `MPICC` to meet users environment.
+3. Check `Makefile.inc` and edit `CXX`, `CXXFLAGS`, and `MPICXX` to match the user's environment.
 4. Execute `>make clean` and `>make` commands to remake libraries.
 
 Since the code is updated without notice, users may need to update the code by `>git pull origin main`.

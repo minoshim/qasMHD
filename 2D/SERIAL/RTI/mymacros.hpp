@@ -13,7 +13,7 @@
 #define R_K (3)		 /* Temporal order (1,2,3). Never set >3 */
 #define CTW (1)		 /* Flag for CT 2D upwind weighting (Minoshima+19, ApJS,242,14) */
 
-// Flag for random perturbation (see mhd2d_init_.cpp)
+// Flag for random perturbation (see gmhd2d_init_.cpp)
 #define RANDOM (0)
 
 #endif

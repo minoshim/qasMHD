@@ -1,0 +1,155 @@
+#include "gmhd2d_class.hpp"
+
+#include <random>
+#include <vector>
+
+inline double sqrwave2(double val_u, double val_l, double dx_u, double dx_l);
+inline double g_potential(double z, double g0, double lg, int deriv);
+double cal_pressure(double y0, double y1, double pr0, int n,
+		    double val_u, double val_l, double s0, double lambda, double g0, double lg);
+
+void GMHD2D::init_()
+{
+  // RT instability
+  int i,j;
+  // Initial condition parameters
+  const double beta=1e3;	// Ambient plasma beta
+  const double angle_u=90;	// B field angle in upper domain. 90deg: B=Bz, 0deg: B=Bx
+  const double angle_l=angle_u;	// B field angle in lower domain.
+  const double vamp=0.0;	// Shear velocity amplitude
+  const int nmode=1;		// Number of mode for perturbation
+  const double wlen=getlx()/nmode;
+  const double lambda=1.0;	// Shear layer width
+  const double s0=0.35*getly(); // Shear position (@ +s0 and -s0)
+  const double ro_u=1.0;	// Density in upper domain
+  const double ro_l=0.1;	// Density in lower domain
+  const double pr0=500.0;	// Base pressure
+  const double b0=sqrt(2.0*pr0/beta); // B field strength
+  const double prmin=1e-4;	// Minimum pressure threshold
+  const double dv=0.01;		// Perturbation amplitude
+  // Parameters associated with gravity
+  const double g0=1.0;		// Gravitational acceleration
+  const double lg=8*dy;		// Width of boundary layer around y=0 (for gravity profile)
+
+  std::vector<double> dvy(nx);
+#if (RANDOM)
+  // Use a fixed seed (e.g. 10) for reproducible perturbations.
+  unsigned seed=(unsigned)time(NULL);
+  std::mt19937 engine(seed);
+#endif
+  for (i=0;i<nx;i++){
+    dvy[i]=0.0;
+#if (RANDOM)
+    double dvpara[2]={0,dv};
+    dvy[i]+=rand_noise_mt(dvpara,engine); // Multiple mode perturbation
+#else
+    dvy[i]+=dv*cos(2*M_PI*x[i]/wlen); // Single mode perturbation
+#endif
+  }
+
+  for (j=0;j<ny;j++){
+    double angle=sqrwave2(angle_u,angle_l,(y[j]-s0)/lambda,(y[j]+s0)/lambda);
+    for (i=0;i<nx;i++){
+      int ss=nx*j+i;
+
+      ro[ss]=sqrwave2(ro_u,ro_l,(y[j]-s0)/lambda,(y[j]+s0)/lambda);
+      vx[ss]=sqrwave2(vamp,-vamp,(y[j]-s0)/lambda,(y[j]+s0)/lambda);
+      vy[ss]=dvy[i]*(exp(-((y[j]-s0)*(y[j]-s0))/(4*lambda*lambda))-exp(-((y[j]+s0)*(y[j]+s0))/(4*lambda*lambda)));
+      vz[ss]=0.0;
+
+      // Gravitational potential, phi_g = g0*lg*log(cosh(y/lg))
+      // d(phi_g)/dy = g0*tanh(y/lg)
+      phi_g[ss]=g_potential(y[j],g0,lg,0);
+
+      // Pressure is obtained by integrating the equilibrium
+      pr[ss]=cal_pressure(0,y[j],pr0,1+(int)(fabs(y[j])/dy+0.5),
+			  ro_u,ro_l,s0,lambda,g0,lg);
+      pr[ss]=max(pr[ss],prmin);
+
+      if (angle == 90){
+	bx[ss]=0.0;
+	by[ss]=0.0;
+	bz[ss]=b0;
+      } else{
+	bx[ss]=b0*cos(angle*dtor);
+	by[ss]=0.0;
+	bz[ss]=b0*sin(angle*dtor);
+      }
+      cx[ss]=bx[ss];
+      cy[ss]=by[ss];
+
+      // In 2D, cell center Bz is identical to cell edge Bz.
+      // Thus cz is not explicitly initialized here.
+      // They should be defined in constructer (see mhd2d_class.cpp).
+      cnsvt(ss);
+      en[ss]+=ro[ss]*phi_g[ss];	// Add gravitational potential
+    }
+  }
+
+  // Boundary condition
+  bound(val,nm,stxs,dnxs,stys,dnys);
+
+}
+
+void GMHD2D::bound(double *values[], int nvars,
+                   const int stxs[], const int dnxs[], const int stys[], const int dnys[])
+{
+  MHD2D::bound(values,nvars,stxs,dnxs,stys,dnys);
+
+  // Special upper/lower energy boundary conditions for this RTI problem.
+  // This is not a general boundary prescription for MHD with gravity.
+  // Only correct the actual conserved state, never auxiliary arrays.
+  if (nvars != nm) return;
+  for (int m=0;m<nm;m++){
+    if (values[m] != val[m]) return;
+  }
+
+  const double fac=(2.0-gam)/(gam-1.0);
+  for (int j=0;j<yoff;j++){
+    for (int i=0;i<nx;i++){
+      const int ss=nx*j+i;
+      const int sb=nx*yoff+i;
+      en[ss]=en[sb]-fac*ro[sb]*(phi_g[ss]-phi_g[sb]);
+    }
+  }
+  for (int j=ny-yoff;j<ny;j++){
+    for (int i=0;i<nx;i++){
+      const int ss=nx*j+i;
+      const int sb=nx*(ny-yoff-1)+i;
+      en[ss]=en[sb]-fac*ro[sb]*(phi_g[ss]-phi_g[sb]);
+    }
+  }
+}
+
+inline double sqrwave2(double val_u, double val_l, double dx_u, double dx_l)
+// Calculate double square wave profile
+/* Return val_u (dx_u*dx_l>0) or val_l (dx_u*dx_l<0) */
+{
+  return 0.5*(2.0+tanh(dx_u)-tanh(dx_l))*(val_u-val_l)+val_l;
+}
+
+inline double g_potential(double z, double g0, double lg, int deriv)
+// Calculate gravitational potential
+// phi_g = g0*lg*log(cosh(z/lg))
+// d(phi_g)/dz = g0*tanh(z/lg)
+// Return z-derivative if deriv==1
+{
+  return (deriv == 1)?(g0*tanh(z/lg)):(g0*lg*log(cosh(z/lg)));
+}
+
+double cal_pressure(double y0, double y1, double pr0, int n,
+		    double val_u, double val_l, double s0, double lambda, double g0, double lg)
+// Calculate pressure profile from hydrostatic equilibrium dP/dz = -rho dPhi_g/dz
+{
+  int j;
+  double dyc=(y1-y0)/n;
+  double ans=pr0;
+  for (j=0;j<n;j++){
+    double yc,roc,dphi_gc;
+    yc=y0+(j+0.5)*dyc;
+    roc=sqrwave2(val_u,val_l,(yc-s0)/lambda,(yc+s0)/lambda);
+    dphi_gc=g_potential(yc,g0,lg,1);
+    ans+=-roc*dphi_gc*dyc;
+  }
+  return ans;
+}

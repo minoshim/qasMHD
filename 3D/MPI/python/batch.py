@@ -9,6 +9,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from python import plt2d
+from python.mhd_io import read_ct_fields
 
 #Read independent variables and parameters
 while True:
@@ -30,7 +31,24 @@ nx=np.size(x)
 ny=np.size(y)
 nz=np.size(z)
 nt=np.size(t)
-nd=8 #Number of dependent variables in MHD-2D
+nd=8 #Number of dependent variables in MHD-3D
+
+#Optional, time-independent gravitational potential (ghost cells already removed).
+potential_path=direc+"merge_g_potential.dat"
+try:
+    with open(potential_path,"rb") as potential_file:
+        potential_bytes=potential_file.read()
+except FileNotFoundError:
+    phi_g=None
+    print("No merged gravitational potential: pressure is not gravity-corrected.")
+else:
+    expected_bytes=nx*ny*nz*np.dtype(np.float32).itemsize
+    if len(potential_bytes) != expected_bytes:
+        raise ValueError(f"{potential_path}: expected {expected_bytes} bytes, got {len(potential_bytes)}")
+    phi_g=np.frombuffer(potential_bytes,dtype=np.float32).reshape((nz,ny,nx))
+    if not np.all(np.isfinite(phi_g)):
+        raise ValueError(f"{potential_path}: gravitational potential contains non-finite values")
+    print(f"Loaded gravitational potential from {potential_path}")
 
 #Read MHD data @ particular time
 sst=-1
@@ -38,6 +56,7 @@ while ((sst < 0) or (sst >= nt)):
     sst=int(input(f"Specity time period (0-{nt-1}): "))
     
 data=np.fromfile(direc+f"merge_outdat_{sst:05d}.dat",dtype=np.float32).reshape((nd,nz,ny,nx))
+bxct,byct,bzct=read_ct_fields(direc,sst,nx,ny,nz)
 
 dx=x[1]-x[0]
 dy=y[1]-y[0]
@@ -48,8 +67,21 @@ ro=data[0,:,:,:]
 vx=data[1,:,:,:]/ro
 vy=data[2,:,:,:]/ro
 vz=data[3,:,:,:]/ro
-bx=data[4,:,:,:]                  # @ CT grid (i-1/2,j,k)
-by=data[5,:,:,:]                  # @ CT grid (i,j-1/2,k)
-bz=data[6,:,:,:]                  # @ CT grid (i,j,k-1/2)
+bx=data[4,:,:,:]                  # Cell centers; already averaged by merge.out
+by=data[5,:,:,:]                  # Do not interpolate again in Python
+bz=data[6,:,:,:]
 en=data[7,:,:,:]
+if phi_g is not None:
+    en=en-ro*phi_g #Do not modify the stored total energy in place.
 pr=(gam-1)*(en-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
+
+# CT divergence at all cell centers (second-order diagnostic).
+divb=(bxct[:,:,1:]-bxct[:,:,:-1])/dx+(byct[:,1:,:]-byct[:,:-1,:])/dy+(bzct[1:,:,:]-bzct[:-1,:,:])/dz
+# Interior face coordinates. Outer edges need tangential ghost data, not saved here.
+xf=0.5*(x[1:]+x[:-1])
+yf=0.5*(y[1:]+y[:-1])
+zf=0.5*(z[1:]+z[:-1])
+# Curl on interior CT edges: jx at (x,yf,zf), jy at (xf,y,zf), jz at (xf,yf,z).
+jx=(bzct[1:-1,1:,:]-bzct[1:-1,:-1,:])/dy-(byct[1:,1:-1,:]-byct[:-1,1:-1,:])/dz
+jy=(bxct[1:,:,1:-1]-bxct[:-1,:,1:-1])/dz-(bzct[1:-1,:,1:]-bzct[1:-1,:,:-1])/dx
+jz=(byct[:,1:-1,1:]-byct[:,1:-1,:-1])/dx-(bxct[:,1:,1:-1]-bxct[:,:-1,1:-1])/dy

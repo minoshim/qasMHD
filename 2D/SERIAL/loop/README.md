@@ -10,6 +10,12 @@ The top was obtained with the 2nd-order scheme, and the bottom with the 4th-orde
 <img src="../../imgs/loop/Figure_1_2nd.png" alt="Loop advection t=1" width="500px"> <img src="../../imgs/loop/Figure_2_2nd.png" alt="Loop advection t=2" width="500px">
 <img src="../../imgs/loop/Figure_1_4th.png" alt="Loop advection t=1" width="500px"> <img src="../../imgs/loop/Figure_2_4th.png" alt="Loop advection t=2" width="500px">
 
+### Serial configuration
+
+This case uses the shared `MHD2D` class and solver in `../common/`. Edit `mhd2d_init_.cpp` for the vector potential, advection velocity, and ambient state. Its temporary vector-potential arrays are local `std::vector` objects. `mhd2d_paras.cpp` sets the domain with `setup_grid()` and defines the boundary conditions; `mymacros.hpp` controls the mesh, output, and solver choices.
+
+See the [serial build and visualization instructions](../README.md). Build with `make` in this directory; objects are kept in `build/`, the executable is `a.out`, and results are written to `dat/`. Run the linked `python batch.py` from this directory to inspect the results.
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [license](../../../license/COPYING) file for details.

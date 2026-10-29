@@ -1,6 +1,8 @@
 #ifndef _COMMON_FUNC_H_
 #define _COMMON_FUNC_H_
 
+#include <random>
+
 template <typename TYPE>
 inline TYPE max(TYPE a, TYPE b)
 {
@@ -32,6 +34,7 @@ inline void rk_updt(double *f1, double f0, double df, double rkfac0, double rkfa
 }
 
 double rand_noise(const double *params, unsigned seed); /* return uniform random distribution (params[0] +- paramas[1]) */
+double rand_noise_mt(const double *params, std::mt19937 &engine); /* Mersenne Twister version with caller-owned state */
 
 void cpy_array(double *a, const double *b, int n); /* copy b to a. n = length */
 
@@ -56,9 +59,20 @@ void bc3d(double *f, int nx, int ny, int nz, int xoff, int yoff, int zoff,
 /* st: Flag for staggered grid. Set 1 when f is @ cell face (not center), else 0 */
 /* dn: 0 for periodic, -1 for Dirichlet, +1 for Neumann, -2 for zero-fix, +2 for open condition */
 
-void bkup_load(double *p[], int nm, int nd, int *n, int *cnt, double *tim, double *dt, double *trec, int mpi_rank, const char *fildir);
-void bkup_save(double *p[], int nm, int nd, int n, int cnt, double tim, double dt, double trec, int mpi_rank, const char *fildir);
+enum {
+  BKUP_ERROR = -1,
+  BKUP_NOT_FOUND = 0,
+  BKUP_OK = 1
+};
+
+int bkup_load(double *p[], int nm, int nd, int *n, int *cnt,
+              double *tim, double *dt, double *trec,
+              int mpi_rank, const char *fildir);
+int bkup_save(double *p[], int nm, int nd, int n, int cnt,
+              double tim, double dt, double trec,
+              int mpi_rank, const char *fildir);
 /* Load and save backup data for restart */
+/* Return BKUP_OK on success, BKUP_NOT_FOUND if no stamp exists, or BKUP_ERROR on failure */
 /* p: Array of pointer for variables (ro,mx,my,...) */
 /* nm: Number of variables (7 for MHD1D, 8 for multi-D MHD) */
 /* nd: Number of spatial grid (nx*ny*nz) */
@@ -68,4 +82,3 @@ void bkup_save(double *p[], int nm, int nd, int n, int cnt, double tim, double d
 /* fildir: data directory */
 
 #endif
-

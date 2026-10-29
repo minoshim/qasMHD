@@ -33,6 +33,23 @@ ny=np.size(y)
 nt=np.size(t)
 nd=8 #Number of dependent variables in MHD-2D
 
+#Optional, time-independent gravitational potential (including ghost cells).
+potential_path=direc+"g_potential.dat"
+try:
+    with open(potential_path,"rb") as potential_file:
+        potential_bytes=potential_file.read()
+except FileNotFoundError:
+    phi_g=None
+else:
+    expected_bytes=nx*ny*np.dtype(np.float64).itemsize
+    if len(potential_bytes) != expected_bytes:
+        raise ValueError(f"{potential_path}: expected {expected_bytes} bytes, got {len(potential_bytes)}")
+    phi_g=np.frombuffer(potential_bytes,dtype=np.float64).reshape((ny,nx))
+    if not np.all(np.isfinite(phi_g)):
+        raise ValueError(f"{potential_path}: gravitational potential contains non-finite values")
+    phi_g=phi_g[yoff:ny-yoff,xoff:nx-xoff]
+    print(f"Loaded gravitational potential from {potential_path}")
+
 #Read MHD data @ all time
 data=np.zeros((nt,nd,ny,nx),dtype=np.float64)
 sst=0
@@ -63,5 +80,8 @@ for j in range(0,ny-2*yoff):
     by[:,j,:]=0.5*(data[:,5,j+yoff,xoff:nx-xoff]+data[:,5,j+1+yoff,xoff:nx-xoff])
 bz=data2[:,6,:,:]
 en=data2[:,7,:,:]
+if phi_g is not None:
+    #Broadcast the static potential over time without modifying the stored energy.
+    en=en-ro*phi_g
 pr=(gam-1)*(en-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
 data2=np.array([ro,vx,vy,vz,pr,bx,by,bz])

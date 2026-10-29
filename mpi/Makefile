@@ -2,19 +2,19 @@ DIR0 = ..
 include $(DIR0)/Makefile.inc
 TARGET = $(DIR0)/lib$(LIBMPI).a
 OBJS = common_mpi.o
+DEPS = $(OBJS:.o=.d)
 
-.PHONY : all
-.PHONY : clean
+.PHONY: all clean
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	ar -r $@ $^
+	$(AR) $(ARFLAGS) $@ $^
 
-%.o: %.c
-	$(MPICC) -c $< $(CFLAGS) -o $@
+%.o: %.cpp
+	$(MPICXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS)
+	$(RM) $(OBJS) $(DEPS)
 
-common_mpi.o: common_mpi.h
+-include $(DEPS)

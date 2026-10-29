@@ -14,12 +14,19 @@
 class MHD{
 
 public:
+  // Copy inhibited
+  MHD()=default;
+  MHD(const MHD&)=delete;
+  MHD& operator=(const MHD&)=delete;
+  MHD(MHD&&)=delete;
+  MHD& operator=(MHD&&)=delete;
+
   static const int nm=8;	// Number of MHD variables
   const double dtor=M_PI/180.;
   
-  void setgam(double gam_value)
+  virtual void setgam(double gam_value)
   {
-    // Set gamma value
+    // Use this setter when changing gamma so derived coefficients stay in sync.
     gam=gam_value;
   }
   double getgam()
@@ -83,6 +90,14 @@ protected:
     vlcty(i);
     pr[i]=mhd_ieos(ro[i],vx[i],vy[i],vz[i],cx[i],cy[i],cz[i],en[i],gam);
   }
+  void prmtv_gravity(int i)
+  {
+    // Requires initialized phi_g and cell-center B, with en including ro*phi_g.
+    // Conservative => primitive without modifying the stored total energy.
+    vlcty(i);
+    const double energy=en[i]-ro[i]*phi_g[i];
+    pr[i]=mhd_ieos(ro[i],vx[i],vy[i],vz[i],cx[i],cy[i],cz[i],energy,gam);
+  }
   double bcell(const double* b_ct, int offset, double (*fcen)(const double *f))
   {
     // B @ cell center from cell edge
@@ -103,6 +118,11 @@ protected:
 		     double, double, double, double, double, double, double,
 		     double, double, const double*,
 		     double*, double*, double*, double*, double*, double*, double*)={calc_flux_roe,calc_flux_hlld,calc_flux_lhlld,calc_flux_mlau};
+  // Riemann solvers with RSST
+  void (*rsstrie[4])(double, double, double, double, double, double, double, double,
+		     double, double, double, double, double, double, double, double,
+		     double, double, const double*,
+		     double*, double*, double*, double*, double*, double*, double*)={rsst_flux_hlld,rsst_flux_hlld,rsst_flux_lhlld,rsst_flux_lhlld};
   /* Linear interpolation function to face LR states*/
   void (*l_interp[4])(const double *f, double *fl, double *fr)={cal_flr_1st,cal_flr_2nd,cal_flr_3rd,cal_flr_4th};
   /* Interpolation function to face LR states */

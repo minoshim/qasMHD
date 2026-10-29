@@ -1,4 +1,9 @@
 #include "dmhd2d_class.hpp"
+#include "mhd2d_io.hpp"
+
+#include <ctime>
+#include <random>
+#include <vector>
 
 inline double harris_field(double x, const double *params);
 inline double harris_density(double x, const double *params);
@@ -6,6 +11,7 @@ inline double harris_density(double x, const double *params);
 const double lambda=1.0;	// Current sheet thickness
 
 void DMHD2D::init_()
+try
 {
   // Magnetic reconnection
   int i,j;
@@ -19,18 +25,24 @@ void DMHD2D::init_()
   const double dv=0.01;		// Random noize perturbation to Vy (avaiable when RANDOM=1)
   const double para[2]={0,lambda};
 
-  double *dvy=new double[nx];
-  unsigned seed;
-  double stim;			// Time at node 0, used for seed of rand_noise
-  if (mpi_rank == 0) stim=MPI_Wtime();
-  MPI_Bcast(&stim,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
-  seed=(unsigned)(stim*(1+mpi_ranx));
+  std::vector<double> dvy;
+  resize_work(dvy,nx); // Allocation failure must stop all ranks.
+#if (RANDOM)
+  // For reproducible runs, replace std::time(nullptr) with a fixed seed.
+  unsigned seed=0;
+  if (mpi_rank == 0) seed=static_cast<unsigned>(std::time(nullptr));
+  mpi2d_io::check_mpi(MPI_Bcast(&seed,1,MPI_UNSIGNED,0,MPI_COMM_WORLD),
+                      "Random seed broadcast failed.");
+  // The same X subdomain uses the same stream, independent of Y rank.
+  std::seed_seq seeds{seed,static_cast<unsigned>(mpi_ranx)};
+  std::mt19937 engine(seeds);
+#endif
 
   for (i=0;i<nx;i++){
     dvy[i]=0.0;
 #if (RANDOM)
     double dvpara[2]={0,dv};
-    dvy[i]+=rand_noise(dvpara,seed); // Multiple mode perturbation
+    dvy[i]+=rand_noise_mt(dvpara,engine); // Multiple mode perturbation
 #endif    
   }
   
@@ -73,8 +85,6 @@ void DMHD2D::init_()
   // Boundary condition
   bound(val,nm,stxs,dnxs,stys,dnys);
 
-  delete[] dvy;
-
   // Set kinematic viscosity and resistivity coefficients
   double al=sqrt((b0*b0+bg*bg)/ro0);
   nu0=al*lambda/REV;
@@ -85,6 +95,8 @@ void DMHD2D::init_()
     printf("Kinematic viscosity coef. = %f\n",nu0);
     printf("Resistivity coef. = %f\n",eta0);
   }
+} catch (...){
+  mpi2d_io::abort_run("Exception while initializing MRX state or random generator.");
 }
 
 double DMHD2D::setdc()
@@ -110,7 +122,8 @@ double DMHD2D::setdc()
 
   // MPI Allreduce
   double dcmax_a;
-  MPI_Allreduce(&dcmax,&dcmax_a,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
+  mpi2d_io::check_mpi(MPI_Allreduce(&dcmax,&dcmax_a,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD),
+                      "Dissipation coefficient reduction failed.");
   dcmax=dcmax_a;
   
   return dcmax;

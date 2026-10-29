@@ -1,25 +1,20 @@
 DIR0 = ..
 include $(DIR0)/Makefile.inc
-LIBS = -lm
 TARGET = $(DIR0)/lib$(LIBNAME).a
 OBJS = common_func.o common_interp.o mhd_eigen.o mhd_flux.o mhd_func.o
+DEPS = $(OBJS:.o=.d)
 
-.PHONY : all
-.PHONY : clean
+.PHONY: all clean
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	ar -r $@ $^
+	$(AR) $(ARFLAGS) $@ $^
 
-%.o: %.c
-	$(CC) -c $< $(CFLAGS) $(LIBS) -o $@
+%.o: %.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS)
+	$(RM) $(OBJS) $(DEPS)
 
-common_func.o: common_func.h
-common_interp.o: common_interp.h common_func.o common_func.h
-mhd_eigen.o: mhd_eigen.h common_func.o common_func.h
-mhd_flux.o: mhd_flux.h common_func.o common_func.h
-mhd_func.o: mhd_func.h common_func.o common_func.h mhd_eigen.o mhd_eigen.h
+-include $(DEPS)

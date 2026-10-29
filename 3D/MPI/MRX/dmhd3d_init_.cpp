@@ -1,4 +1,10 @@
 #include "dmhd3d_class.hpp"
+#include "mhd3d_io.hpp"
+
+#include <cmath>
+#include <ctime>
+#include <random>
+#include <vector>
 
 inline double harris_field(double x, const double *params);
 inline double harris_density(double x, const double *params);
@@ -6,6 +12,7 @@ inline double harris_density(double x, const double *params);
 const double lambda=1.0;	// Current sheet thickness
 
 void DMHD3D::init_()
+try
 {
   // Magnetic reconnection
   int i,j,k;
@@ -21,29 +28,35 @@ void DMHD3D::init_()
   const double dvpara[2]={0,dv};
   const double dbpara[2]={b1,b1};
 
-  double dvy[nz][nx];
-  unsigned seed;
-  double stim;			// Time at node 0, used for seed of rand_noise
-  if (mpi_rank == 0) stim=MPI_Wtime();
-  MPI_Bcast(&stim,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
-  //Random seed depending on x and z, used for vy perturbation
-  seed=(unsigned)(stim*(1+mpi_ranx+(mpi_numx*mpi_ranz)));
+  std::vector<double> dvy;
+  resize_work(dvy,static_cast<std::size_t>(nz)*nx);
+  // For reproducible runs, replace std::time(nullptr) with a fixed seed.
+  unsigned seed=0;
+  if (mpi_rank == 0) seed=static_cast<unsigned>(std::time(nullptr));
+  mpi3d_io::check_mpi(MPI_Bcast(&seed,1,MPI_UNSIGNED,0,MPI_COMM_WORLD),
+                      "Random seed broadcast failed.");
+#if (RANDOM)
+  // The same X/Z subdomain uses the same stream, independent of Y rank.
+  std::seed_seq seeds_vy{seed,static_cast<unsigned>(mpi_ranx),static_cast<unsigned>(mpi_ranz)};
+  std::mt19937 engine_vy(seeds_vy);
+#endif
   
   for (k=0;k<nz;k++){
     for (i=0;i<nx;i++){
-      dvy[k][i]=0.0;
+      dvy[nx*k+i]=0.0;
 #if (RANDOM)
-      dvy[k][i]+=rand_noise(dvpara,seed); // Multiple mode perturbation
+      dvy[nx*k+i]+=rand_noise_mt(dvpara,engine_vy); // Multiple mode perturbation
 #endif
     }
   }
 
-  //Reset random seed depending on z, used for b1 perturbation
-  seed=(unsigned)(stim*(1+mpi_ranz));
-  srandom(seed);
+  // A separate Z-only stream preserves the b1 perturbation even when RANDOM=0.
+  // The same Z subdomain uses the same stream, independent of X/Y rank.
+  std::seed_seq seeds_b1{seed,static_cast<unsigned>(mpi_ranz)};
+  std::mt19937 engine_b1(seeds_b1);
   
   for (k=0;k<nz;k++){
-    double b1amp=rand_noise(dbpara,seed); // Perturbation to b1 is independent of x nd y
+    double b1amp=rand_noise_mt(dbpara,engine_b1); // Perturbation to b1 is independent of x and y
     double zm=z[k]-0.5*dz;
     for (j=0;j<ny;j++){
       double ym=y[j]-0.5*dy;
@@ -58,7 +71,7 @@ void DMHD3D::init_()
 	vy[ss]=0.0;
 	vz[ss]=0.0;
 	// Perturbation to vy
-	vy[ss]+=dvy[k][i]*exp(-(y[j]*y[j])/(4*lambda*lambda));
+	vy[ss]+=dvy[nx*k+i]*exp(-(y[j]*y[j])/(4*lambda*lambda));
 
 	bx[ss]=b0*harris_field(y[j],para);
 	by[ss]=0.0;
@@ -93,6 +106,8 @@ void DMHD3D::init_()
     printf("Kinematic viscosity coef. = %f\n",nu0);
     printf("Resistivity coef. = %f\n",eta0);
   }
+} catch (...){
+  mpi3d_io::abort_run("Exception while initializing MRX state or random generator.");
 }
 
 double DMHD3D::setdc()
@@ -111,8 +126,16 @@ double DMHD3D::setdc()
 	double r=sqrt(x[i]*x[i]+y[j]*y[j]);
 	nu[ss]=nu0*exp(-r/lambda);
 	eta[ss]=eta0*exp(-r/lambda);
-      
+
+	// Check before taking maxima, which can otherwise hide NaN or negative values.
+	if (!std::isfinite(nu[ss]) || nu[ss] < 0.0 ||
+	    !std::isfinite(eta[ss]) || eta[ss] < 0.0){
+	  mpi3d_io::abort_run("Invalid viscosity or resistivity in setdc().");
+	}
 	dtmp=max(2*nu[ss],eta[ss]); // Factor 2 is multiplied in viscous coef. for robust estimation
+	if (!std::isfinite(dtmp)){
+	  mpi3d_io::abort_run("Dissipation coefficient exceeds the supported range.");
+	}
 	if (dtmp > dcmax) dcmax=dtmp;
       }
     }
@@ -120,7 +143,8 @@ double DMHD3D::setdc()
 
   // MPI Allreduce
   double dcmax_a;
-  MPI_Allreduce(&dcmax,&dcmax_a,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
+  mpi3d_io::check_mpi(MPI_Allreduce(&dcmax,&dcmax_a,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD),
+                     "Dissipation coefficient reduction failed.");
   dcmax=dcmax_a;
   
   return dcmax;

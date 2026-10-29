@@ -1,5 +1,8 @@
 #include "dmhd2d_class.hpp"
 
+#include <random>
+#include <vector>
+
 inline double harris_field(double x, const double *params);
 inline double harris_density(double x, const double *params);
 
@@ -19,13 +22,17 @@ void DMHD2D::init_()
   const double dv=0.01;		// Random noize perturbation to Vy (avaiable when RANDOM=1)
   const double para[2]={0,lambda};
 
-  double *dvy=new double[nx];
+  std::vector<double> dvy(nx);
+#if (RANDOM)
+  // Use a fixed seed (e.g. 10) for reproducible perturbations.
   unsigned seed=(unsigned)time(NULL);
+  std::mt19937 engine(seed);
+#endif
   for (i=0;i<nx;i++){
     dvy[i]=0.0;
 #if (RANDOM)
     double dvpara[2]={0,dv};
-    dvy[i]+=rand_noise(dvpara,seed); // Multiple mode perturbation
+    dvy[i]+=rand_noise_mt(dvpara,engine); // Multiple mode perturbation
 #endif    
   }
   
@@ -67,8 +74,6 @@ void DMHD2D::init_()
   
   // Boundary condition
   bound(val,nm,stxs,dnxs,stys,dnys);
-
-  delete[] dvy;
 
   // Set kinematic viscosity and resistivity coefficients
   double al=sqrt((b0*b0+bg*bg)/ro0);
