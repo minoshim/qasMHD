@@ -71,7 +71,7 @@ Backups still overwrite the existing files without retaining generations. This i
 
 ### How to check the result
 
-Build the standalone C++11 merge utility once (from a problem directory):
+Build the standalone C++17 merge utility once (from a problem directory):
 ```sh
 make -C ../common
 ```
