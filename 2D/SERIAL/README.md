@@ -40,11 +40,10 @@ KHI, MRX, RMI, and RTI use `rand_noise_mt()` with `std::mt19937` when random per
 
 ### How to run the simulation
 
-From `2D/SERIAL/`:
+After building the libraries as described in the [root README](../../README.md#installation), run the following commands from `2D/SERIAL/`:
 
 ```sh
 cd OTvortex/
-make -C ../../../common
 make
 mkdir -p dat
 OMP_NUM_THREADS=2 ./a.out

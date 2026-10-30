@@ -48,12 +48,10 @@ Random sequences differ from the legacy generator. Reproducibility requires the 
 
 ### How to run the simulation
 
-From `3D/MPI/`:
+After building the libraries as described in the [root README](../../README.md#installation), run the following commands from `3D/MPI/`:
 
 ```sh
 cd OTvortex/
-make -C ../../../common
-make -C ../../../mpi
 make
 mkdir -p dat
 mpiexec -np 16 env OMP_NUM_THREADS=2 ./a.out

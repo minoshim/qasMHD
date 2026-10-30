@@ -33,11 +33,10 @@ The wave and h-wave problems use `rand_noise_mt()` with a local `std::mt19937` d
 
 ### How to run the simulation
 
-From `1D/SERIAL/`:
+After building the libraries as described in the [root README](../../README.md#installation), run the following commands from `1D/SERIAL/`:
 
 ```sh
 cd shock/
-make -C ../../../common
 make
 mkdir -p dat
 OMP_NUM_THREADS=2 ./a.out
