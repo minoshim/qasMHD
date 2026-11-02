@@ -11,6 +11,10 @@ This simulation was performed in a frame moving with *v<sub>y</sub>=-0.6* so tha
 ![RMI1](../../imgs/RMI/Figure_1.png)
 ![RMI3](../../imgs/RMI/Figure_3.png)
 
+These figures were regenerated with `XMESH=128`, `YMESH=1024`, `RMN=2` (LHLLD), `ODR=2`, `R_K=3`, `CTW=1`, `CFL=0.4`, `DTREC=1`, `N_OUT=15`, `MAGNET=1`, and `RANDOM=0`, using GCC 16.2.0 (C++17, `-O2`) and `OMP_NUM_THREADS=2`. A fixed seed of `10` was used, although the perturbation is deterministic with `RANDOM=0`.
+
+In `batch.py`, select output indices `5` or `15` and plot `ro` with `plt2d.image(x, y, ro, figsize=(4, 8), equal=1, xmin=0, xmax=1, ymin=-1, ymax=2, vmin=4, vmax=45)`. Output index `10` was also regenerated as [Figure_2.png](../../imgs/RMI/Figure_2.png). The titles use the actual times in `t.dat`, including the slight overshoot of the first requested time.
+
 ### Serial configuration
 
 The local `RMI2D` class in `rmi2d_class.hpp/.cpp` derives from the shared `MHD2D` in `../common/`. Edit `rmi2d_init_.cpp` for the initial shock/contact state and inflow parameters, and `mhd2d_paras.cpp` for `setup_grid()` and ordinary boundary conditions.

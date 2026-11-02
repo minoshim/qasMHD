@@ -15,6 +15,10 @@ The large-scale vortex is stable in the out-of-plane field case (left), while th
 
 <img src="../../imgs/KHI/khi_movie_perp.gif" alt="KH instability (out-of-plane B)" width="480px"> <img src="../../imgs/KHI/khi_movie_oblique.gif" alt="KH instability (in-plane B)" width="480px">
 
+These movies were regenerated with `XMESH=YMESH=256`, `RMN=2` (LHLLD), `ODR=2`, `R_K=3`, `CTW=1`, `CFL=0.4`, `DTREC=4`, `N_OUT=49`, and `RANDOM=0`, using GCC 16.2.0 (C++17, `-O2`) and `OMP_NUM_THREADS=4`. Set `angle_u` in `mhd2d_init_.cpp` to `90.0` or `71.5651`, keeping `angle_l=angle_u` and `beta=1e3`, then rebuild and run each case.
+
+Each movie contains output indices `0` through `49` (`t=0` to `196`) at 10 frames per second. Titles use the actual times in `t.dat`. The LIC rendering uses the cell-center velocity, a fixed noise texture generated with NumPy seed `10`, and a symmetric convolution extending 15 pixels along each direction of the streamline. This texture seed controls visualization only; `RANDOM=0` gives a deterministic sinusoidal physical perturbation.
+
 ### Serial configuration
 
 This case uses the shared `MHD2D` implementation in `../common/`. Edit `mhd2d_init_.cpp` for the shear, magnetic field, and perturbation amplitude; edit `mhd2d_paras.cpp` for `setup_grid()` and boundary conditions.

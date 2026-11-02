@@ -73,6 +73,8 @@ Enter `dat` when prompted for the data directory, then select an output index. T
 
 To load all output times, execute `exec(open("python/batch_a.py").read())` instead.
 
+In both scripts, `bx, by, bz` are cell-center fields, while `bxct, byct` retain the CT face fields, including the right/top boundary faces. `divb` is the second-order CT divergence at cell centers. As in the MPI scripts, `jz` is the CT curl at interior corners, with shape `(len(y)-1,len(x)-1)` and coordinates `xjz, yjz`; `batch_a.py` adds a leading time dimension. Plot it with `plt2d.image(xjz, yjz, jz)`, or `jz[sst]` after loading all times. The original conserved arrays in `data` are preserved.
+
 Both `batch.py` and `batch_a.py` automatically subtract `rho*phi_g` when `g_potential.dat` is present in the selected data directory; without it, they use the ordinary MHD pressure formula. Keep each output set with its matching potential file, and do not leave a stale potential file in a non-gravitating run's directory. See [RTI/README.md](RTI/README.md) for the file format.
 
 ## License

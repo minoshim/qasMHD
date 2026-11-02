@@ -69,21 +69,12 @@ ro=data2[0,:,:]
 vx=data2[1,:,:]/ro
 vy=data2[2,:,:]/ro
 vz=data2[3,:,:]/ro
-bx=data2[4,:,:]
-by=data2[5,:,:]
-bxct=bx
-byct=by
-#Check divB (2nd-order)
-divb=np.zeros((ny-2*yoff,nx-2*xoff))
-for j in range(0,ny-2*yoff):
-    for i in range(0,nx-2*xoff):
-        divb[j,i]=(+(data[4,j+yoff,i+1+xoff]-data[4,j+yoff,i+xoff])/dx
-                   +(data[5,j+1+yoff,i+xoff]-data[5,j+yoff,i+xoff])/dy)
-#Cell-face to cell-center B
-for i in range(0,nx-2*xoff):
-    bx[:,i]=0.5*(data[4,yoff:ny-yoff,i+xoff]+data[4,yoff:ny-yoff,i+1+xoff])
-for j in range(0,ny-2*yoff):
-    by[j,:]=0.5*(data[5,j+yoff,xoff:nx-xoff]+data[5,j+1+yoff,xoff:nx-xoff])
+# CT faces, including the physical right/top boundary faces, as in MPI.
+bxct=data[4,yoff:ny-yoff,xoff:nx-xoff+1]
+byct=data[5,yoff:ny-yoff+1,xoff:nx-xoff]
+# Cell-center fields are new arrays; preserve the CT values in data.
+bx=0.5*(bxct[:,:-1]+bxct[:,1:])
+by=0.5*(byct[:-1,:]+byct[1:,:])
 bz=data2[6,:,:]
 en=data2[7,:,:]
 if phi_g is not None:
@@ -91,11 +82,13 @@ if phi_g is not None:
 pr=(gam-1)*(en-0.5*(ro*(vx**2+vy**2+vz**2)+(bx**2+by**2+bz**2)))
 data2=np.array([ro,vx,vy,vz,pr,bx,by,bz])
 
-# Current
-jz=np.zeros((ny-2*yoff,nx-2*xoff))
-for j in range(1,ny-2*yoff):
-    for i in range(1,nx-2*xoff):
-        jz[j,i]=(by[j,i]-by[j,i-1])/dx-(bx[j,i]-bx[j-1,i])/dy # @ corner (i-1/2,j-1/2)
+# CT divergence at all cell centers (second-order diagnostic).
+divb=(bxct[:,1:]-bxct[:,:-1])/dx+(byct[1:,:]-byct[:-1,:])/dy
+# Current at interior corners only, matching the MPI post-processing layout.
+# jz.shape=(len(y)-1,len(x)-1); xjz,yjz are its coordinates.
+xjz=0.5*(x[1:]+x[:-1])
+yjz=0.5*(y[1:]+y[:-1])
+jz=(byct[1:-1,1:]-byct[1:-1,:-1])/dx-(bxct[1:,1:-1]-bxct[:-1,1:-1])/dy
 
 # #Plot
 val=pr/ro

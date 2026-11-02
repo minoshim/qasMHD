@@ -11,6 +11,8 @@ Example density profiles at t=15.0,20.0 are shown below.
 ![RTI1](../../imgs/RTI/Figure_1.png)
 ![RTI2](../../imgs/RTI/Figure_2.png)
 
+These figures were regenerated with `XMESH=128`, `YMESH=1024`, `RMN=2` (LHLLD), `ODR=4`, `R_K=3`, `CTW=1`, `CFL=0.4`, `DTREC=0.5`, `N_OUT=40`, and `RANDOM=0`, using GCC 16.2.0 (C++17, `-O2`) and `OMP_NUM_THREADS=4`. In `batch.py`, select output indices `30` and `40`, then plot `ro` with `plt2d.image(x, y, ro, figsize=(4, 6), equal=1, xmin=0, xmax=20, ymin=30, ymax=70, vmin=0.1, vmax=1)`. Both panels show the upper interface with the same color scale. The titles use the actual times in `t.dat`.
+
 ### Serial configuration
 
 This case uses the shared gravity-aware `GMHD2D` implementation in `../common/`; its Makefile selects the gravity sources with `GRAVITY := 1`. `gmhd2d_init_.cpp` defines the initial state, prescribed potential, and `GMHD2D::bound()`. The latter contains the special upper/lower energy correction for this RTI setup, not a general-purpose gravitational boundary condition.

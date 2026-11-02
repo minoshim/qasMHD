@@ -11,6 +11,8 @@ Following example is the out-of-plane current with localized resistivity (*&prop
 
 ![MRX](../../imgs/MRX/Figure_1.png)
 
+This figure was regenerated at `t=90` with `XMESH=1024`, `YMESH=128`, `RMN=2` (LHLLD), `ODR=2`, `R_K=3`, `CTW=1`, `CFL=0.4`, `DTREC=5`, `N_OUT=18`, `REV=REM=200`, and `RANDOM=0`, using GCC 16.2.0 (C++17, `-O2`) and `OMP_NUM_THREADS=2`. In `batch.py`, select output index `18`, plot the CT-based current `jz` with `plt2d.image(xjz, yjz, jz, figsize=(8, 4), xmin=0, xmax=32, ymin=-4, ymax=4)`, and overlay magnetic field lines with `plt.streamplot(x, y, bx, by, color="white", density=1.5)`. The title uses the actual time in `t.dat`.
+
 ### Serial configuration
 
 This case uses the shared `DMHD2D` implementation in `../common/`; its Makefile selects the dissipative sources with `DISSIPATION := 1`. `dmhd2d_init_.cpp` defines both the initial state and `DMHD2D::setdc()`, where the viscosity and resistivity profiles are configured. `REV` and `REM` in `mymacros.hpp` set their normalization. The current update applies ideal MHD followed by subcycled dissipation.

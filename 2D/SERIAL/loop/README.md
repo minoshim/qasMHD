@@ -10,6 +10,8 @@ The top was obtained with the 2nd-order scheme, and the bottom with the 4th-orde
 <img src="../../imgs/loop/Figure_1_2nd.png" alt="Loop advection t=1" width="500px"> <img src="../../imgs/loop/Figure_2_2nd.png" alt="Loop advection t=2" width="500px">
 <img src="../../imgs/loop/Figure_1_4th.png" alt="Loop advection t=1" width="500px"> <img src="../../imgs/loop/Figure_2_4th.png" alt="Loop advection t=2" width="500px">
 
+These figures were regenerated with `XMESH=256`, `YMESH=128`, `RMN=2` (LHLLD), `R_K=3`, `CTW=1`, `CFL=0.4`, `DTREC=0.5`, and `N_OUT=4`, using GCC 16.2.0 (C++17, `-O2`) and `OMP_NUM_THREADS=2`. Set `ODR=2` or `4`, rebuild, and run each case. In `batch.py`, select output indices `2` and `4`, then set `pm=0.5*(bx**2+by**2+bz**2)` and call `plt2d.image(x, y, pm, equal=1, vmin=0, vmax=6e-7)`. All four panels use the same color scale. The first output is slightly later than `t=1` because the timestep varies; the titles use the actual times in `t.dat`.
+
 ### Serial configuration
 
 This case uses the shared `MHD2D` class and solver in `../common/`. Edit `mhd2d_init_.cpp` for the vector potential, advection velocity, and ambient state. Its temporary vector-potential arrays are local `std::vector` objects. `mhd2d_paras.cpp` sets the domain with `setup_grid()` and defines the boundary conditions; `mymacros.hpp` controls the mesh, output, and solver choices.

@@ -3,9 +3,11 @@
 The Orszag-Tang vortex problem is a standard benchmark test for the two-dimensional MHD simulation adopted in many literatures, to verify the capability of capturing multiple interactions of shocks and vortices.<br>
 The initial condition is *(&rho;,v<sub>x</sub>,v<sub>y</sub>,v<sub>z</sub>,B<sub>x</sub>,B<sub>y</sub>,B<sub>z</sub>,P)*=*(&gamma;<sup>2</sup>,-sin(y),sin(x),0,-sin(y),sin(2x),0,&gamma;)* where *&gamma;*=5/3 is specific heat ratio, and *0<x,y<2&pi;*.
 
-An example of the temperature *(=P/&rho;)* profile at *t=&pi;* is shown below.
+An example of the temperature *(=P/&rho;)* profile at `t=3.1416` (approximately *&pi;*) is shown below.
 
 ![OT vortex](../../imgs/OTvortex/Figure_1.png)
+
+This figure was regenerated with `XMESH=YMESH=200`, `RMN=2` (LHLLD), `ODR=2`, `R_K=3`, `CTW=1`, `CFL=0.4`, `DTREC=0.2*3.1416`, and `N_OUT=5`, using GCC 16.2.0 (C++17, `-O2`) and `OMP_NUM_THREADS=2`. Run the case, execute `batch.py`, and select output index `5`; its default plot shows `pr/ro`. The title uses the actual time in `t.dat`.
 
 ### Serial configuration
 
