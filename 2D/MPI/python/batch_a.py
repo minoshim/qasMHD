@@ -38,7 +38,7 @@ try:
         potential_bytes=potential_file.read()
 except FileNotFoundError:
     phi_g=None
-    print("No merged gravitational potential: pressure is not gravity-corrected.")
+#    print("No merged gravitational potential: pressure is not gravity-corrected.")
 else:
     expected_bytes=nx*ny*np.dtype(np.float32).itemsize
     if len(potential_bytes) != expected_bytes:
