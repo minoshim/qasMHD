@@ -26,13 +26,13 @@ MRX selects the dissipative sources with `DISSIPATION = 1`; RTI selects the grav
 - Edit `mhd2d_init_.cpp` for initial conditions, `dmhd2d_init_.cpp` for MRX (also defines `setdc()`), `rmi2d_init_.cpp` for RMI (also sets inflow parameters), or `gmhd2d_init_.cpp` for RTI (also defines the hydrostatic energy correction in `bound()`).
 - Edit `mhd2d_paras.cpp` for the domain and boundary conditions. `setup_grid(xmin, xmax, ymin, ymax)` takes **global** physical domain bounds excluding ghost cells; it sets local coordinates, mesh spacings, and the initial timestep using the existing MPI decomposition. Optional `xshift, yshift` arguments specify offsets in cell widths: both default to `0.5`; OTvortex uses `0.0, 0.0`.
 - The output directory defaults to `./dat/`. To change it, assign `fildir` in `paras()` and create the directory before running.
-- Edit `mymacros.hpp` for global mesh size, MPI process counts, output intervals, CFL, and solver choices. `RMN` (0–3), `ODR` (1–4), and `R_K` (1–3) are checked by `static_assert` in the shared class header. `CTW` controls multidimensional CT upwinding[^3].
+- Edit `mymacros.hpp` for global mesh size, MPI process counts, output intervals, CFL, and solver choices. `RMN` (0–3), `ODR` (1–4), `R_K` (1–3), and positive `MNP_X/Y` are checked by `static_assert` in the shared class header. `CTW` controls multidimensional CT upwinding[^3]. Uneven MPI partitions are supported; the process counts need not divide the corresponding global mesh sizes exactly.
 
 RMI refreshes inflow density once per time step and keeps it through all RK stages, only at the global upper Y boundary. RTI now follows SERIAL's gravity treatment: primitive conversion does not modify stored energy, and gravity sources use the density at the start of each RK stage. Its hydrostatic energy boundary correction assumes density, velocity, and magnetic field are extended unchanged from the interior; it only applies to the actual conserved state at global Y boundaries. MRX uses the same diffusion substep safety coefficient of 6 as SERIAL; its time-splitting order is unchanged.
 
 KHI, MRX, RMI, and RTI use `rand_noise_mt()` with `std::mt19937`. Rank 0 broadcasts an unsigned time-based base seed. For reproducible runs, replace `std::time(nullptr)` in the case's initial-condition source with a fixed value such as `10u`, then rebuild. KHI/MRX/RTI seed each generator with `std::seed_seq{seed, mpi_ranx}`, so ranks sharing an X subdomain use identical sequences regardless of their Y coordinate. RMI uses `std::seed_seq{seed, mpi_rank}` for rank-local density noise, and broadcasts interface phases generated on rank 0. RMI retains its per-instance generator across time steps; boundary calls within RK stages reuse the cached inflow density. Its generator state is not checkpointed.
 
-Random sequences differ from the legacy generator. Reproducibility requires the same base seed, decomposition, and execution/call history; changing the MPI layout does not preserve the same global random field. Initial perturbation arrays use `std::vector`, with allocation failures stopping all ranks.
+Random sequences differ from the legacy generator. Reproducibility requires the same base seed, mesh, decomposition, and execution/call history; changing the MPI layout does not preserve the same global random field. Initial perturbation arrays use `std::vector`, with allocation failures stopping all ranks.
 
 ### How to run the simulation
 
@@ -55,10 +55,10 @@ Rerunning the same executable and MPI layout loads a saved backup from the outpu
 
 ### Time stepping and restart
 
-Time integration follows the SERIAL version's bookkeeping. On a new run, the initial CFL timestep is aligned to the output interval with `nrec=max(1,ceil(dtrec/dt))` and `dt=dtrec/nrec`.
+Time integration follows `2D/SERIAL`'s bookkeeping. On a new run, the initial CFL timestep is aligned to the output interval with `nrec=max(1,ceil(dtrec/dt))` and `dt=dtrec/nrec`.
 
-- `exec_(0)` keeps this fixed timestep, runs `nrec*N_OUT` steps, and records every `nrec` steps.
-- `exec_(1)` retains the existing CFL recalculation every two steps, runs until `tmax`, and shortens the final step to reach `tmax` exactly. Records are written when the time crosses the next output threshold; intermediate record times need not equal that threshold exactly.
+- `exec_(0)` keeps this fixed timestep, advances to step `nrec*N_OUT`, and records every `nrec` steps.
+- `exec_(1)` retains the existing CFL recalculation every two steps, runs until `tmax=N_OUT*DTREC`, and shortens the final step to reach `tmax` exactly. The initial step-count estimate does not limit the run. Records are written when the time crosses the next output threshold; intermediate record times need not equal that threshold exactly.
 - Nonfinite/nonpositive timesteps and unsupported step counts stop all ranks. Common initialization/restart checks are in `common/mhd2d_control.cpp`.
 
 Backup load/save results are collected with `mpi_sync_status()`: all ranks must either find no checkpoint or load one successfully. Missing rank files, invalid metadata, inconsistent rank statuses/times, and I/O errors stop the entire MPI job. A restored timestep is preserved, not realigned; fixed-step checkpoints must already be consistent with the current output interval and counters. Use the same mesh, MPI decomposition, physical parameters, and time-stepping mode/settings for restart. The old format does not encode all of these settings, so validation cannot detect every incompatible configuration.
@@ -70,6 +70,7 @@ Backups still overwrite the existing files without retaining generations. This i
 ### How to check the result
 
 Build the standalone C++17 merge utility once (from a problem directory):
+
 ```sh
 make -C ../common
 ```
@@ -77,6 +78,7 @@ make -C ../common
 The existing `merge.out` links point to this shared executable. It uses `CXX` and the flags in `Makefile.inc`, not an MPI launcher. Its temporary-file handling uses POSIX functions, as supported on Linux/macOS.
 
 Merge rank-local data using either form:
+
 ```sh
 ./merge.out dat             # Read and write in dat (same as: ./merge.out dat dat)
 mkdir -p merged
@@ -103,11 +105,21 @@ In Python, **`bx, by, bz` are cell-center fields** loaded directly from `merge_o
 
 Rebuild `merge.out` and rerun it on raw data before using the updated Python scripts. Old merged fields stored face values under the same eight-field layout and are **not interchangeable** with the new center fields. Missing or wrong-size CT companion files cause an error; retain all three files for each time index. For plotting `jz`, use `xjz, yjz`, not the cell-center coordinate arrays.
 
-Subsequently, execute the python script `batch.py`.
+From the problem directory, start Python 3 with NumPy and Matplotlib installed:
+
+```sh
+python
 ```
->python
->>>exec(open("batch.py").read())
+
+Then execute the linked script in the interactive session:
+
+```pycon
+>>> exec(open("batch.py").read())
 ```
+
+Enter the merged data directory (`dat` or `merged` in the examples above), then select an output index. The `batch.py` and `python/` links let these commands run directly from each problem directory. Keeping the Python session open allows further inspection of the loaded data and figures.
+
+To load all output times, execute `exec(open("python/batch_a.py").read())` instead.
 
 ## License
 

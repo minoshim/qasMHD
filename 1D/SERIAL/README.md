@@ -33,7 +33,7 @@ The wave and h-wave problems use `rand_noise_mt()` with a local `std::mt19937` d
 
 ### How to run the simulation
 
-After building the libraries as described in the [root README](../../README.md#installation), run the following commands from `1D/SERIAL/`:
+After building `libqasmhd.a` as described in the [root README](../../README.md#installation), run the following commands from `1D/SERIAL/`:
 
 ```sh
 cd shock/
@@ -47,6 +47,12 @@ Use the C++ compiler and flags configured in the repository's `Makefile.inc`. Th
 The executable is `a.out`; object and dependency files are stored in each problem's `build/`. Results are written to `dat/`. Local macro and shared-header edits are tracked by dependency files: rerun `make` after editing. Rebuild the repository-level library after changing its sources; after changing compiler flags, clean and rebuild both the library objects and the case objects.
 
 `make clean` removes `a.out` and the current build's object/dependency files, but preserves results. `make cdata` deletes `dat/*.dat`; use it deliberately. A new simulation can overwrite existing output files, so preserve previous results first.
+
+### Time stepping
+
+The supplied drivers use `setdt(1)` followed by `exec_(0)`: the initial CFL timestep is aligned to the output interval with `nrec=max(1,ceil(DTREC/dt))` and `dt=DTREC/nrec`, then kept fixed for `nrec*N_OUT` steps. Hall-MHD subcycles the Hall update within each full step.
+
+If you change the driver to `exec_(1)`, the CFL timestep is recalculated every two steps. Unlike the 2D/3D execution loops, the current 1D loop also stops at the initial step-count limit and does not shorten the final step to reach `N_OUT*DTREC` exactly. It can therefore finish before or after that time; use the actual output times in `t.dat`. SERIAL runs do not load or save restart checkpoints.
 
 ### How to check the result
 
@@ -65,6 +71,8 @@ Then execute the linked script in the interactive session:
 Enter `dat` when prompted for the data directory, then select an output index. The `batch.py` and `python/` links let these commands run directly from each problem directory. Keeping the Python session open allows further inspection of the loaded data and figures.
 
 To load all output times, execute `exec(open("python/batch_a.py").read())` instead.
+
+The `outdat_XXXXX.dat` files contain eight float64 fields in the order `rho, mx, my, mz, Bx, By, Bz, E`, including ghost cells. Both scripts remove the ghost cells and derive velocity and pressure from the conserved fields.
 
 For wave spectra, see the scripts and examples in the wave and h-wave problem directories.
 

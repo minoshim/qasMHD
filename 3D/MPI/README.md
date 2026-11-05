@@ -69,7 +69,7 @@ Rerunning the same executable and MPI layout loads a saved backup from the outpu
 
 Time integration follows `2D/MPI`'s bookkeeping. On a new run, the initial CFL timestep is aligned to the output interval with `nrec=max(1,ceil(dtrec/dt))` and `dt=dtrec/nrec`.
 
-- `exec_(0)` keeps this fixed timestep, runs `nrec*N_OUT` steps, and records every `nrec` steps.
+- `exec_(0)` keeps this fixed timestep, advances to step `nrec*N_OUT`, and records every `nrec` steps.
 - `exec_(1)` retains the existing CFL recalculation every two steps, runs until `tmax=N_OUT*DTREC`, and shortens the final step to reach `tmax` exactly. The initial step-count estimate does not limit the run. Records are written when the time crosses the next output threshold; intermediate record times need not equal that threshold exactly.
 - Nonfinite/nonpositive timesteps and unsupported step counts stop all ranks. Common initialization/restart checks are in `common/mhd3d_control.cpp`.
 - MRX uses the same actual step length for its ideal and dissipative updates.
@@ -127,25 +127,46 @@ Here `xf, yf, zf` are the midpoints between adjacent cell coordinates. These dia
 
 Rebuild `merge.out` and rerun it on raw data before using the updated Python scripts. Old merged fields stored face values under the same eight-field layout and are **not interchangeable** with the new center fields. Missing or wrong-size CT companion files cause an error; retain all four files for each time index.
 
-Subsequently, execute the python script `batch.py`.
+From the problem directory, start Python 3 with NumPy and Matplotlib installed:
 
+```sh
+python
 ```
->python
->>>exec(open("batch.py").read())
+
+Then execute the linked script in the interactive session:
+
+```pycon
+>>> exec(open("batch.py").read())
+```
+
+Enter the merged data directory (`dat` or `merged` in the examples above), then select an output index. The `batch.py` and `python/` links let these commands run directly from each problem directory. Keeping the Python session open allows further inspection of the loaded data.
+
+The 3D `batch.py` loads one output without automatically plotting it. For example, display an XY density slice with Matplotlib:
+
+```pycon
+>>> k = len(z)//2
+>>> plt2d.image(x, y, ro[k, :, :], title=f"z={z[k]:.3f}", show=1)
 ```
 
 ### How to visualize in 3D
 
-`python/plt3d.py` module is available, which requires [Mayavi](https://mayavi.readthedocs.io/ja/latest/index.html) (installed by `>pip install mayavi`)
+`python/plt3d.py` requires [Mayavi and a compatible GUI backend](https://github.com/enthought/mayavi#installation), such as PySide6/Qt6. Use a Qt generation consistent with the VTK libraries in the same environment. For a PySide6/Qt6 installation, start a fresh Python session from the problem directory with the backend selected before imports:
 
+```sh
+ETS_TOOLKIT=qt QT_API=pyside6 python
 ```
->>>from python import plt3d
->>>
->>>plt3d.volume(x,y,z,ro) # Plots iso-surfaces for a 3D volume of data
->>>
->>>fig,obj=plt3d.slice(x,y,z,ro,plane_orientation='x_axes') #Plots 2D image in y-z plane sliced through a 3D volume of data
->>>plt3d.slice(x,y,z,ro,plane_orientation='y_axes',figure=fig) #Overplot in x-z plane
->>>plt3d.slice(x,y,z,ro,plane_orientation='z_axes',figure=fig) #Overplot in x-y plane
+
+Load the merged data, create the figures, and start the GUI event loop with `mlab.show()`:
+
+```pycon
+>>> exec(open("batch.py").read())
+>>> from python import plt3d
+>>> from mayavi import mlab
+>>> plt3d.volume(x, y, z, ro)  # Plot density iso-surfaces
+>>> fig, obj = plt3d.slice(x, y, z, ro, plane_orientation='x_axes')
+>>> plt3d.slice(x, y, z, ro, plane_orientation='y_axes', figure=fig)
+>>> plt3d.slice(x, y, z, ro, plane_orientation='z_axes', figure=fig)
+>>> mlab.show()
 ```
 
 ## License

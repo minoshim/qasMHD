@@ -19,9 +19,9 @@ The following packages are required:
 - an MPI library (MPICH or Open MPI) and its C++ compiler wrapper (`mpic++` by default) for MPI cases;
 - GNU Make;
 - Python 3 with NumPy and Matplotlib for data reading and visualization;
-- optionally, [Mayavi](https://mayavi.readthedocs.io/ja/latest/index.html) for the 3D visualization examples.
+- optionally, [Mayavi](https://docs.enthought.com/mayavi/mayavi/) with a compatible GUI backend for the 3D visualization examples; see the [3D guide](3D/MPI/README.md#how-to-visualize-in-3d).
 
-The code has been tested on Linux (Ubuntu, Linux Mint, CentOS, including Windows Subsystem for Linux). SERIAL cases use one process with OpenMP support and do not require MPI.
+The code has been tested on Linux (Ubuntu, Linux Mint, CentOS, including Windows Subsystem for Linux) and macOS with GCC and Open MPI. SERIAL cases use one process with OpenMP support and do not require MPI.
 
 ## Installation
 
@@ -76,12 +76,14 @@ At the repository root:
   double gam=5.0/3.0;           // Specific heat ratio
   double *x,*y,*z;              // Spatial coordinates
   double *ro,*mx,*my,*mz,*en;   // Density, momentum, and total energy
-  double *bx,*by,*bz;           // Staggered magnetic field (CT face values)
+  double *bx,*by,*bz;           // Magnetic fields; layout depends on dimension
   double *vx,*vy,*vz,*pr;       // Velocity and pressure
   double *cx,*cy,*cz;           // Magnetic field @ cell center
   double *nu,*eta;              // Kinematic viscosity and resistivity
   double *phi_g;                // Gravitational potential
 ```
+
+In 1D, magnetic fields are stored at cell centers, with constant longitudinal `bx`. In 2D, `bx` and `by` are CT face values and `bz` is cell-centered; in 3D, all three components are CT face values. The `cx, cy, cz` arrays provide the cell-center fields used by the solver.
 
 The MPI base class provides:
 

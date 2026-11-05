@@ -18,7 +18,7 @@ Serial codes for the following two-dimensional problems are available:
 
 The sources in this directory's `common/` are compiled separately for each problem, using that problem's `mymacros.hpp`. They are not a precompiled class library. The repository-level `common/` supplies the numerical kernels in `libqasmhd.a`.
 
-`common/mhd2d_control.cpp` shares timestep initialization and validation across the ordinary, dissipative, gravity-aware, and RSST classes. It aligns the initial timestep to the output interval and checks invalid time parameters, integer step-count overflow, and floating-point failure to advance time. `common/mhd2d_io.hpp` provides output checks and serial error termination. Unlike MPI, SERIAL does not load or save restart checkpoints.
+`common/mhd2d_control.cpp` shares timestep initialization and validation across the ordinary, dissipative, and gravity-aware classes. It aligns the initial timestep to the output interval and checks invalid time parameters, integer step-count overflow, and floating-point failure to advance time. `common/mhd2d_io.hpp` provides output checks and serial error termination. Unlike MPI, SERIAL does not load or save restart checkpoints.
 
 | Problem | Class | Initial-condition source |
 | --- | --- | --- |
@@ -42,7 +42,7 @@ KHI, MRX, RMI, and RTI use `rand_noise_mt()` with `std::mt19937` when random per
 
 ### How to run the simulation
 
-After building the libraries as described in the [root README](../../README.md#installation), run the following commands from `2D/SERIAL/`:
+After building `libqasmhd.a` as described in the [root README](../../README.md#installation), run the following commands from `2D/SERIAL/`:
 
 ```sh
 cd OTvortex/
@@ -74,6 +74,8 @@ Then execute the linked script in the interactive session:
 Enter `dat` when prompted for the data directory, then select an output index. The `batch.py` and `python/` links let these commands run directly from each problem directory. Keeping the Python session open allows further inspection of the loaded data and figures.
 
 To load all output times, execute `exec(open("python/batch_a.py").read())` instead.
+
+The `outdat_XXXXX.dat` files contain eight float64 fields in the order `rho, mx, my, mz, Bx, By, Bz, E`, including ghost cells. `Bx` and `By` are CT face values; `Bz` is cell-centered. Both scripts remove the ghost cells and average adjacent faces to obtain cell-center `bx, by`.
 
 In both scripts, `bx, by, bz` are cell-center fields, while `bxct, byct` retain the CT face fields, including the right/top boundary faces. `divb` is the second-order CT divergence at cell centers. As in the MPI scripts, `jz` is the CT curl at interior corners, with shape `(len(y)-1,len(x)-1)` and coordinates `xjz, yjz`; `batch_a.py` adds a leading time dimension. Plot it with `plt2d.image(xjz, yjz, jz)`, or `jz[sst]` after loading all times. The original conserved arrays in `data` are preserved.
 
