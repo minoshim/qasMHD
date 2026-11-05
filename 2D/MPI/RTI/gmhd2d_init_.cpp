@@ -107,8 +107,8 @@ void GMHD2D::bound(double *values[], int nvars,
 {
   MHD2D::bound(values,nvars,stxs,dnxs,stys,dnys);
 
-  // Special upper/lower energy boundary conditions for this RTI problem.
-  // This is not a general boundary prescription for MHD with gravity.
+  // Hydrostatic energy correction at the upper/lower boundaries, assuming
+  // density, velocity, and magnetic field are extended unchanged from the interior.
   // Only correct the actual conserved state, never auxiliary arrays.
   if (nvars != nm) return;
   for (int m=0;m<nm;m++){
