@@ -25,7 +25,9 @@ The sources in this directory's `common/` are compiled separately for each probl
 | KHI, OTvortex, blast, loop | `MHD2D` | `mhd2d_init_.cpp` |
 | MRX | `DMHD2D` | `dmhd2d_init_.cpp` (also defines `setdc()`) |
 | RMI | Local derived class `RMI2D` | `rmi2d_init_.cpp` |
-| RTI | `GMHD2D` | `gmhd2d_init_.cpp` (also defines the RTI-specific `bound()`) |
+| RTI | `GMHD2D` | `gmhd2d_init_.cpp` (also defines the hydrostatic energy correction in `bound()`) |
+
+The hydrostatic energy boundary correction used by RTI assumes density, velocity, and magnetic field are extended unchanged from the interior.
 
 RMI keeps `rmi2d_class.hpp/.cpp` locally for its inflow boundary. MRX and RTI select their additional shared sources with `DISSIPATION := 1` and `GRAVITY := 1`, respectively, in their Makefiles.
 

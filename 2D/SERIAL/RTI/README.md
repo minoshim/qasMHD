@@ -15,7 +15,7 @@ These figures were regenerated with `XMESH=128`, `YMESH=1024`, `RMN=2` (LHLLD), 
 
 ### Serial configuration
 
-This case uses the shared gravity-aware `GMHD2D` implementation in `../common/`; its Makefile selects the gravity sources with `GRAVITY := 1`. `gmhd2d_init_.cpp` defines the initial state, prescribed potential, and `GMHD2D::bound()`. The latter contains the special upper/lower energy correction for this RTI setup, not a general-purpose gravitational boundary condition.
+This case uses the shared gravity-aware `GMHD2D` implementation in `../common/`; its Makefile selects the gravity sources with `GRAVITY := 1`. `gmhd2d_init_.cpp` defines the initial state, prescribed potential, and `GMHD2D::bound()`. The latter applies a hydrostatic energy correction at the upper/lower boundaries, assuming density, velocity, and magnetic field are extended unchanged from the interior.
 
 Edit `mhd2d_paras.cpp` for `setup_grid()` and ordinary boundary flags. `RANDOM=0` in `mymacros.hpp` uses the single-mode velocity perturbation; `RANDOM=1` uses `rand_noise_mt()`. Set a fixed `seed` in `gmhd2d_init_.cpp` for reproducibility; the default is time-based.
 

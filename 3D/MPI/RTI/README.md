@@ -2,7 +2,7 @@
 
 This case uses `GMHD3D` from `../common/`, enabled by `GRAVITY = 1` in its Makefile. The conserved total energy includes `rho*phi_g` for a prescribed, time-independent gravitational potential.
 
-- `gmhd3d_init_.cpp` defines the initial state, gravitational potential, and RTI-specific upper/lower energy boundary corrections.
+- `gmhd3d_init_.cpp` defines the initial state, gravitational potential, and hydrostatic energy corrections at the upper/lower boundaries, assuming density, velocity, and magnetic field are extended unchanged from the interior.
 - `mhd3d_paras.cpp` defines the domain and boundary flags using the shared `setup_grid()`.
 - `mymacros.hpp` selects the grid, MPI decomposition, numerical methods, and `RANDOM` flag.
 

@@ -13,7 +13,7 @@ MPI parallel codes for the following three-dimensional problems are available:
 
 - `common/` contains the shared MPI `MHD3D`, dissipative `DMHD3D`, and gravity-aware `GMHD3D` classes and solvers, plus the build rules in `common/case.mk`.
 - Each problem directory retains its driver (`main.cpp`), initial conditions, parameters, macros, and a small `Makefile`.
-- RTI uses the shared `GMHD3D`; its initial state, potential profile, and special upper/lower energy boundary conditions are in `RTI/gmhd3d_init_.cpp`.
+- RTI uses the shared `GMHD3D`; its initial state, potential profile, and hydrostatic upper/lower energy boundary corrections are in `RTI/gmhd3d_init_.cpp`.
 - The existing `merge.out`, `batch.py`, and `python/` links remain in each problem directory.
 
 The sources in this directory's `common/` are compiled separately for each problem, using that problem's `mymacros.hpp`. They are not a precompiled class library. The repository-level `common/` and `mpi/` supply the numerical kernels and MPI routines in `libqasmhd.a` and `libmympi.a`.
@@ -26,12 +26,12 @@ Solver workspaces are reused through `static thread_local std::vector` storage. 
 
 ### Configuring a problem
 
-- Edit `mhd3d_init_.cpp` for initial conditions, `dmhd3d_init_.cpp` for MRX (also defines `setdc()`), or `gmhd3d_init_.cpp` for RTI (also defines its special `bound()`).
+- Edit `mhd3d_init_.cpp` for initial conditions, `dmhd3d_init_.cpp` for MRX (also defines `setdc()`), or `gmhd3d_init_.cpp` for RTI (also defines the hydrostatic energy correction in `bound()`).
 - Edit `mhd3d_paras.cpp` for the domain and boundary conditions. `setup_grid(xmin, xmax, ymin, ymax, zmin, zmax)` takes **global** physical domain bounds excluding ghost cells; it sets local coordinates, mesh spacings, and the initial timestep using the existing MPI decomposition. Optional `xshift, yshift, zshift` arguments specify offsets in cell widths: all default to `0.5`; OTvortex uses `0.0, 0.0, 0.0`.
 - The output directory defaults to `./dat/`. To change it, assign the `std::string` member `fildir` in `paras()` and create the directory before running.
 - Edit `mymacros.hpp` for global mesh size, MPI process counts, output intervals, CFL, and solver choices. `RMN` (0–3), `ODR` (1–4), `R_K` (1–3), and positive `MNP_X/Y/Z` are checked by `static_assert` in the shared class header. `CTW` controls multidimensional CT upwinding[^1]. Uneven MPI partitions are supported; the process counts need not divide the corresponding global mesh sizes exactly.
 
-`GMHD3D` inherits the common execution loop and includes a prescribed, time-independent gravitational potential in the conserved total energy. Gravity-aware pressure conversion does not modify that stored energy, and momentum sources use density at the start of each RK stage. RTI's special energy boundary correction applies only to the actual conserved state at global Z boundaries; it is not a general prescription for gravity. MRX uses the diffusion substep safety coefficient of 9, the 3D counterpart of 6 in `2D/MPI`; its time-splitting order is unchanged.
+`GMHD3D` inherits the common execution loop and includes a prescribed, time-independent gravitational potential in the conserved total energy. Gravity-aware pressure conversion does not modify that stored energy, and momentum sources use density at the start of each RK stage. RTI's hydrostatic energy boundary correction assumes density, velocity, and magnetic field are extended unchanged from the interior; it only applies to the actual conserved state at global Z boundaries. MRX uses the diffusion substep safety coefficient of 9, the 3D counterpart of 6 in `2D/MPI`; its time-splitting order is unchanged.
 
 KHI, MRX, and RTI use `rand_noise_mt()` with `std::mt19937`. Rank 0 broadcasts an unsigned time-based base seed when random perturbations are used. For reproducible runs, replace `std::time(nullptr)` in the case's initial-condition source with a fixed value such as `10u`, then rebuild. Each generator is initialized once per `init_()` call and reused while filling the perturbation arrays.
 

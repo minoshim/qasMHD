@@ -13,7 +13,7 @@ Example density profiles at t=15.0,20.0 are shown below.
 
 ### Code organization
 
-This case uses the shared gravity-aware `GMHD2D` implementation in `../common/`; its Makefile selects the gravity sources with `GRAVITY := 1`, as in SERIAL. `gmhd2d_init_.cpp` defines the initial state, prescribed potential, and `GMHD2D::bound()`. The latter contains the special upper/lower energy correction for this RTI setup, not a general-purpose gravitational boundary condition. Only ranks at global Y boundaries apply the correction, and only to the actual conserved-state arrays.
+This case uses the shared gravity-aware `GMHD2D` implementation in `../common/`; its Makefile selects the gravity sources with `GRAVITY := 1`, as in SERIAL. `gmhd2d_init_.cpp` defines the initial state, prescribed potential, and `GMHD2D::bound()`. The latter applies a hydrostatic energy correction at the upper/lower boundaries, assuming density, velocity, and magnetic field are extended unchanged from the interior. Only ranks at global Y boundaries apply the correction, and only to the actual conserved-state arrays.
 
 Edit `mhd2d_paras.cpp` for `setup_grid()` and ordinary boundary flags. The common MPI `MHD2D::exec_()` calls the overridden timestep, solver and output routines. Primitive conversion subtracts `rho*phi_g` locally without modifying stored total energy; gravity sources use the density at the start of each RK stage, matching SERIAL.
 
