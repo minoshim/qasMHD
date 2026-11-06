@@ -11,7 +11,7 @@ try
   // KH instability
   int i,j,k;
   // Initial condition parameters
-  const double beta=1e2;	// Ambient plasma beta
+  const double beta=1e1;	// Ambient plasma beta
   const double angle_u=90.0;	// B field angle in upper domain. 90deg: B=Bz, 0deg: B=Bx
   const double angle_l=angle_u;	// B field angle in lower domain.
   const double vamp=0.5;	// Shear velocity amplitude
