@@ -17,7 +17,7 @@ try
   int i,j,k;
   // Initial condition parameters
   const double beta=1e2;	// Ambient plasma beta
-  const double angle_u=90;	// B field angle in upper domain. 90deg: B=By, 0deg: B=Bx
+  const double angle_u=90.0;	// B field angle in upper domain. 90deg: B=By, 0deg: B=Bx
   const double angle_l=angle_u;	// B field angle in lower domain.
   const double vamp=0.0;	// Shear velocity amplitude
   const int nmode=1;		// Number of mode for perturbation

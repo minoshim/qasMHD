@@ -4,9 +4,9 @@
 #define XMESH (64)		// Number of cells in X domain
 #define YMESH (64)		// Number of cells in Y domain
 #define ZMESH (256)		// Number of cells in Z domain
-#define MNP_X (2)		// Number of MPI processes in X
-#define MNP_Y (2)		// Number of MPI processes in Y
-#define MNP_Z (8)		// Number of MPI processes in Z
+#define MNP_X (1)		// Number of MPI processes in X
+#define MNP_Y (1)		// Number of MPI processes in Y
+#define MNP_Z (4)		// Number of MPI processes in Z
 #define N_OUT (50)		// Number of output
 #define DTREC (1.0)		// Time step for output
 #define CFL (0.4)		// CFL value
