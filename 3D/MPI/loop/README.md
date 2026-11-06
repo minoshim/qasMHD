@@ -2,7 +2,7 @@
 
 This is the three-dimensional extension of the field loop advection problem conducted by Gardiner & Stone[^1], and further by Lee[^2] for the small-angle advection.<br>
 The periodic computational domain is `-0.5 < x < 0.5`, `-0.5 < y < 0.5`, `-1 < z < 1`.<br>
-A weak magnetic loop is tilted around the *y* axis by an angle of *tan<sup>-1</sup>(1/2)* and flows almost in the *x-z* plane.<br>
+A weak magnetic loop is tilted around the *y* axis by an angle of *tan<sup>-1</sup>(1/2)* and flows almost in the *x-z* plane, with velocity `(vx, vy, vz)=(cos(0.01), sin(0.01), 2)`.<br>
 (For details of the initial condition, see the literature[^3])
 
 ### Configuring this case
@@ -17,7 +17,7 @@ See [the MPI guide](../README.md) for building, running, restarting, and merging
 
 ### Example result
 
-An example result of the magnetic pressure at one period is shown below.<br>
+An example of the magnetic-pressure iso-surfaces after advection is shown below. The Z-domain crossing time is `Lz/vz=1`; the nonzero Y velocity means that the full pattern does not return exactly to its initial position at that time.
 
 ![loop3d](../../imgs/loop/snapshot4.png)
 
