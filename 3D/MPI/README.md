@@ -156,18 +156,25 @@ The 3D `batch.py` loads one output without automatically plotting it. For exampl
 ETS_TOOLKIT=qt QT_API=pyside6 python
 ```
 
-Load the merged data, create the figures, and start the GUI event loop with `mlab.show()`:
+Load the merged data and create the figures:
 
 ```pycon
 >>> exec(open("batch.py").read())
 >>> from python import plt3d
->>> from mayavi import mlab
 >>> plt3d.volume(x, y, z, ro)  # Plot density iso-surfaces
 >>> fig, obj = plt3d.slice(x, y, z, ro, plane_orientation='x_axes')
 >>> plt3d.slice(x, y, z, ro, plane_orientation='y_axes', figure=fig)
 >>> plt3d.slice(x, y, z, ro, plane_orientation='z_axes', figure=fig)
+```
+
+If the windows respond to mouse input, no explicit `mlab.show()` call is needed. In environments where the GUI event loop is not already running and the windows do not respond, you may need to start it explicitly:
+
+```pycon
+>>> from mayavi import mlab
 >>> mlab.show()
 ```
+
+This call normally waits until the Mayavi windows are closed.
 
 ## License
 
