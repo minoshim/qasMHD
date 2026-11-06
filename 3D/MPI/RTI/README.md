@@ -22,4 +22,6 @@ The potential is written once as `dat/g_potential_<rank>.dat` (float32, includin
 
 Density slices at `t=30` are shown below, illustrating the deformation of the upper interface as the instability develops.
 
+Magnetic tension from the initial `By` field suppresses small-scale structure in the *y-z* plane, leaving larger structures. Finer structures develop in the *x-z* plane, where the initial field is perpendicular to the plane.
+
 ![Density slices in the 3D Rayleigh-Taylor instability at t=30](../../imgs/RTI/snapshot.png)
