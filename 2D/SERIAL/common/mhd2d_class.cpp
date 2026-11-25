@@ -8,6 +8,10 @@
 #include <sstream>
 #include <string>
 
+#ifndef MUSCL_LIMITER
+#define MUSCL_LIMITER (0)
+#endif
+
 using namespace serial2d_io;
 
 void MHD2D::setup_grid(double xmin_value, double xmax_value,
@@ -196,6 +200,19 @@ MHD2D::MHD2D()
   stys[5]=1;
   stys[6]=0;
   stys[7]=0;
+
+  // Configure only the ODR=2 entry of the reconstruction table.
+  // MUSCL_LIMITER is defined in each case's mymacros.hpp.
+#if MUSCL_LIMITER == 1
+  interpol[1]=muscl_mc_cal_flr;
+#elif MUSCL_LIMITER == 2
+  interpol[1]=muscl_vl_cal_flr;
+#elif MUSCL_LIMITER == 3
+  interpol[1]=muscl_kr_cal_flr;
+#else
+  // Minmod is the default for an unspecified or unsupported selection.
+  interpol[1]=muscl_mm_cal_flr;
+#endif
 }
 
 MHD2D::~MHD2D()
