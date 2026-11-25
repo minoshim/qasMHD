@@ -39,7 +39,12 @@ ifeq ($(DISSIPATION),1)
 COMMON_NAMES += dmhd2d_class dmhd2d_solve
 endif
 ifeq ($(GRAVITY),1)
+ifeq ($(RSST),1)
+# GRSSTMHD2D combines gravity with RSST and inherits RSSTMHD2D, not GMHD2D.
+COMMON_NAMES += grsstmhd2d_class grsstmhd2d_solve
+else
 COMMON_NAMES += gmhd2d_class gmhd2d_solve
+endif
 endif
 ifeq ($(RSST),1)
 COMMON_NAMES += rsstmhd2d_class rsstmhd2d_solve
