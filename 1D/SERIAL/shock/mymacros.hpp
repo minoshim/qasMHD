@@ -11,4 +11,7 @@
 #define ODR (1)		 /* Spatial order (1,2,3,4) */
 #define R_K (2)		 /* Temporal order (1,2,3) */
 
+// MUSCL limiter for ODR=2. Other values fall back to Minmod.
+#define MUSCL_LIMITER (0) /* 0=Minmod, 1=MC, 2=van Leer, 3=Koren */
+
 #endif

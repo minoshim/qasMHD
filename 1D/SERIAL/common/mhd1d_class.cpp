@@ -10,6 +10,10 @@
 #include <sstream>
 #include <string>
 
+#ifndef MUSCL_LIMITER
+#define MUSCL_LIMITER (0)
+#endif
+
 namespace {
 
 [[noreturn]] void output_error(const char *operation, const std::string& path)
@@ -189,6 +193,19 @@ MHD1D::MHD1D()
   stxs[5]=0;
   stxs[6]=0;
   stxs[7]=0;
+
+  // Configure only the ODR=2 entry of the reconstruction table.
+  // MUSCL_LIMITER is defined in each case's mymacros.hpp.
+#if MUSCL_LIMITER == 1
+  interpol[1]=muscl_mc_cal_flr;
+#elif MUSCL_LIMITER == 2
+  interpol[1]=muscl_vl_cal_flr;
+#elif MUSCL_LIMITER == 3
+  interpol[1]=muscl_kr_cal_flr;
+#else
+  // Minmod is the default for an unspecified or unsupported selection.
+  interpol[1]=muscl_mm_cal_flr;
+#endif
 }
 
 MHD1D::~MHD1D()
