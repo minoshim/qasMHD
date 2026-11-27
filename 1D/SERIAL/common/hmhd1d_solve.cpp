@@ -141,6 +141,13 @@ void HMHD1D::hall_(double dt)
   const auto func_flux=&calc_flux_hall_lf;
   const auto func_lr=interpol[ODR-1];
   const auto func_df=df1[ODR-1];
+  // hy ~ (dBz/dx)/rho and hz ~ -(dBy/dx)/rho: reflection parity is -p_B*p_rho.
+  const auto hall_bc=[this](int b_bc, int velocity_bc){
+    if (b_bc == 0 && dnxs[0] == 0) return 0;
+    if (std::abs(b_bc) == 1 && std::abs(dnxs[0]) == 1) return -b_bc*dnxs[0];
+    return velocity_bc; // Keep the prescribed velocity BC for other boundary types.
+  };
+  const int hall_dnxs[]={dnxs[1],hall_bc(dnxs[6],dnxs[2]),hall_bc(dnxs[5],dnxs[3])};
   const std::size_t work_size=static_cast<std::size_t>(nm)*static_cast<std::size_t>(nx);
   const std::size_t required_size=4*work_size;
   static thread_local std::vector<double> work;
@@ -170,7 +177,7 @@ void HMHD1D::hall_(double dt)
 #ifdef _OPENMP
 #pragma omp for simd
 #endif
-      for (i=1;i<nx-1;i++){
+      for (i=xoff;i<nx-xoff;i++){
 	ss=i;
 	hallv(ss);
       }
@@ -179,7 +186,7 @@ void HMHD1D::hall_(double dt)
 #endif
       {
 	double *pv[3]={hx,hy,hz};
-	bound(pv,3,&dnxs[1]);
+	bound(pv,3,hall_dnxs);
       }
       /* Primitive variable at cell face */
 #ifdef _OPENMP
