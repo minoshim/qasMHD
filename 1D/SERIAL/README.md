@@ -28,6 +28,7 @@ The Hall-MHD problems select their additional shared sources with `HALL := 1` in
 - Edit `mhd1d_paras.cpp` (`hmhd1d_paras.cpp` for Hall-MHD) for the domain and boundary conditions. `setup_grid(xmin, xmax)` takes physical domain bounds excluding ghost cells and sets the cell-centered coordinates, mesh spacing, and initial timestep.
 - The output directory defaults to `./dat/`. To change it, assign `fildir` in `paras()` and create the directory before running.
 - Edit `mymacros.hpp` for mesh size, output intervals, CFL, and solver choices. `RMN` (0–3), `ODR` (1–4), and `R_K` (1–3) are checked by `static_assert` in the shared class header.
+- For second-order MUSCL reconstruction (`ODR=2`), set `MUSCL_LIMITER` in `mymacros.hpp` (e.g., `4` for Smooth Koren, default `0` for Minmod). See the [limiter settings and comparison plot](../../README.md#muscl-limiter-selection).
 
 The wave and h-wave problems use `rand_noise_mt()` with a local `std::mt19937` during initialization. Their seed is fixed at `10` in `mhd1d_init_.cpp`; edit that assignment and rebuild to change it. Sequences differ from the legacy `rand_noise()` generator even for the same seed.
 

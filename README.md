@@ -99,6 +99,20 @@ The MPI base class provides:
 - Set MPI process counts with `MNP_X`, `MNP_Y`, and, in 3D, `MNP_Z`. Uneven partitions are supported; process counts need not divide the global mesh sizes exactly.
 - To change the output directory, assign `fildir` in `paras()` and create the directory before running. See the case guide for random-perturbation seeds and reproducibility settings.
 
+### MUSCL limiter selection
+
+Set `ODR` to `2` in the case's `mymacros.hpp` to use second-order MUSCL reconstruction. Select the limiter with `MUSCL_LIMITER` and run `make` in the case directory after editing the header.
+
+| `MUSCL_LIMITER` | Limiter |
+| --- | --- |
+| `0` | Minmod (default) |
+| `1` | Monotonized Central (MC) |
+| `2` | van Leer |
+| `3` | Koren |
+| `4` | Smooth Koren |
+
+An undefined macro or an integer outside this range selects Minmod. The [flux limiter comparison](flux_limiter_summary_v2.png) plots the five functions against the slope ratio.
+
 ## How to run the simulation
 
 After building the libraries, run a SERIAL example from the repository root:

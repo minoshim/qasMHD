@@ -37,6 +37,7 @@ RMI keeps `rmi2d_class.hpp/.cpp` locally for its inflow boundary. MRX and RTI se
 - Edit `mhd2d_paras.cpp` for the domain and boundary conditions. `setup_grid(xmin, xmax, ymin, ymax)` takes physical domain bounds excluding ghost cells and sets the coordinates, mesh spacings, and initial timestep. Optional `xshift, yshift` arguments specify offsets in cell widths: both default to `0.5`; OTvortex explicitly uses `0.0, 0.0` to preserve its original coordinates.
 - The output directory defaults to `./dat/`. To change it, assign `fildir` in `paras()` and create the directory before running.
 - Edit `mymacros.hpp` for mesh size, output intervals, CFL, and solver choices. `RMN` (0–3), `ODR` (1–4), and `R_K` (1–3) are checked by `static_assert` in the shared class header. `CTW` controls multidimensional CT upwinding[^3].
+- For second-order MUSCL reconstruction (`ODR=2`), set `MUSCL_LIMITER` in `mymacros.hpp` (e.g., `4` for Smooth Koren, default `0` for Minmod). See the [limiter settings and comparison plot](../../README.md#muscl-limiter-selection).
 
 KHI, MRX, RMI, and RTI use `rand_noise_mt()` with `std::mt19937` when random perturbations are enabled by `RANDOM`. Their seed is currently time-based. For reproducible runs, replace the seed assignment in the case's initial-condition source with a fixed value such as `unsigned seed=10;`, then rebuild. RMI retains its generator between inflow updates; other cases use it only during initialization. Sequences differ from the legacy `rand_noise()` generator even for the same seed.
 
