@@ -112,6 +112,7 @@ Set `ODR` to `2` in the case's `mymacros.hpp` to use second-order MUSCL reconstr
 | `4` | Smooth Koren |
 
 An undefined macro or an integer outside this range selects Minmod. The [flux limiter comparison](flux_limiter_summary_v2.png) plots the five functions against the slope ratio.
+Koren limiters provide third-order accurate solutions for sufficiently smooth profile.
 
 ## How to run the simulation
 
