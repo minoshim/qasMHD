@@ -24,6 +24,14 @@ To reproduce them, set `NUM` to each problem number, rebuild and run as describe
 5. Super-fast expansion (`t=0.050`)
 ![Super-fast expansion](../../imgs/shock/Figure_5.png)
 
+### Brio–Wu density at `t=0.1`
+
+The seven runs give nearly identical density profiles at the scale of the full tube. The lower panels show where the methods differ. Minmod spreads the contact discontinuity near `x=0.06` over more cells than the other methods. The right-going slow shock near `x=0.145` spans only a few cells in all seven runs.
+
+![Brio–Wu density profiles for five MUSCL limiters, WCNS3, and WCNS4, with enlarged views of the contact discontinuity and right-going slow shock](../../imgs/shock/brio_wu_density_comparison.png)
+
+To reproduce the comparison, set `NUM=2` in `mhd1d_init_.cpp`. In `mymacros.hpp`, use `XMESH=800`, `RMN=2` (LHLLD), `R_K=3` (three-stage Runge–Kutta), `CFL=0.4`, `DTREC=0.01`, and `N_OUT=10` for all runs. For MUSCL, set `ODR=2` and run once per `MUSCL_LIMITER` value from 0 to 4 (Minmod, MC, van Leer, Koren, Smooth Koren). For WCNS3 and WCNS4, set `ODR=3` and `ODR=4`, respectively. Rebuild with `make` for each run and save its output before starting the next. The figure uses the cell-center density from output index 10 in each run.
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [license](../../../license/COPYING) file for details.
