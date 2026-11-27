@@ -55,6 +55,7 @@ void muscl_mm_cal_flr(const double *f, double *fl, double *fr); /* MinMod */
 void muscl_mc_cal_flr(const double *f, double *fl, double *fr); /* MC */
 void muscl_vl_cal_flr(const double *f, double *fl, double *fr); /* van Leer */
 void muscl_kr_cal_flr(const double *f, double *fl, double *fr); /* Koren */
+void muscl_skr4_cal_flr(const double *f, double *fl, double *fr); /* Smooth koren-type */
 
 /* WCNS routines */
 /* f = address @ i, *fl = left state @ i+1/2, *fr = Right state @i-1/2 */

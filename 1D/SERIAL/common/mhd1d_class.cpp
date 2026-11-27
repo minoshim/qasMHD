@@ -202,6 +202,8 @@ MHD1D::MHD1D()
   interpol[1]=muscl_vl_cal_flr;
 #elif MUSCL_LIMITER == 3
   interpol[1]=muscl_kr_cal_flr;
+#elif MUSCL_LIMITER == 4
+  interpol[1]=muscl_skr4_cal_flr;
 #else
   // Minmod is the default for an unspecified or unsupported selection.
   interpol[1]=muscl_mm_cal_flr;

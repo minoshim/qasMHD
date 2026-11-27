@@ -12,7 +12,7 @@
 #define R_K (3)		 /* Temporal order (1,2,3) */
 
 // MUSCL limiter for ODR=2. Other values fall back to Minmod.
-#define MUSCL_LIMITER (0) /* 0=Minmod, 1=MC, 2=van Leer, 3=Koren */
+#define MUSCL_LIMITER (0) /* 0=Minmod, 1=MC, 2=van Leer, 3=Koren, 4=Smooth Koren */
 
 // Inertia length for Hall MHD
 #define D_ION (1e-3)		// Ion inertia length

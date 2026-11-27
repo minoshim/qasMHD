@@ -1,5 +1,6 @@
 #include "common_interp.h"
 #include <math.h>
+#include <cmath>
 #include "common_func.h"
 
 /* Linear interpolation */
@@ -58,6 +59,35 @@ void muscl_kr_cal_flr(const double *f, double *fl, double *fr) /* Koren */
   double dfr=0.5*minmod3(df1,df2,(df1+0.5*df2)/3.0);
   (*fl)=f[0]+dfl;
   (*fr)=f[0]-dfr;
+}
+
+void muscl_skr4_cal_flr(const double *f, double *fl, double *fr) /* Smooth koren-type */
+{
+  const double df1=f[0]-f[-1];
+  const double df2=f[+1]-f[0];
+
+  // if (!((df1>0.0 && df2>0.0) || (df1<0.0 && df2<0.0))){
+  if (df1*df2 <= 0){
+    (*fl)=f[0];
+    (*fr)=f[0];
+    return;
+  }
+
+  const bool sw=(std::abs(df2)<=std::abs(df1));
+  const double r=sw ? df2/df1 : df1/df2;
+  const double df=sw ? df2 : df1;
+
+  const double num1=1.0+r*(6.0+r*(-4.0+r*3.0));
+  const double den1=1.0+r*(6.0+r*(6.0+r*(-4.0+r*3.0)));
+
+  const double num2=3.0+r*(-4.0+r*(6.0+r));
+  const double den2=3.0+r*(-4.0+r*(6.0+r*(6.0+r)));
+
+  const double d1=df*(num1/den1);
+  const double d2=df*(num2/den2);
+
+  (*fl)=f[0]+(sw ? d1 : d2);
+  (*fr)=f[0]-(sw ? d2 : d1);
 }
 
 /* WCNS routines */
